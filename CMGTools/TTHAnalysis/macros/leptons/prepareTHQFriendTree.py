@@ -169,35 +169,35 @@ if not os.path.exists(outdir): os.mkdir(outdir)
 for D in glob(args[0]+"/*"):
     if len(opt.onlyTag) > 0 and not opt.onlyTag in D: continue
     flname = D+"/treeProducerSusyMultilepton/tree.root"
-    print flname
     if os.path.exists(flname):
         fname = flname
+        print "Found tree file locally", fname
     elif os.path.exists(flname+".url"):
         fname_remote = open(flname+".url","r").readline().strip()
         fname = fname_remote
+        print "Found tree file remotely", fname
     else:
+        print "ERROR: Did not find tree file for", D
         continue;
 
-
-    if os.path.exists(fname):
-        short = os.path.basename(D)
-        f = ROOT.TFile.Open(fname);
-        t = f.Get("tree")
-        t.vectorTree = True
-        entries = t.GetEntries()
-        f.Close()
-        chunk = opt.nEvsPerChunk
-        if entries < chunk:
-            print "  ",os.path.basename(D)," single chunk"
-            jobs.append((short,fname,outdir+"THqFriend_%s.root" % short,
-                             xrange(entries)))
-        else:
-            nchunk = (entries//chunk)+1
-            print "  ",os.path.basename(D)," %d chunks" % nchunk
-            for i in xrange(nchunk):
-                r = xrange(int(i*chunk),min(int((i+1)*chunk),entries))
-                jobs.append((short+"_chunk%d" % i, fname,
-                      outdir+"THqFriend_%s.chunk%d.root" % (short,i),r))
+    short = os.path.basename(D)
+    f = ROOT.TFile.Open(fname);
+    t = f.Get("tree")
+    t.vectorTree = True
+    entries = t.GetEntries()
+    f.Close()
+    chunk = opt.nEvsPerChunk
+    if entries < chunk:
+        print "  ",os.path.basename(D)," single chunk"
+        jobs.append((short,fname,outdir+"THqFriend_%s.root" % short,
+                         xrange(entries)))
+    else:
+        nchunk = (entries//chunk)+1
+        print "  ",os.path.basename(D)," %d chunks" % nchunk
+        for i in xrange(nchunk):
+            r = xrange(int(i*chunk),min(int((i+1)*chunk),entries))
+            jobs.append((short+"_chunk%d" % i, fname,
+                  outdir+"THqFriend_%s.chunk%d.root" % (short,i),r))
 
 
 print "\n"
@@ -208,7 +208,14 @@ maintimer = ROOT.TStopwatch()
 def _runIt(args):
     (name,fin,fout,evrange) = args
     timer = ROOT.TStopwatch()
-    fb = ROOT.TFile(fin)
+
+    if 'root://' in fin:
+        ROOT.gEnv.SetValue("TFile.AsyncReading", 1);
+        ROOT.gEnv.SetValue("XNet.Debug", -1); # suppress output about opening connections
+        ROOT.gEnv.SetValue("XrdClientDebug.kUSERDEBUG", -1); # suppress output about opening connections
+        fb = ROOT.TXNetFile(fin+"?cachesz=1844567432")
+    else:
+        fb = ROOT.TFile.Open(fin)
     tb = fb.Get("tree")
     tb.vectorTree = True
     nev = tb.GetEntries()
@@ -227,7 +234,7 @@ def _runIt(args):
 from multiprocessing import Pool
 pool = Pool(8)
 ret  = dict(pool.map(_runIt, jobs))
-#ret = dict(map(_runIt, jobs))
+# ret = dict(map(_runIt, jobs))
 fulltime = maintimer.RealTime()
 totev   = sum([ev   for (ev,time) in ret.itervalues()])
 tottime = sum([time for (ev,time) in ret.itervalues()])
