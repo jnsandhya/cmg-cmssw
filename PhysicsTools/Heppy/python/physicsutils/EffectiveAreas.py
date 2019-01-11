@@ -86,7 +86,7 @@ areas = dict(
                        }
         },
     Fall17 = {
-        # https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/ElectronIdentification/data/Fall17/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_94X.txt
+        # https://github.com/cms-sw/cmssw/blob/CMSSW_9_4_X/RecoEgamma/ElectronIdentification/data/Fall17/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_94X.txt
         'electron' : { '03' : 
                        [ (1.000, 0.1440),
                          (1.479, 0.1562),
@@ -96,13 +96,13 @@ areas = dict(
                          (2.400, 0.1321),
                          (2.500, 0.1654) ],
                        '04' :  # warning: EAs not computed for cone DR=0.4, use the values for DR=0.3 scaled by 16/9 instead
-                       [ (1.000, 0.1566 * scaling_03_04),
-                         (1.479, 0.1626 * scaling_03_04),
-                         (2.000, 0.1073 * scaling_03_04),
-                         (2.200, 0.0854 * scaling_03_04),
-                         (2.300, 0.1051 * scaling_03_04),
-                         (2.400, 0.1204 * scaling_03_04),
-                         (2.500, 0.1524 * scaling_03_04) ],
+                       [ (1.000, 0.1440 * scaling_03_04),
+                         (1.479, 0.1562 * scaling_03_04),
+                         (2.000, 0.1032 * scaling_03_04),
+                         (2.200, 0.0859 * scaling_03_04),
+                         (2.300, 0.1116 * scaling_03_04),
+                         (2.400, 0.1321 * scaling_03_04),
+                         (2.500, 0.1654 * scaling_03_04) ],
                        'eta' : lambda x: x.superCluster().eta()
                        }
         },
