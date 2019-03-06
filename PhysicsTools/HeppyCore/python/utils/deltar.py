@@ -141,8 +141,12 @@ def bestMatch( object, matchCollection):
     deltaR2Min = float('+inf')
     bm = None
     for match in matchCollection:
-        dR2 = deltaR2( object.eta(), object.phi(),
-                       match.eta(), match.phi() )
+        if hasattr(match,'eta'):
+            dR2 = deltaR2( object.eta(), object.phi(),
+                           match.eta(), match.phi() )
+        else:
+            dR2 = deltaR2( object.eta(), object.phi(),
+                           match.Eta(), match.Phi() )
         if dR2 < deltaR2Min:
             deltaR2Min = dR2
             bm = match
