@@ -63,7 +63,6 @@ class ElectronCutBasedID(object):
         iso  = chad + max([0.0, nhad + pho - rho*eA])
         relIsoWithEA = iso/ele.pt()
         relIsoWithEA_cut = WP.relCombIsolationWithEACut_C0+WP.relCombIsolationWithEACut_Cpt/ele.pt()
-
         ecal_energy_inverse = 1.0/ele.ecalEnergy()
         eSCoverP = ele.eSuperClusterOverP()
         absEInverseMinusPInverse = abs(1.0 - eSCoverP)*ecal_energy_inverse
@@ -189,6 +188,16 @@ from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_
         import WP_Veto_EB as cutBasedElectronID_Fall17_94X_V2_WP_Veto_EB
 from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
         import WP_Veto_EE as cutBasedElectronID_Fall17_94X_V2_WP_Veto_EE
+#######
+from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
+        import WP_Tight_EB as cutBasedElectronID_Fall17_94X_V2_WP_Tight_EB
+from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
+        import WP_Tight_EE as cutBasedElectronID_Fall17_94X_V2_WP_Tight_EE
+from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
+        import WP_Loose_EB as cutBasedElectronID_Fall17_94X_V2_WP_Loose_EB
+from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
+        import WP_Loose_EE as cutBasedElectronID_Fall17_94X_V2_WP_Loose_EE
+######
 from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
         import isoInputs as cutBasedElectronID_Fall17_94X_V2_isoInputs
 
@@ -196,6 +205,12 @@ cutBasedElectronID_Fall17_94X_V2_wps = dict(
     veto = (cutBasedElectronID_Fall17_94X_V2_WP_Veto_EB,
             cutBasedElectronID_Fall17_94X_V2_WP_Veto_EE,
             cutBasedElectronID_Fall17_94X_V2_isoInputs),
+    tight = (cutBasedElectronID_Fall17_94X_V2_WP_Tight_EB,
+            cutBasedElectronID_Fall17_94X_V2_WP_Tight_EE,
+            cutBasedElectronID_Fall17_94X_V2_isoInputs),
+    loose = (cutBasedElectronID_Fall17_94X_V2_WP_Loose_EB,
+            cutBasedElectronID_Fall17_94X_V2_WP_Loose_EE,
+            cutBasedElectronID_Fall17_94X_V2_isoInputs)
 )
 
 # Dictionary with the relecant e/gmma MVAs

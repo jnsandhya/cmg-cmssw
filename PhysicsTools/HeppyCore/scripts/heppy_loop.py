@@ -36,7 +36,7 @@ if __name__ == '__main__':
                       dest="timeReport",
                       action='store_true',
                       help="Make a report of the time used by each analyzer",
-                      default=False)
+                      default=True)
     parser.add_option("-v", "--verbose",
                       dest="verbose",
                       action='store_true',
