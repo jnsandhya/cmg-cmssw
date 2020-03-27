@@ -91,7 +91,10 @@ class JetReCalibrator:
             return None
         if self.type1METParams['skipMuons']:
             for idau in xrange(jet.numberOfDaughters()):
-                pfcand = jet.daughter(idau)
+                try :
+                    pfcand = jet.daughter(idau)
+                except(Exception) : 
+                    continue
                 if pfcand.isGlobalMuon() or pfcand.isStandAloneMuon(): 
                     p4 -= pfcand.p4()
         return p4
