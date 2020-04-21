@@ -43,11 +43,12 @@ class Event(object):
     print_nstrip = 10
     print_patterns = ['*']
 
-    def __init__(self, iEv, input_data=None, setup=None, eventWeight=1):
+    def __init__(self, iEv, input_data=None, setup=None, eventWeight=1, eventSystWeight=1):
         self.iEv = iEv
         self.input = input_data
         self.setup = setup
         self.eventWeight = eventWeight
+	self.eventSystWeight = eventSystWeight
         self.analyzers = []
 
     def _get_print_attrs(self, subname=""):
