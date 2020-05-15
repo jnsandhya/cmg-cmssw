@@ -188,22 +188,12 @@ from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_
         import WP_Veto_EB as cutBasedElectronID_Fall17_94X_V2_WP_Veto_EB
 from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
         import WP_Veto_EE as cutBasedElectronID_Fall17_94X_V2_WP_Veto_EE
-<<<<<<< HEAD
-#######
-from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
-        import WP_Tight_EB as cutBasedElectronID_Fall17_94X_V2_WP_Tight_EB
-from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
-        import WP_Tight_EE as cutBasedElectronID_Fall17_94X_V2_WP_Tight_EE
-=======
 
->>>>>>> aure/master_9_4_11_cand1_v1
+
 from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
         import WP_Loose_EB as cutBasedElectronID_Fall17_94X_V2_WP_Loose_EB
 from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
         import WP_Loose_EE as cutBasedElectronID_Fall17_94X_V2_WP_Loose_EE
-<<<<<<< HEAD
-######
-=======
 
 from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
         import WP_Medium_EB as cutBasedElectronID_Fall17_94X_V2_WP_Medium_EB
@@ -215,22 +205,10 @@ from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_
 from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
         import WP_Tight_EE as cutBasedElectronID_Fall17_94X_V2_WP_Tight_EE
 
->>>>>>> aure/master_9_4_11_cand1_v1
 from RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff \
         import isoInputs as cutBasedElectronID_Fall17_94X_V2_isoInputs
 
 cutBasedElectronID_Fall17_94X_V2_wps = dict(
-<<<<<<< HEAD
-    veto = (cutBasedElectronID_Fall17_94X_V2_WP_Veto_EB,
-            cutBasedElectronID_Fall17_94X_V2_WP_Veto_EE,
-            cutBasedElectronID_Fall17_94X_V2_isoInputs),
-    tight = (cutBasedElectronID_Fall17_94X_V2_WP_Tight_EB,
-            cutBasedElectronID_Fall17_94X_V2_WP_Tight_EE,
-            cutBasedElectronID_Fall17_94X_V2_isoInputs),
-    loose = (cutBasedElectronID_Fall17_94X_V2_WP_Loose_EB,
-            cutBasedElectronID_Fall17_94X_V2_WP_Loose_EE,
-            cutBasedElectronID_Fall17_94X_V2_isoInputs)
-=======
     veto   = (cutBasedElectronID_Fall17_94X_V2_WP_Veto_EB,
               cutBasedElectronID_Fall17_94X_V2_WP_Veto_EE,
               cutBasedElectronID_Fall17_94X_V2_isoInputs),
@@ -243,7 +221,6 @@ cutBasedElectronID_Fall17_94X_V2_wps = dict(
     tight  = (cutBasedElectronID_Fall17_94X_V2_WP_Tight_EB,
               cutBasedElectronID_Fall17_94X_V2_WP_Tight_EE,
               cutBasedElectronID_Fall17_94X_V2_isoInputs),
->>>>>>> aure/master_9_4_11_cand1_v1
 )
 
 # Dictionary with the relecant e/gmma MVAs
