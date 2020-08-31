@@ -50,7 +50,7 @@ public:
    TGeoMgrFromDdd(const edm::ParameterSet&);
    ~TGeoMgrFromDdd() override;
 
-   typedef std::shared_ptr<TGeoManager> ReturnType;
+   using ReturnType = std::unique_ptr<TGeoManager>;
 
    // ---------- const member functions ---------------------
 
@@ -78,6 +78,8 @@ private:
 
    int                      m_level;
    bool                     m_verbose;
+   std::string              m_TGeoName;
+   std::string              m_TGeoTitle;
 
    std::map<std::string, TGeoShape*>    nameToShape_;
    std::map<std::string, TGeoVolume*>   nameToVolume_;

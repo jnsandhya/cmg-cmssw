@@ -68,7 +68,10 @@ namespace edm {
         T::prevalidate(descriptions);
       }
 
-      
+      bool wantsGlobalRuns() const final {
+        return T::HasAbility::kRunCache or T::HasAbility::kRunSummaryCache; }
+      bool wantsGlobalLuminosityBlocks() const final {return T::HasAbility::kLuminosityBlockCache or T::HasAbility::kLuminosityBlockSummaryCache;}
+
     private:
       typedef CallGlobal<T> MyGlobal;
       typedef CallGlobalRun<T> MyGlobalRun;
@@ -83,6 +86,11 @@ namespace edm {
           return tmp;
         });
         m_pset= nullptr;
+      }
+
+      void preallocLumis(unsigned int iNLumis) final {
+        m_lumis.resize(iNLumis);
+        m_lumiSummaries.resize(iNLumis);
       }
 
       void doEndJob() final {
@@ -115,7 +123,7 @@ namespace edm {
                       EventSetup const& c,
                       ModuleCallingContext const* mcc) final {
         if(T::HasAbility::kRunCache or T::HasAbility::kRunSummaryCache) {
-          Run r(rp, moduleDescription(), mcc);
+          Run r(rp, moduleDescription(), mcc, false);
           r.setConsumer(consumer());
           Run const& cnstR = r;
           RunIndex ri = rp.index();
@@ -130,7 +138,7 @@ namespace edm {
       {
         if(T::HasAbility::kRunCache or T::HasAbility::kRunSummaryCache) {
           
-          Run r(rp, moduleDescription(), mcc);
+          Run r(rp, moduleDescription(), mcc, true);
           r.setConsumer(consumer());
 
           RunIndex ri = rp.index();
@@ -145,7 +153,7 @@ namespace edm {
                                   ModuleCallingContext const* mcc) final
       {
         if(T::HasAbility::kLuminosityBlockCache or T::HasAbility::kLuminosityBlockSummaryCache) {
-          LuminosityBlock lb(lbp, moduleDescription(), mcc);
+          LuminosityBlock lb(lbp, moduleDescription(), mcc, false);
           lb.setConsumer(consumer());
           LuminosityBlock const& cnstLb = lb;
           LuminosityBlockIndex li = lbp.index();
@@ -162,7 +170,7 @@ namespace edm {
                                 ModuleCallingContext const* mcc) final {
         if(T::HasAbility::kLuminosityBlockCache or T::HasAbility::kLuminosityBlockSummaryCache) {
           
-          LuminosityBlock lb(lbp, moduleDescription(), mcc);
+          LuminosityBlock lb(lbp, moduleDescription(), mcc, true);
           lb.setConsumer(consumer());
           
           LuminosityBlockIndex li = lbp.index();

@@ -180,7 +180,11 @@ void SiStripCMMonitorPlugin::bookHistograms(DQMStore::IBooker & ibooker , const 
 {
   ibooker.setCurrentFolder(folderName_);
 
-  cmHists_.bookTopLevelHistograms(ibooker);
+  edm::ESHandle<TkDetMap> tkDetMapHandle;
+  eSetup.get<TrackerTopologyRcd>().get(tkDetMapHandle);
+  const TkDetMap* tkDetMap = tkDetMapHandle.product();
+
+  cmHists_.bookTopLevelHistograms(ibooker, tkDetMap);
 
   if (fillAllDetailedHistograms_) cmHists_.bookAllFEDHistograms(ibooker);
 }
@@ -229,7 +233,7 @@ SiStripCMMonitorPlugin::analyze(const edm::Event& iEvent,
       continue;
     }
 
-    std::auto_ptr<const sistrip::FEDBuffer> buffer;
+    std::unique_ptr<const sistrip::FEDBuffer> buffer;
 
     if (!lFedErrors.fillFatalFEDErrors(fedData,0)) {
       continue;
@@ -275,7 +279,7 @@ SiStripCMMonitorPlugin::analyze(const edm::Event& iEvent,
 
       if (!lDetId || lDetId == sistrip::invalid32_) continue;
 
-      bool lFailUnpackerChannelCheck = !buffer->channelGood(iCh) && connected;
+      bool lFailUnpackerChannelCheck = !buffer->channelGood(iCh, true) && connected;
 
       if (lFailUnpackerChannelCheck) {
 	continue;

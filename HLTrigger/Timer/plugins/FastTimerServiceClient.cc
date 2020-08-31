@@ -96,7 +96,7 @@ FastTimerServiceClient::fillSummaryPlots(DQMStore::IBooker & booker, DQMStore::I
     // the plots are directly in the configured folder
     fillProcessSummaryPlots(booker, getter, m_dqm_path);
   } else {
-    static const boost::regex running_n_processes(".*/Running [0-9]+ processes");
+    static const boost::regex running_n_processes(".*/Running .*");
 
     booker.setCurrentFolder(m_dqm_path);
     std::vector<std::string> subdirs = getter.getSubdirs();
@@ -498,6 +498,6 @@ FastTimerServiceClient::fillDescriptions(edm::ConfigurationDescriptions & descri
   descriptions.add("fastTimerServiceClient", desc);
 }
 
-//define this as a plug-in
+// declare this class as a framework plugin
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(FastTimerServiceClient);

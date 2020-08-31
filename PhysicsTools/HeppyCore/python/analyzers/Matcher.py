@@ -1,5 +1,5 @@
-from heppy.framework.analyzer import Analyzer
-from heppy.utils.deltar import matchObjectCollection, deltaR
+from PhysicsTools.HeppyCore.framework.analyzer import Analyzer
+from PhysicsTools.HeppyCore.utils.deltar import matchObjectCollection, deltaR
 
 import collections
 
@@ -54,7 +54,7 @@ class Matcher(Analyzer):
     def beginLoop(self, setup):
         super(Matcher, self).beginLoop(setup)
         self.match_collections = []
-        if isinstance( self.cfg_ana.match_particles, basestring):
+        if isinstance( self.cfg_ana.match_particles, str):
             self.match_collections.append( (self.cfg_ana.match_particles, None) )
         else:
             self.match_collections = self.cfg_ana.match_particles

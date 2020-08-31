@@ -175,9 +175,6 @@ void SiStripRecHitsValid::bookHistograms(DQMStore::IBooker & ibooker,const edm::
   }
 }
 
-void SiStripRecHitsValid::beginJob(const edm::EventSetup& es){
-}
-
 void SiStripRecHitsValid::analyze(const edm::Event& e, const edm::EventSetup& es) {
 
   LogInfo("EventInfo") << " Run = " << e.id().run() << " Event = " << e.id().event();  
@@ -225,8 +222,7 @@ void SiStripRecHitsValid::analyze(const edm::Event& e, const edm::EventSetup& es
     if(iLayerME != LayerMEsMap.end()){
       for(auto const& rechit : theDetSet){	
         const GeomDetUnit *  det = tracker.idToDetUnit(detid);
-        const StripGeomDetUnit * stripdet=(const StripGeomDetUnit*)(det);
-        const StripTopology &topol=(StripTopology&)stripdet->topology();
+        const StripTopology &topol=static_cast<const StripGeomDetUnit*>(det)->specificTopology();
         //analyze RecHits 
         rechitanalysis(rechit,topol,associate);
         // fill the result in a histogram
@@ -265,8 +261,7 @@ void SiStripRecHitsValid::analyze(const edm::Event& e, const edm::EventSetup& es
     if(iStereoAndMatchedME != StereoAndMatchedMEsMap.end()){
       for (auto const& rechit : theDetSet) {
         const GeomDetUnit *  det = tracker.idToDetUnit(detid);
-        const StripGeomDetUnit * stripdet=(const StripGeomDetUnit*)(det);
-        const StripTopology &topol=(StripTopology&)stripdet->topology();
+        const StripTopology &topol=static_cast<const StripGeomDetUnit*>(det)->specificTopology();
         //analyze RecHits
         rechitanalysis(rechit,topol,associate);
         // fill the result in a histogram
@@ -304,7 +299,7 @@ void SiStripRecHitsValid::analyze(const edm::Event& e, const edm::EventSetup& es
     //loop over rechits-matched in the same subdetector
     if(iStereoAndMatchedME != StereoAndMatchedMEsMap.end()){
       for (auto const& rechit : theDetSet) {
-        const GluedGeomDet* gluedDet = (const GluedGeomDet*)tracker.idToDet(rechit.geographicalId());
+        const GluedGeomDet* gluedDet = static_cast<const GluedGeomDet*>(tracker.idToDet(rechit.geographicalId()));
         //analyze RecHits 
         rechitanalysis_matched(rechit, gluedDet, associate);
         // fill the result in a histogram
@@ -465,7 +460,7 @@ void SiStripRecHitsValid::rechitanalysis_matched(SiStripMatchedRecHit2D const re
     PSimHit const * closest = nullptr;
     std::pair<LocalPoint,LocalVector> closestPair;
 
-    const StripGeomDetUnit* partnerstripdet =(StripGeomDetUnit*) gluedDet->stereoDet();
+    const StripGeomDetUnit* partnerstripdet = static_cast<const StripGeomDetUnit*>(gluedDet->stereoDet());
     std::pair<LocalPoint,LocalVector> hitPair;
 
     for(auto const &m : matched){
@@ -527,8 +522,6 @@ void SiStripRecHitsValid::createMEs(DQMStore::IBooker & ibooker,const edm::Event
   // get list of active detectors from SiStripDetCabling 
   std::vector<uint32_t> activeDets;
   SiStripDetCabling_->addActiveDetectorsRawIds(activeDets);
-    
-  SiStripSubStructure substructure;
 
   SiStripFolderOrganizer folder_organizer;
   // folder_organizer.setSiStripFolderName(topFolderName_);
@@ -562,20 +555,20 @@ void SiStripRecHitsValid::createMEs(DQMStore::IBooker & ibooker,const edm::Event
       std::vector<uint32_t> layerDetIds;
       if (lname == tec) {
         if (lnumber > 0) {
-	  substructure.getTECDetectors(activeDets,layerDetIds,2,0,0,0,abs(lnumber),0);
+	  SiStripSubStructure::getTECDetectors(activeDets,layerDetIds,tTopo,2,0,0,0,abs(lnumber),0);
         } else if (lnumber < 0) {
-	  substructure.getTECDetectors(activeDets,layerDetIds,1,0,0,0,abs(lnumber),0);
+	  SiStripSubStructure::getTECDetectors(activeDets,layerDetIds,tTopo,1,0,0,0,abs(lnumber),0);
         }
       } else if (lname == tid) {
          if (lnumber > 0) {
-	   substructure.getTIDDetectors(activeDets,layerDetIds,2,0,abs(lnumber),0);
+	   SiStripSubStructure::getTIDDetectors(activeDets,layerDetIds,tTopo,2,0,abs(lnumber),0);
         } else if (lnumber < 0) {
-	  substructure.getTIDDetectors(activeDets,layerDetIds,1,0,abs(lnumber),0);
+	  SiStripSubStructure::getTIDDetectors(activeDets,layerDetIds,tTopo,1,0,abs(lnumber),0);
         }
       } else if (lname == tob) {
-	substructure.getTOBDetectors(activeDets,layerDetIds,lnumber,0,0);
+	SiStripSubStructure::getTOBDetectors(activeDets,layerDetIds,tTopo,lnumber,0,0);
       } else if (lname == tib) {
-	substructure.getTIBDetectors(activeDets,layerDetIds,lnumber,0,0,0);
+	SiStripSubStructure::getTIBDetectors(activeDets,layerDetIds,tTopo,lnumber,0,0,0);
       }  
       LayerDetMap[label] = layerDetIds;
 
@@ -600,25 +593,25 @@ void SiStripRecHitsValid::createMEs(DQMStore::IBooker & ibooker,const edm::Event
       const std::string& stereolname = det_layer_pair.first;
       if ( stereolname == tec && (tTopo->tecIsStereo(detid)) ) {
         if ( stereolnumber > 0 ) {
-          substructure.getTECDetectors(activeDets,stereoandmatchedDetIds,2,0,0,0,abs(stereolnumber),1);
+          SiStripSubStructure::getTECDetectors(activeDets,stereoandmatchedDetIds,tTopo,2,0,0,0,abs(stereolnumber),1);
 	  isStereo = true;
         } else if ( stereolnumber < 0 ) {
-	  substructure.getTECDetectors(activeDets,stereoandmatchedDetIds,1,0,0,0,abs(stereolnumber),1);
+	  SiStripSubStructure::getTECDetectors(activeDets,stereoandmatchedDetIds,tTopo,1,0,0,0,abs(stereolnumber),1);
 	  isStereo = true;
         }
       } else if ( stereolname == tid && (tTopo->tidIsStereo(detid)) ) {
         if ( stereolnumber > 0 ) {
-	  substructure.getTIDDetectors(activeDets,stereoandmatchedDetIds,2,0,abs(stereolnumber),1);
+	  SiStripSubStructure::getTIDDetectors(activeDets,stereoandmatchedDetIds,tTopo,2,0,abs(stereolnumber),1);
 	  isStereo = true;
         } else if ( stereolnumber < 0 ) {
-	  substructure.getTIDDetectors(activeDets,stereoandmatchedDetIds,1,0,abs(stereolnumber),1);
+	  SiStripSubStructure::getTIDDetectors(activeDets,stereoandmatchedDetIds,tTopo,1,0,abs(stereolnumber),1);
 	  isStereo = true;
         }
       } else if ( stereolname == tob && (tTopo->tobIsStereo(detid)) ) {
-	substructure.getTOBDetectors(activeDets,stereoandmatchedDetIds,stereolnumber,0,0);
+	SiStripSubStructure::getTOBDetectors(activeDets,stereoandmatchedDetIds,tTopo,stereolnumber,0,0);
 	isStereo = true;
       } else if ( stereolname == tib && (tTopo->tibIsStereo(detid)) ) {
-	substructure.getTIBDetectors(activeDets,stereoandmatchedDetIds,stereolnumber,0,0,0);
+	SiStripSubStructure::getTIBDetectors(activeDets,stereoandmatchedDetIds,tTopo,stereolnumber,0,0,0);
 	isStereo = true;
       } 
 

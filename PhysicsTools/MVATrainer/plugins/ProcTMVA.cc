@@ -54,18 +54,18 @@ class ProcTMVA : public TrainProcessor {
 
 	ProcTMVA(const char *name, const AtomicId *id,
 	         MVATrainer *trainer);
-	virtual ~ProcTMVA();
+	~ProcTMVA() override;
 
-	virtual void configure(DOMElement *elem) override;
-	virtual Calibration::VarProcessor *getCalibration() const override;
+	void configure(DOMElement *elem) override;
+	Calibration::VarProcessor *getCalibration() const override;
 
-	virtual void trainBegin() override;
-	virtual void trainData(const std::vector<double> *values,
+	void trainBegin() override;
+	void trainData(const std::vector<double> *values,
 	                       bool target, double weight) override;
-	virtual void trainEnd() override;
+	void trainEnd() override;
 
-	virtual bool load() override;
-	virtual void cleanup() override;
+	bool load() override;
+	void cleanup() override;
 
     private:
 	void runTMVATrainer();
@@ -92,7 +92,7 @@ class ProcTMVA : public TrainProcessor {
 
 	std::vector<Method>		methods;
 	std::vector<std::string>	names;
-	std::auto_ptr<TFile>		file;
+	std::unique_ptr<TFile>		file;
 	TTree				*treeSig, *treeBkg;
 	Double_t			weight;
 	std::vector<Double_t>		vars;
@@ -109,7 +109,7 @@ ProcTMVA::Registry registry("ProcTMVA");
 ProcTMVA::ProcTMVA(const char *name, const AtomicId *id,
                    MVATrainer *trainer) :
 	TrainProcessor(name, id, trainer),
-	iteration(ITER_EXPORT), treeSig(0), treeBkg(0), needCleanup(false),
+	iteration(ITER_EXPORT), treeSig(nullptr), treeBkg(nullptr), needCleanup(false),
 	doUserTreeSetup(false), setupOptions("SplitMode = Block:!V")
 {
 }
@@ -189,7 +189,7 @@ void ProcTMVA::configure(DOMElement *elem)
 		}
 	}
 
-	if (!methods.size())
+	if (methods.empty())
 		throw cms::Exception("ProcTMVA")
 			<< "Expected TMVA method in config section."
 			<< std::endl;
@@ -271,7 +271,7 @@ void ProcTMVA::trainBegin()
 	if (iteration == ITER_EXPORT) {
 		ROOTContextSentinel ctx;
 
-		file = std::auto_ptr<TFile>(TFile::Open(
+		file = std::unique_ptr<TFile>(TFile::Open(
 			trainer->trainFileName(this, "root",
 			                       "input").c_str(),
 			"RECREATE"));
@@ -333,7 +333,7 @@ void ProcTMVA::runTMVATrainer()
 			   "No signal (" << nSignal << ") or background ("
 			<< nBackground << ") events!" << std::endl;
 
-	std::auto_ptr<TFile> file(TFile::Open(
+	std::unique_ptr<TFile> file(TFile::Open(
 		trainer->trainFileName(this, "root", "output").c_str(),
 		"RECREATE"));
 	if (!file.get())
@@ -391,7 +391,7 @@ void ProcTMVA::trainEnd()
 
 			file->Close();
 			file.reset();
-			file = std::auto_ptr<TFile>(TFile::Open(
+			file = std::unique_ptr<TFile>(TFile::Open(
 				trainer->trainFileName(this, "root",
 				                       "input").c_str()));
 			if (!file.get())
@@ -406,8 +406,8 @@ void ProcTMVA::trainEnd()
 			runTMVATrainer();
 
 			file->Close();
-			treeSig = 0;
-			treeBkg = 0;
+			treeSig = nullptr;
+			treeBkg = nullptr;
 			file.reset();
 		}
 		vars.clear();

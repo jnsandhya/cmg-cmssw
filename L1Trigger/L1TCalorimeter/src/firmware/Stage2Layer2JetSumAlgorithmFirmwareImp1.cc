@@ -9,22 +9,15 @@
 #include "L1Trigger/L1TCalorimeter/interface/Stage2Layer2JetSumAlgorithmFirmware.h"
 #include "L1Trigger/L1TCalorimeter/interface/CaloTools.h"
 
-l1t::Stage2Layer2JetSumAlgorithmFirmwareImp1::Stage2Layer2JetSumAlgorithmFirmwareImp1(CaloParamsHelper* params) :
-  params_(params)
+l1t::Stage2Layer2JetSumAlgorithmFirmwareImp1::Stage2Layer2JetSumAlgorithmFirmwareImp1(CaloParamsHelper const* params) 
 {
-  httJetThresholdHw_ = floor(params_->etSumEtThreshold(1)/params_->jetLsb());
-  mhtJetThresholdHw_ = floor(params_->etSumEtThreshold(3)/params_->jetLsb());
+  httJetThresholdHw_ = floor(params->etSumEtThreshold(1)/params->jetLsb());
+  mhtJetThresholdHw_ = floor(params->etSumEtThreshold(3)/params->jetLsb());
 
-  httEtaMax_  = params_->etSumEtaMax(1);
+  httEtaMax_  = params->etSumEtaMax(1);
   httEtaMaxHF_ = CaloTools::kHFEnd;
-  mhtEtaMax_  = params_->etSumEtaMax(3);
+  mhtEtaMax_  = params->etSumEtaMax(3);
   mhtEtaMaxHF_ = CaloTools::kHFEnd;
-}
-
-
-l1t::Stage2Layer2JetSumAlgorithmFirmwareImp1::~Stage2Layer2JetSumAlgorithmFirmwareImp1() {
-
-
 }
 
 
@@ -37,7 +30,7 @@ void l1t::Stage2Layer2JetSumAlgorithmFirmwareImp1::processEvent(const std::vecto
     int hx(0), hy(0), ht(0);
     int hxHF(0), hyHF(0), htHF(0);
 
-    bool satMht(0), satMhtHF(0), satHt(0), satHtHF(0);
+    bool satMht(false), satMhtHF(false), satHt(false), satHtHF(false);
   
     // loop over rings    
     for (unsigned absieta=1; absieta<=(unsigned int)CaloTools::mpEta(CaloTools::kHFEnd); absieta++) {

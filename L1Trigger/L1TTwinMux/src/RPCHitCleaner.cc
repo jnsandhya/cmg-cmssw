@@ -26,8 +26,33 @@
 using namespace std;
 
 
-RPCHitCleaner::RPCHitCleaner(RPCDigiCollection inrpcDigis){
-  m_inrpcDigis = inrpcDigis;
+RPCHitCleaner::RPCHitCleaner(RPCDigiCollection const& inrpcDigis):
+  m_inrpcDigis {inrpcDigis}
+{
+}
+
+namespace {
+  constexpr int max_rpc_bx = 3; 
+  constexpr int min_rpc_bx = -3;
+
+  //Need to shift the index so that index 0
+  // corresponds to min_rpc_bx
+  class BxToStrips {
+  public:
+    BxToStrips(): m_strips{} {} //zero initializes
+
+    static bool outOfRange(int iBX) {
+      return (iBX > max_rpc_bx or iBX < min_rpc_bx) ;
+    }
+
+    int& operator[](int iBX) {
+      return m_strips[iBX-min_rpc_bx];
+    }
+
+    size_t size() const { return m_strips.size(); }
+  private:
+    std::array<int,max_rpc_bx-min_rpc_bx+1> m_strips;
+  };
 }
 
 namespace {

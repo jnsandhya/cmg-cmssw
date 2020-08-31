@@ -44,12 +44,12 @@ public:
     L1GtStableParametersTrivialProducer(const edm::ParameterSet&);
 
     /// destructor
-    ~L1GtStableParametersTrivialProducer();
+    ~L1GtStableParametersTrivialProducer() override;
 
     /// public methods
 
     /// L1 GT parameters
-    std::shared_ptr<L1GtStableParameters> produceGtStableParameters(
+    std::unique_ptr<L1GtStableParameters> produceGtStableParameters(
         const L1GtStableParametersRcd&);
 
 private:

@@ -371,7 +371,7 @@ reco::BeamSpot BSFitter::Fit_z_chi2(double *inipar) {
 	//Use our own copy for thread safety
         // also do not add to global list of functions
 	TF1 fgaus("fgaus","gaus",0.,1.,TF1::EAddToList::kNo);
-	h1z->Fit(&fgaus,"QLMN0");
+	h1z->Fit(&fgaus,"QLMN0 SERIAL");
 	//std::cout << "fitted "<< std::endl;
 
 	//std::cout << "got function" << std::endl;
@@ -581,7 +581,7 @@ reco::BeamSpot BSFitter::Fit_d0phi() {
 	TF1 fgaus("fgaus","gaus",0.,1.,TF1::EAddToList::kNo);
 	//returns 0 if OK
 	//auto status = h1z->Fit(&fgaus,"QLM0","",h1z->GetMean() -2.*h1z->GetRMS(),h1z->GetMean() +2.*h1z->GetRMS());
-	auto status = h1z->Fit(&fgaus,"QLN0","",h1z->GetMean() -2.*h1z->GetRMS(),h1z->GetMean() +2.*h1z->GetRMS());
+	auto status = h1z->Fit(&fgaus,"QLN0 SERIAL","",h1z->GetMean() -2.*h1z->GetRMS(),h1z->GetMean() +2.*h1z->GetRMS());
 
 	//std::cout << "fitted "<< std::endl;
 
@@ -589,6 +589,7 @@ reco::BeamSpot BSFitter::Fit_d0phi() {
 	if (status){
 	  //edm::LogError("NoBeamSpotFit")<<"gaussian fit failed. no BS d0 fit";
 
+	  goodfit = false;
 	  return reco::BeamSpot();
 	}
 	double fpar[2] = {fgaus.GetParameter(1), fgaus.GetParameter(2) };

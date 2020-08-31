@@ -14,6 +14,7 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/BTauReco/interface/JetTag.h"
+#include "DataFormats/BTauReco/interface/ShallowTagInfo.h"
 
 // Trigger
 #include "DataFormats/Common/interface/TriggerResults.h"
@@ -49,8 +50,7 @@ class HLTBTagPerformanceAnalyzer : public DQMEDAnalyzer {
 			void analyze(const edm::Event&, const edm::EventSetup&) override;
 			void bookHistograms(DQMStore::IBooker & ibooker, edm::Run const & iRun,edm::EventSetup const &  iSetup ) override;
 
-		struct JetRefCompare :
-			public std::binary_function<edm::RefToBase<reco::Jet>, edm::RefToBase<reco::Jet>, bool> {
+		struct JetRefCompare {
 				inline bool operator () (const edm::RefToBase<reco::Jet> &j1,
 						const edm::RefToBase<reco::Jet> &j2) const
 				{ return j1.id() < j2.id() || (j1.id() == j2.id() && j1.key() < j2.key()); }
@@ -62,10 +62,15 @@ class HLTBTagPerformanceAnalyzer : public DQMEDAnalyzer {
 
 		// variables from python configuration
 		edm::EDGetTokenT<edm::TriggerResults> hlTriggerResults_;
+		std::string mainFolder_;
 		std::vector<std::string> hltPathNames_;
 		HLTConfigProvider hltConfigProvider_;
 		bool triggerConfChanged_;
 		std::vector<edm::EDGetTokenT<reco::JetTagCollection> > JetTagCollection_;
+        //                edm::EDGetTokenT<std::vector<reco::ShallowTagInfo> > shallowTagInfosTokenCalo_;
+                edm::EDGetTokenT<std::vector<reco::ShallowTagInfo> > shallowTagInfosTokenPf_;
+        //                edm::Handle<std::vector<reco::ShallowTagInfo> > shallowTagInfosCalo;
+                edm::Handle<std::vector<reco::ShallowTagInfo> > shallowTagInfosPf;
 
 		/// other class variable
 		std::vector<bool> _isfoundHLTs;
@@ -90,6 +95,8 @@ class HLTBTagPerformanceAnalyzer : public DQMEDAnalyzer {
 		std::vector< std::map<std::string, MonitorElement *> > H2_;
 		std::vector< std::map<std::string, std::map<HCALSpecials, MonitorElement *> > > H2mod_;
 		std::vector< std::map<std::string, MonitorElement *> > H2Eta_;
+		std::vector< std::map<std::string, MonitorElement *> > H2EtaPhi_;
+		std::vector< std::map<std::string, MonitorElement *> > H2EtaPhi_threshold_;
 		std::vector< std::map<std::string, MonitorElement *> > H2Phi_;
 
 		// Other variables

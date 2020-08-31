@@ -33,8 +33,10 @@ DavixFile::~DavixFile(void) {
 
 void DavixFile::close(void) {
   if (m_davixPosix && m_fd) {
+    auto davixPosix = std::move(m_davixPosix);
     DavixError *err = nullptr;
-    m_davixPosix->close(m_fd, &err);
+    davixPosix->close(m_fd, &err);
+    m_fd = nullptr;
     if (err) {
       std::unique_ptr<DavixError> davixErrManaged(err);
       cms::Exception ex("FileCloseError");
@@ -343,7 +345,7 @@ IOSize DavixFile::read(void *into, IOSize n) {
 }
 
 IOSize DavixFile::write(const void *from, IOSize n) {
-  cms::Exception ex("FileWriteError");
+  edm::Exception ex(edm::errors::FileWriteError);
   ex << "DavixFile::write(name='" << m_name << "') not implemented";
   ex.addContext("Calling DavixFile::write()");
   throw ex;

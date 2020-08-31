@@ -37,7 +37,7 @@ public:
    FWTGeoRecoGeometryESProducer( const edm::ParameterSet& );
    ~FWTGeoRecoGeometryESProducer( void ) override;
   
-   std::shared_ptr<FWTGeoRecoGeometry> produce( const FWTGeoRecoGeometryRecord& );
+   std::unique_ptr<FWTGeoRecoGeometry> produce( const FWTGeoRecoGeometryRecord& );
 
 private:
    FWTGeoRecoGeometryESProducer( const FWTGeoRecoGeometryESProducer& );
@@ -77,12 +77,10 @@ private:
    std::map<ERecoDet, TGeoMedium*> m_recoMedium;
 
    edm::ESHandle<GlobalTrackingGeometry> m_geomRecord;
-   edm::ESHandle<CaloGeometry>           m_caloGeom;
+   const CaloGeometry*    m_caloGeom;
    const TrackerGeometry* m_trackerGeom;
    const TrackerTopology* m_trackerTopology;
   
-   std::shared_ptr<FWTGeoRecoGeometry> m_fwGeometry;
-
    TGeoMedium* m_dummyMedium;
 
    bool m_tracker;

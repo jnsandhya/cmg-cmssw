@@ -594,6 +594,34 @@ Realistic5TeVppCollision2017VtxSmearingParameters = cms.PSet(
     Z0 = cms.double(0.619)
 )
 
+# From 2018B 3.8T data
+# BS parameters extracted from run 316199, fill 6675 (from StreamExpressAlignment, HP BS):
+# X0         =  0.09676  [cm]
+# Y0         = -0.06245  [cm]
+# Z0         = -0.292    [cm]
+# sigmaZ0    =  3.5      [cm] => mean sigmaZ0 in this run is 3.2676
+# BeamWidthX 0.0008050
+# BeamWidthY 0.0006238
+#
+# From LHC calculator, emittance is 1.634e-8 cm
+# https://lpc.web.cern.ch/lpc/lumi2.html
+#
+# BPIX absolute position (from https://cms-conddb.cern.ch/cmsDbBrowser/payload_inspector/Prod):
+# X = 0.0859918 cm
+# Y = -0.104172 cm
+# Z = -0.327748 cm
+Realistic25ns13TeVEarly2018CollisionVtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(30.0),
+    Emittance = cms.double(1.634e-8),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(3.5),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(0.0107682),
+    Y0 = cms.double(0.041722 ),
+    Z0 = cms.double(0.035748 )
+)
+
 # Test HF offset
 ShiftedCollision2015VtxSmearingParameters = cms.PSet(
     Phi = cms.double(0.0),
@@ -683,7 +711,35 @@ RealisticXeXeCollision2017VtxSmearingParameters = cms.PSet(
     X0 = cms.double(-0.026),
     Y0 = cms.double(0.081),
     Z0 = cms.double(0.645)
-) 
+)
+
+# From fit to 5 TeV PbPb data
+# From 2018 PbPb  data
+# BS parameters extracted from run 327211, Fill 7471 (from StreamExpressAlignment, HP, BS):
+# X0         =  0.09443  [cm]
+# Y0         = -0.06377  [cm]
+# Z0         =  0.58067  [cm]
+# sigmaZ0    =  4.969    [cm]
+# BeamWidthX 0.0014392
+# BeamWidthY 0.0011545
+#
+# Emittance is 3.36e-8 cm. Calculated by  ((BeamWidthX + BeamWidth)/2)^2/BetaStar
+#
+# BPIX absolute position (from https://cms-conddb.cern.ch/cmsDbBrowser/payload_inspector/Prod):
+# X =  0.084335 cm
+# Y = -0.110381 cm
+# Z = -0.321904 cm
+RealisticPbPbCollision2018VtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(50),
+    Emittance = cms.double(3.36e-08),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(4.97),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(0.010),
+    Y0 = cms.double(0.047),
+    Z0 = cms.double(0.903)
+)
 
 # Estimate for 2015 pp collisions at 5.02 TeV, based on feedback from accelerator:  beta* ~ 400cm, normalized emittance = 2.5 um, SigmaZ similar to RunIIWinter15GS
 Nominal5TeVpp2015VtxSmearingParameters = cms.PSet(

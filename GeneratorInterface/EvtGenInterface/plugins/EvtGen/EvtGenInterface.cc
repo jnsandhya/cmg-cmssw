@@ -9,8 +9,8 @@
 // January 2015: Setting of coherent or incoherent B mixing included by Eduard Burelo 
 // January 2015: Adding new feature to allow users to provide new evtgen models
 
-#include "GeneratorInterface/EvtGenInterface/interface/EvtGenUserModels/EvtModelUserReg.h"
-#include "GeneratorInterface/EvtGenInterface/interface/EvtGenInterface.h"
+#include "GeneratorInterface/EvtGenInterface/plugins/EvtGenUserModels/EvtModelUserReg.h"
+#include "GeneratorInterface/EvtGenInterface/plugins/EvtGen/EvtGenInterface.h"
 
 #include "GeneratorInterface/EvtGenInterface/interface/EvtGenFactory.h"
 #include "GeneratorInterface/EvtGenInterface/interface/myEvtRandomEngine.h"
@@ -305,7 +305,7 @@ void EvtGenInterface::init(){
   //Setup evtGen following instructions on http://evtgen.warwick.ac.uk/docs/external/ 
   bool convertPythiaCodes=fPSet->getUntrackedParameter<bool>("convertPythiaCodes",true); // Specify if we want to use Pythia 6 physics codes for decays
   std::string pythiaDir = getenv ("PYTHIA8DATA"); // Specify the pythia xml data directory to use the default PYTHIA8DATA location
-  if(pythiaDir==nullptr){ 
+  if(pythiaDir.empty()){
     edm::LogError("EvtGenInterface::~EvtGenInterface") << "EvtGenInterface::init() PYTHIA8DATA not defined. Terminating program "; 
     exit(0);
   }

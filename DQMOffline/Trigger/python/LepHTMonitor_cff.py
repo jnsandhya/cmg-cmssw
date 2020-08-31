@@ -4,7 +4,8 @@ from copy import deepcopy
 
 
 ### Single Electron + HT triggers
-DQMOffline_Ele15_HT600 = cms.EDAnalyzer('LepHTMonitor',
+from DQMServices.Core.DQMEDAnalyzer import DQMEDAnalyzer
+DQMOffline_Ele15_HT600 = DQMEDAnalyzer('LepHTMonitor',
                                               electronCollection = cms.InputTag('gedGsfElectrons'),
                                               electronVID = cms.InputTag("egmGsfElectronIDsForDQM:cutBasedElectronID-Summer16-80X-V1-medium"),
                                               muonCollection = cms.InputTag(''),
@@ -187,7 +188,8 @@ DQMOffline_LepHT_POSTPROCESSING = DQMEDHarvester("DQMGenericClient",
 
 from DQMOffline.Trigger.HLTEGTnPMonitor_cfi import egmGsfElectronIDsForDQM
 
-LepHTMonitor = cms.Sequence( DQMOffline_Ele15_HT600
+LepHTMonitor = cms.Sequence( 
+                              DQMOffline_Ele15_HT600
                             + DQMOffline_Ele15_HT450
                             + DQMOffline_Ele50_HT450
                             + DQMOffline_Mu15_HT600
@@ -199,7 +201,7 @@ LepHTMonitor = cms.Sequence( DQMOffline_Ele15_HT600
                             + DQMOffline_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT350
                             + DQMOffline_DoubleMu4_Mass8_PFHT350
                             + DQMOffline_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT350,
-                            cms.Task(egmGsfElectronIDsForDQM) # Use of electron VID requires this module being executed first
+                              cms.Task(egmGsfElectronIDsForDQM) # Use of electron VID requires this module being executed first
 )
 
 LepHTClient = cms.Sequence(  DQMOffline_LepHT_POSTPROCESSING )

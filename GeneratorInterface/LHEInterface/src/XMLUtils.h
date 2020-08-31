@@ -37,12 +37,13 @@ class XMLDocument {
     public:
 	class Handler : public XERCES_CPP_NAMESPACE_QUALIFIER DefaultHandler {};
 
-	XMLDocument(std::auto_ptr<std::istream> &in, Handler &handler);
-	XMLDocument(std::auto_ptr<StorageWrap> &in, Handler &handler);
+	XMLDocument(std::unique_ptr<std::istream> &in, Handler &handler);
+	XMLDocument(std::unique_ptr<StorageWrap> &in, Handler &handler);
 	virtual ~XMLDocument();
 
 	bool parse();
 
+        static std::shared_ptr<void> platformHandle() { return std::make_shared<XercesPlatform>(); }
     private:
 	class XercesPlatform {
 	    public:
@@ -51,18 +52,18 @@ class XMLDocument {
 
 	    private:
 		// do not make any kind of copies
-		XercesPlatform(const XercesPlatform &orig);
-		XercesPlatform &operator = (const XercesPlatform &orig);
+		XercesPlatform(const XercesPlatform &orig) = delete;
+		XercesPlatform &operator = (const XercesPlatform &orig) = delete;
 
 		static unsigned int instances;
 	};
 
 	void init(Handler &handler);
 
-	std::auto_ptr<XercesPlatform>					platform;
+	std::unique_ptr<XercesPlatform>					platform;
 
-	std::auto_ptr<XERCES_CPP_NAMESPACE_QUALIFIER InputSource>	source;
-	std::auto_ptr<XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader>	parser;
+	std::unique_ptr<XERCES_CPP_NAMESPACE_QUALIFIER InputSource>	source;
+	std::unique_ptr<XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader>	parser;
 
 	XERCES_CPP_NAMESPACE_QUALIFIER XMLPScanToken			token;
 
@@ -115,14 +116,14 @@ class XMLInputSourceWrapper :
     public:
 	typedef typename T::Stream_t Stream_t;
 
-	XMLInputSourceWrapper(std::auto_ptr<Stream_t> &obj) : obj(obj) {}
-	virtual ~XMLInputSourceWrapper() {}
+	XMLInputSourceWrapper(std::unique_ptr<Stream_t> &obj) : obj(std::move(obj)) {}
+	~XMLInputSourceWrapper() override {}
 
-	virtual XERCES_CPP_NAMESPACE_QUALIFIER BinInputStream* makeStream() const
+	XERCES_CPP_NAMESPACE_QUALIFIER BinInputStream* makeStream() const override
 	{ return new T(*obj); }
 
     private:
-	std::auto_ptr<Stream_t>	obj;
+	std::unique_ptr<Stream_t>	obj;
 };
 
 class CBInputStream : public XERCES_CPP_NAMESPACE_QUALIFIER BinInputStream {
@@ -136,14 +137,14 @@ class CBInputStream : public XERCES_CPP_NAMESPACE_QUALIFIER BinInputStream {
 	typedef Reader Stream_t;
 
 	CBInputStream(Reader &in);
-	virtual ~CBInputStream();
+	~CBInputStream() override;
 
-	virtual XMLFilePos curPos() const override { return pos; }
+	XMLFilePos curPos() const override { return pos; }
 
-	virtual XMLSize_t readBytes(XMLByte *const buf,
+	XMLSize_t readBytes(XMLByte *const buf,
 				    const XMLSize_t size) override;
 
-        virtual const XMLCh* getContentType() const override { return 0; }
+        const XMLCh* getContentType() const override { return nullptr; }
 
     private:
 	Reader		&reader;
@@ -156,14 +157,14 @@ class STLInputStream : public XERCES_CPP_NAMESPACE_QUALIFIER BinInputStream {
 	typedef std::istream Stream_t;
 
 	STLInputStream(std::istream &in);
-	virtual ~STLInputStream();
+	~STLInputStream() override;
 
-	virtual XMLFilePos curPos() const override { return pos; }
+	XMLFilePos curPos() const override { return pos; }
 
-	virtual XMLSize_t readBytes(XMLByte *const buf,
+	XMLSize_t readBytes(XMLByte *const buf,
 				    const XMLSize_t size) override;
 
-        virtual const XMLCh* getContentType() const override { return 0; }
+        const XMLCh* getContentType() const override { return nullptr; }
 
     private:
 	std::istream	&in;
@@ -176,14 +177,14 @@ class StorageInputStream :
 	typedef StorageWrap Stream_t;
 
 	StorageInputStream(StorageWrap &in);
-	virtual ~StorageInputStream();
+	~StorageInputStream() override;
 
-	virtual XMLFilePos curPos() const override { return pos; }
+	XMLFilePos curPos() const override { return pos; }
 
-	virtual XMLSize_t readBytes(XMLByte *const buf,
+	XMLSize_t readBytes(XMLByte *const buf,
 				    const XMLSize_t size) override;
 
-        virtual const XMLCh* getContentType() const override { return 0; }
+        const XMLCh* getContentType() const override { return nullptr; }
 
     private:
 	StorageWrap	&in;

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2014 Colin Bernet
 # https://github.com/cbernet/heppy/blob/master/LICENSE
 
@@ -11,6 +12,7 @@ from event import Event
 import timeit
 import resource
 import json
+import six
 
 class Setup(object):
     '''The Looper creates a Setup object to hold information relevant during 
@@ -100,7 +102,7 @@ class Looper(object):
         if stopFlag:
             import signal
             def doSigUsr2(sig,frame):
-                print 'SIGUSR2 received, signaling graceful stop'
+                print('SIGUSR2 received, signaling graceful stop')
                 self.stopFlag.value = 1
             signal.signal(signal.SIGUSR2, doSigUsr2)
         tree_name = None
@@ -112,7 +114,7 @@ class Looper(object):
         if hasattr(config,"preprocessor") and config.preprocessor is not None :
               self.cfg_comp = config.preprocessor.run(self.cfg_comp,self.outDir,firstEvent,nEvents)
         if hasattr(self.cfg_comp,"options"):
-              print self.cfg_comp.files,self.cfg_comp.options
+              print(self.cfg_comp.files,self.cfg_comp.options)
               self.events = config.events_class(self.cfg_comp.files, tree_name,options=self.cfg_comp.options)
         else :
               self.events = config.events_class(self.cfg_comp.files, tree_name)
@@ -126,7 +128,7 @@ class Looper(object):
                 self.firstEvent = firstEvent + fineSplitIndex * self.nEvents
                 if self.firstEvent + self.nEvents >= totevents:
                     self.nEvents = totevents - self.firstEvent 
-                #print "For component %s will process %d events starting from the %d one, ending at %d excluded" % (self.cfg_comp.name, self.nEvents, self.firstEvent, self.nEvents + self.firstEvent)
+                #print("For component %s will process %d events starting from the %d one, ending at %d excluded" % (self.cfg_comp.name, self.nEvents, self.firstEvent, self.nEvents + self.firstEvent))
         # self.event is set in self.process
         self.event = None
         services = dict()
@@ -151,7 +153,7 @@ class Looper(object):
         tmpname = name
         while True and index < 2000:
             try:
-                # print 'mkdir', self.name
+                # print('mkdir '+ self.name)
                 os.mkdir( tmpname )
                 break
             except OSError:
@@ -195,25 +197,25 @@ class Looper(object):
                     self.logger.info('processing first event')
                 self.process( iEv )
                 if iEv%100 ==0:
-                    # print 'event', iEv
+                    # print('event '+ iEv)
                     if not hasattr(self,'start_time'):
-                        print 'event', iEv
+                        print('event', iEv)
                         self.start_time = timeit.default_timer()
                         self.start_time_event = iEv
                     else:
-                        print 'event %d (%.1f ev/s)' % (iEv, (iEv-self.start_time_event)/float(timeit.default_timer() - self.start_time))
+                        print('event %d (%.1f ev/s)' % (iEv, (iEv-self.start_time_event)/float(timeit.default_timer() - self.start_time)))
 
                 if at_firstEvent:
-                    self.logger.info('done')
+                    self.logger.info('done first event')
                     at_firstEvent = False
                 if iEv<self.nPrint:
-                    print self.event
+                    print(self.event)
                 if self.stopFlag and self.stopFlag.value:
-                    print 'stopping gracefully at event %d' % (iEv)
+                    print('stopping gracefully at event %d' % (iEv))
                     break
 
         except UserWarning:
-            print 'Stopped loop following a UserWarning exception'
+            print('Stopped loop following a UserWarning exception')
 
         info = self.logger.info
         warning = self.logger.warning
@@ -261,13 +263,13 @@ class Looper(object):
             if self.memReportFirstEvent >=0 and iEv >= self.memReportFirstEvent:           
                 memNow=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
                 if memNow > self.memLast :
-                   print  "Mem Jump detected before analyzer %s at event %s. RSS(before,after,difference) %s %s %s "%( analyzer.name, iEv, self.memLast, memNow, memNow-self.memLast)
+                   print("Mem Jump detected before analyzer %s at event %s. RSS(before,after,difference) %s %s %s "%( analyzer.name, iEv, self.memLast, memNow, memNow-self.memLast))
                 self.memLast=memNow
             ret = analyzer.process( self.event )
             if self.memReportFirstEvent >=0 and iEv >= self.memReportFirstEvent:           
                 memNow=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
                 if memNow > self.memLast :
-                   print "Mem Jump detected in analyzer %s at event %s. RSS(before,after,difference) %s %s %s "%( analyzer.name, iEv, self.memLast, memNow, memNow-self.memLast)
+                   print("Mem Jump detected in analyzer %s at event %s. RSS(before,after,difference) %s %s %s "%( analyzer.name, iEv, self.memLast, memNow, memNow-self.memLast))
                 self.memLast=memNow
             if self.timeReport:
                 self.timeReport[i]['events'] += 1
@@ -304,7 +306,7 @@ if __name__ == '__main__':
         jsonfilename = options.options
         jfile = open (jsonfilename, 'r')
         opts=json.loads(jfile.readline())
-        for k,v in opts.iteritems():
+        for k,v in six.iteritems(opts):
             _heppyGlobalOptions[k]=v
         jfile.close()
 

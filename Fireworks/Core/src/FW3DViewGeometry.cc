@@ -30,8 +30,6 @@
 #include "DataFormats/MuonDetId/interface/GEMDetId.h"
 #include "DataFormats/MuonDetId/interface/ME0DetId.h"
 
-#include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
-#include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
 //
 // constants, enums and typedefs
 //
@@ -50,7 +48,8 @@ FW3DViewGeometry::FW3DViewGeometry(const fireworks::Context& context):
    m_pixelBarrelElements(nullptr),
    m_pixelEndcapElements(nullptr),
    m_trackerBarrelElements(nullptr),
-   m_trackerEndcapElements(nullptr)
+   m_trackerEndcapElements(nullptr),
+   m_HGCalEEElements(nullptr), m_HGCalHSiElements(nullptr), m_HGCalHScElements(nullptr)
 {  
 
    SetElementName("3D Geometry");
@@ -299,13 +298,11 @@ FW3DViewGeometry::showPixelBarrel( bool showPixelBarrel )
 	   id != ids.end(); ++id )
       {
 	 TEveGeoShape* shape = m_geom->getEveShape( *id );
-	 PXBDetId idid = PXBDetId( *id );
-	 unsigned int layer = idid.layer();
-	 unsigned int ladder = idid.ladder();
-	 unsigned int module = idid.module();
-	 
-         shape->SetTitle( TString::Format( "PixelBarrel %d: Layer=%u, Ladder=%u, Module=%u",
-					   *id, layer, ladder, module ));
+
+	 uint32_t rawId = *id;
+         DetId did = DetId(rawId);
+         std::string title = m_geom->getTrackerTopology()->print(did);
+         shape->SetTitle( title.c_str());
 
          addToCompound(shape, kFWPixelBarrelColorIndex);
          m_pixelBarrelElements->AddElement( shape );
@@ -332,16 +329,10 @@ FW3DViewGeometry::showPixelEndcap(bool  showPixelEndcap )
 	   id != ids.end(); ++id )
       {
 	 TEveGeoShape* shape = m_geom->getEveShape( *id );
-	 PXFDetId idid = PXFDetId( *id );
-	 unsigned int side = idid.side();
-	 unsigned int disk = idid.disk();
-	 unsigned int blade = idid.blade();
-	 unsigned int panel = idid.panel();
-	 unsigned int module = idid.module();
-
-         shape->SetTitle( TString::Format( "PixelEndcap %d: Side=%u, Disk=%u, Blade=%u, Panel=%u, Module=%u",
-					   *id, side, disk, blade, panel, module ));
-	 
+         uint32_t rawId = *id;
+         DetId did = DetId(rawId);
+         std::string title = m_geom->getTrackerTopology()->print(did);
+         shape->SetTitle( title.c_str());
          addToCompound(shape, kFWPixelEndcapColorIndex);
          m_pixelEndcapElements->AddElement( shape );
       }
@@ -425,4 +416,87 @@ FW3DViewGeometry::showTrackerEndcap( bool showTrackerEndcap )
    }
 }
 
+//______________________________________________________________________________
+void 
+FW3DViewGeometry::showHGCalEE(bool showHGCalEE){
+   if( showHGCalEE && !m_HGCalEEElements ){
+      m_HGCalEEElements = new TEveElementList("HGCalEE");
+      for( const auto& id : m_geom->getMatchedIds( FWGeometry::HGCalEE ))
+      {
+         TEveGeoShape* shape = m_geom->getHGCSiliconEveShape( id );
+         const unsigned int layer = (id>>20)&0x1F;
+         shape->SetTitle(Form("HGCalEE %d", layer));
+         {
+            float color[3];
+            color[0] = color[1] = color[2] = 0.3f + 0.7f*(1.0f-layer/28.0f); 
+            color[1] = 0.5f*(layer&2U) + 0.5f*color[1];
+            const bool isFine = ((id>>26)&0x3) == 0;
+            color[0] *= isFine ? 1.0f : 1.0f;
+            color[1] *= isFine ? 1.0f : 0.4f;
+            color[2] *= isFine ? 0.0f : 0.0f;
+            shape->SetMainColorRGB( color[0], color[1], color[2] );
+            shape->SetPickable(false);
+            m_colorComp[kFwHGCalEEColorIndex]->AddElement(shape);
+         }
+         m_HGCalEEElements->AddElement( shape );
+      }
+      AddElement( m_HGCalEEElements );
+   }
+   if (m_HGCalEEElements ){
+      m_HGCalEEElements->SetRnrState( showHGCalEE );
+      gEve->Redraw3D();
+   }
+}
  
+void 
+FW3DViewGeometry::showHGCalHSi(bool showHGCalHSi){
+  if( showHGCalHSi && !m_HGCalHSiElements ){
+    m_HGCalHSiElements = new TEveElementList("HGCalHSi");
+    for( const auto& id : m_geom->getMatchedIds( FWGeometry::HGCalHSi ))
+    {
+        TEveGeoShape* shape = m_geom->getHGCSiliconEveShape( id );
+        const unsigned int layer = (id>>20)&0x1F;
+        shape->SetTitle(Form("HGCalHSi %d",layer));
+        {
+            float color[3];
+            color[0] = color[1] = color[2] = 0.3f + 0.7f*(1.0f-layer/28.0f); 
+            color[0] = 0.5f*(layer&2U) + 0.5f*color[0];
+            const bool isFine = ((id>>26)&0x3) == 0;
+            color[0] *= isFine ? 1.0f : 0.4f;
+            color[1] *= isFine ? 0.7f : 0.7f;
+            color[2] *= isFine ? 0.2f : 0.2f;
+            shape->SetMainColorRGB( color[0], color[1], color[2] );
+            shape->SetPickable(false);
+            m_colorComp[kFwHGCalHSiColorIndex]->AddElement(shape);
+        }
+        m_HGCalHSiElements->AddElement( shape );
+    }
+    AddElement( m_HGCalHSiElements );
+  }
+  if (m_HGCalHSiElements ){
+    m_HGCalHSiElements->SetRnrState( showHGCalHSi );
+    gEve->Redraw3D();
+  }
+}
+
+void FW3DViewGeometry::showHGCalHSc(bool showHGCalHSc){
+   if( showHGCalHSc && !m_HGCalHScElements )
+   {
+      m_HGCalHScElements = new TEveElementList( "HGCalHSc" );
+      std::vector<unsigned int> ids = m_geom->getMatchedIds( FWGeometry::HGCalHSc );
+      for( const auto& id : m_geom->getMatchedIds( FWGeometry::HGCalHSc ))
+      {
+        TEveGeoShape* shape = m_geom->getHGCScintillatorEveShape( id );
+        const unsigned int layer = (id>>17)&0x1F;       
+        shape->SetTitle(Form("HGCalHSc %d", layer));
+        addToCompound(shape, kFwHGCalHScColorIndex);
+        m_HGCalHScElements->AddElement( shape );
+      }
+      AddElement( m_HGCalHScElements );
+   }
+   if( m_HGCalHScElements )
+   {
+      m_HGCalHScElements->SetRnrState( showHGCalHSc );
+      gEve->Redraw3D();
+   }
+}

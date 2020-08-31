@@ -10,7 +10,7 @@
 #include "DataFormats/FWLite/interface/InputSource.h"
 #include "DataFormats/FWLite/interface/OutputFiles.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/PythonParameterSet/interface/MakeParameterSets.h"
+#include "FWCore/ParameterSetReader/interface/ParameterSetReader.h"
 
 #include "TStopwatch.h"
 #include "PhysicsTools/FWLite/interface/WSelector.h"
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   WSelector wSelector( selection ); pat::strbitset wSelectorReturns = wSelector.getBitTemplate();
   
   // book a set of histograms
-  fwlite::TFileService fs = fwlite::TFileService(outputHandler_.file().c_str());
+  fwlite::TFileService fs = fwlite::TFileService(outputHandler_.file());
   TFileDirectory theDir = fs.mkdir("analyzeBasicPat");
   TH1F* muonPt_  = theDir.make<TH1F>("muonPt", "pt",    100,  0.,300.);
   TH1F* muonEta_ = theDir.make<TH1F>("muonEta","eta",   100, -3.,  3.);

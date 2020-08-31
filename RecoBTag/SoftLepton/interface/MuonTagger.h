@@ -6,7 +6,7 @@
 #define RecoBTag_SoftLepton_MuonTagger_h
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "CommonTools/Utils/interface/TMVAEvaluator.h"
+#include "CommonTools/MVAUtils/interface/TMVAEvaluator.h"
 #include "RecoBTau/JetTagComputer/interface/JetTagComputer.h"
 #include "RecoBTag/SoftLepton/interface/LeptonSelector.h"
 #include <memory>
@@ -17,7 +17,7 @@ class MuonTagger : public JetTagComputer {
   
     MuonTagger(const edm::ParameterSet&);
     void initialize(const JetTagComputerRecord &) override;
-    virtual float discriminator(const TagInfoHelper& tagInfo) const override;
+    float discriminator(const TagInfoHelper& tagInfo) const override;
     
   private:
     btag::LeptonSelector m_selector;

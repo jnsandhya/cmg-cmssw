@@ -34,18 +34,18 @@ class ProcLikelihood : public TrainProcessor {
 
 	ProcLikelihood(const char *name, const AtomicId *id,
 	               MVATrainer *trainer);
-	virtual ~ProcLikelihood();
+	~ProcLikelihood() override;
 
-	virtual void configure(DOMElement *elem) override;
-	virtual Calibration::VarProcessor *getCalibration() const override;
+	void configure(DOMElement *elem) override;
+	Calibration::VarProcessor *getCalibration() const override;
 
-	virtual void trainBegin() override;
-	virtual void trainData(const std::vector<double> *values,
+	void trainBegin() override;
+	void trainData(const std::vector<double> *values,
 	                       bool target, double weight) override;
-	virtual void trainEnd() override;
+	void trainEnd() override;
 
-	virtual bool load() override;
-	virtual void save() override;
+	bool load() override;
+	void save() override;
 
 	struct PDF {
 		std::vector<double>		distr;
@@ -294,8 +294,7 @@ Calibration::VarProcessor *ProcLikelihood::getCalibration() const
 		std::transform(iter->signal.distr.begin(),
 		               iter->signal.distr.end(),
 		               values.begin() + 1,
-		               std::bind1st(std::multiplies<double>(),
-		                            factor));
+		               [&](auto const& c) {return c * factor;});
 		pdf.signal.setValues(values);
 
 		pdf.background =
@@ -311,8 +310,7 @@ Calibration::VarProcessor *ProcLikelihood::getCalibration() const
 		std::transform(iter->background.distr.begin(),
 		               iter->background.distr.end(),
 		               values.begin() + 1,
-		               std::bind1st(std::multiplies<double>(),
-		                            factor));
+		               [&](auto const& c){return c * factor;});
 		pdf.background.setValues(values);
 
 		pdf.useSplines = true;
@@ -678,7 +676,7 @@ bool ProcLikelihood::load()
 				<< std::endl;
 		elem = static_cast<DOMElement*>(node);
 
-		SigBkg *pdf = 0;
+		SigBkg *pdf = nullptr;
 		switch(version) {
 		    case 1:
 			if (cur == pdfs.end())
@@ -707,7 +705,7 @@ bool ProcLikelihood::load()
 		    node && node->getNodeType() != DOMNode::ELEMENT_NODE;
 		    node = node->getNextSibling());
 		DOMElement *elemSig =
-				node ? static_cast<DOMElement*>(node) : 0;
+				node ? static_cast<DOMElement*>(node) : nullptr;
 
 		for(node = node->getNextSibling();
 		    node && node->getNodeType() != DOMNode::ELEMENT_NODE;
@@ -715,7 +713,7 @@ bool ProcLikelihood::load()
 		while(node && node->getNodeType() != DOMNode::ELEMENT_NODE)
 			node = node->getNextSibling();
 		DOMElement *elemBkg =
-				node ? static_cast<DOMElement*>(node) : 0;
+				node ? static_cast<DOMElement*>(node) : nullptr;
 
 		for(node = node->getNextSibling();
 		    node && node->getNodeType() != DOMNode::ELEMENT_NODE;

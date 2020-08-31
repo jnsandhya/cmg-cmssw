@@ -1,3 +1,4 @@
+from __future__ import print_function
 import operator
 import itertools
 import copy
@@ -76,13 +77,13 @@ class IsoTrackAnalyzer( Analyzer ):
     #------------------
     def makeIsoTrack(self, event):
 
-        
+
         event.selectedIsoTrack = []
 
         alltrack = self.handles['isolatedTracks'].product()
         for track in alltrack:
-		track.absIso = track.pfIsolationDR03().chargedHadronIso()
-		event.selectedIsoTrack.append(track)
+            track.absIso = track.pfIsolationDR03().chargedHadronIso()
+            event.selectedIsoTrack.append(track)
 
         event.selectedIsoTrack.sort(key = lambda l : l.pt(), reverse = True)
         self.counters.counter('events').inc('all events')
@@ -114,8 +115,8 @@ class IsoTrackAnalyzer( Analyzer ):
 
 ## ===> require is not the leading lepton and opposite to the leading lepton 
             if( (self.cfg_ana.doSecondVeto) and len(event.selectedLeptons)>0) : 
-               if( deltaR(event.selectedLeptons[0].eta(), event.selectedLeptons[0].phi(), track.eta(), track.phi()) <0.01) : continue
-               if ( (abs(track.pdgId())!=11) and (abs(track.pdgId())!=13) and (track.charge()*event.selectedLeptons[0].charge()) ): continue
+                if( deltaR(event.selectedLeptons[0].eta(), event.selectedLeptons[0].phi(), track.eta(), track.phi()) <0.01) : continue
+                if ( (abs(track.pdgId())!=11) and (abs(track.pdgId())!=13) and (track.charge()*event.selectedLeptons[0].charge()) ): continue
 
 
 ## ===> Redundant:: require the Track Candidate with a  minimum dz
@@ -187,19 +188,19 @@ class IsoTrackAnalyzer( Analyzer ):
 
 
     def printInfo(self, event):
-        print 'event to Veto'
-        print '----------------'
+        print('event to Veto')
+        print('----------------')
 
         if len(event.selectedIsoTrack)>0:
-            print 'lenght: ',len(event.selectedIsoTrack)
-            print 'track candidate pt: ',event.selectedIsoTrack[0].pt()
-            print 'track candidate eta: ',event.selectedIsoTrack[0].eta()
-            print 'track candidate phi: ',event.selectedIsoTrack[0].phi()
-            print 'track candidate mass: ',event.selectedIsoTrack[0].mass()
-            print 'pdgId candidate : ',event.selectedIsoTrack[0].pdgId()
-            print 'dz: ',event.selectedIsoTrack[0].dz()
-            print 'iso: ',event.selectedIsoTrack[0].absIso
-            print 'matchId: ',event.selectedIsoTrack[0].mcMatchId 
+            print('lenght: ',len(event.selectedIsoTrack))
+            print('track candidate pt: ',event.selectedIsoTrack[0].pt())
+            print('track candidate eta: ',event.selectedIsoTrack[0].eta())
+            print('track candidate phi: ',event.selectedIsoTrack[0].phi())
+            print('track candidate mass: ',event.selectedIsoTrack[0].mass())
+            print('pdgId candidate : ',event.selectedIsoTrack[0].pdgId())
+            print('dz: ',event.selectedIsoTrack[0].dz())
+            print('iso: ',event.selectedIsoTrack[0].absIso)
+            print('matchId: ',event.selectedIsoTrack[0].mcMatchId) 
                 
 #        for lepton in event.selectedLeptons:
 #            print 'good lepton type: ',lepton.pdgId()
@@ -209,7 +210,7 @@ class IsoTrackAnalyzer( Analyzer ):
 #            print 'good lepton type: ',tau.pdgId()
 #            print 'pt: ',tau.pt()
             
-        print '----------------'
+        print('----------------')
 
 
     def process(self, event):

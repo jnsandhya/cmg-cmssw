@@ -1,6 +1,40 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//  HBHEMuonOfflineAnalyzer h1(tree,outfile,rcorFile,flag,mode,maxDHB,maxDHE,
+//                             runLo,runHi,etaMin,etaMax,debug);
+//  HBHEMuonOfflineAnalyzer h1(infile,outfile,rcorFile,flag,mode,maxDHB,maxDHE,
+//                             runLo,runHi,etaMin,etaMax,debug);
+//   h1.Loop()
+//
+//   tree       TTree*       Pointer to the tree chain
+//   infile     const char*  Name of the input file
+//   outfile    const char*  Name of the output file 
+//                           (dyll_PU20_25_output_10.root)
+//   rcorFile   consr char*  name of the text file having the correction factors
+//                           as a function of run numbers to be used for raddam
+//                           correction (default="", no corr.)
+//   flag       int          Flag of 2 digits ("to"): to where "o" decides if 
+//                           corrected (1) or default (0) energy to be used;
+//                           "t" decides if all depths to be merged (1) or not
+//                           (0) (default is 0)
+//   mode       int          Geometry file used 0:(defined by maxDHB/HE);
+//                           1 (Run 1; valid till 2016); 2 (Run 2; 2018);
+//                           3 (Run 3; post LS2); 4 (2017 Plan 1);
+//                           5 (Run 4; post LS3); default (2)
+//   maxDHB     int          Maximum number of depths for HB (4)
+//   maxDHE     int          Maximum number of depths for HE (7)
+//   runLO      int          Minimum run number (1)
+//   runHI      int          Maximum run number (99999999)
+//   etaMin     int          Minimum (absolute) eta value (1)
+//   etaMax     int          Maximum (absolute) eta value (29)
+//
+///////////////////////////////////////////////////////////////////////////////
+
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <string>
 #include <TCanvas.h>
@@ -17,9 +51,9 @@
 #include <TTree.h>
 
 class HBHEMuonOfflineAnalyzer {
-
+  
 public :
-  TTree                     *fChain;   //!pointer to the analyzed TTree/TChain
+  TChain                    *fChain;   //!pointer to the analyzed TTree/TChain
   Int_t                      fCurrent; //!current Tree number in a TChain
 
   // Fixed size dimensions of array or collections stored in the TTree if any.
@@ -29,20 +63,61 @@ public :
   UInt_t                     Run_No;
   UInt_t                     LumiNumber;
   UInt_t                     BXNumber;
+  UInt_t                     GoodVertex;
+  std::vector<bool>         *PF_Muon;
+  std::vector<bool>         *Global_Muon;
+  std::vector<bool>         *Tracker_muon;
+  std::vector<bool>         *MuonIsTight;
+  std::vector<bool>         *MuonIsMedium;
   std::vector<double>       *pt_of_muon;
   std::vector<double>       *eta_of_muon;
   std::vector<double>       *phi_of_muon;
   std::vector<double>       *energy_of_muon;
   std::vector<double>       *p_of_muon;
-  std::vector<bool>         *PF_Muon;
-  std::vector<bool>         *Global_Muon;
-  std::vector<bool>         *Tracker_muon;
+  std::vector<float>        *muon_trkKink;
+  std::vector<float>        *muon_chi2LocalPosition;
+  std::vector<float>        *muon_segComp;
+  std::vector<int>          *TrackerLayer;
+  std::vector<int>          *NumPixelLayers;
+  std::vector<int>          *InnerTrackPixelHits;
+  std::vector<bool>         *innerTrack;
+  std::vector<double>       *chiTracker;
+  std::vector<double>       *DxyTracker;
+  std::vector<double>       *DzTracker;
+  std::vector<double>       *innerTrackpt;
+  std::vector<double>       *innerTracketa;
+  std::vector<double>       *innerTrackphi;
+  std::vector<double>       *tight_validFraction;
+  std::vector<bool>         *OuterTrack;
+  std::vector<double>       *OuterTrackPt;
+  std::vector<double>       *OuterTrackEta;
+  std::vector<double>       *OuterTrackPhi;
+  std::vector<double>       *OuterTrackChi;
+  std::vector<int>          *OuterTrackHits;
+  std::vector<int>          *OuterTrackRHits;
+  std::vector<bool>         *GlobalTrack;
+  std::vector<double>       *GlobalTrckPt;
+  std::vector<double>       *GlobalTrckEta;
+  std::vector<double>       *GlobalTrckPhi;
+  std::vector<int>          *Global_Muon_Hits;
+  std::vector<int>          *MatchedStations;
+  std::vector<double>       *GlobTrack_Chi;
+  std::vector<double>       *Tight_LongitudinalImpactparameter;
+  std::vector<double>       *Tight_TransImpactparameter;
+  std::vector<double>       *IsolationR04;
+  std::vector<double>       *IsolationR03;
+  std::vector<double>       *ecal_3into3;
   std::vector<double>       *hcal_3into3;
+  std::vector<double>       *tracker_3into3;
+  std::vector<bool>         *matchedId;
+  std::vector<bool>         *hcal_cellHot;
+  std::vector<double>       *ecal_3x3;
   std::vector<double>       *hcal_1x1;
+  std::vector<unsigned int> *ecal_detID;
   std::vector<unsigned int> *hcal_detID;
-  std::vector<double>       *hcal_cellHot;
-  std::vector<double>       *activeLength;
-  std::vector<double>       *activeLengthHot;
+  std::vector<unsigned int> *ehcal_detID;
+  std::vector<int>          *hcal_ieta;
+  std::vector<int>          *hcal_iphi;
   std::vector<double>       *hcal_edepth1;
   std::vector<double>       *hcal_activeL1;
   std::vector<double>       *hcal_edepthHot1;
@@ -51,6 +126,8 @@ public :
   std::vector<double>       *hcal_edepthHotCorrect1;
   std::vector<double>       *hcal_cdepthHot1;
   std::vector<double>       *hcal_cdepthHotBG1;
+  std::vector<bool>         *hcal_depthMatch1;
+  std::vector<bool>         *hcal_depthMatchHot1;
   std::vector<double>       *hcal_edepth2;
   std::vector<double>       *hcal_activeL2;
   std::vector<double>       *hcal_edepthHot2;
@@ -59,6 +136,8 @@ public :
   std::vector<double>       *hcal_edepthHotCorrect2;
   std::vector<double>       *hcal_cdepthHot2;
   std::vector<double>       *hcal_cdepthHotBG2;
+  std::vector<bool>         *hcal_depthMatch2;
+  std::vector<bool>         *hcal_depthMatchHot2;
   std::vector<double>       *hcal_edepth3;
   std::vector<double>       *hcal_activeL3;
   std::vector<double>       *hcal_edepthHot3;
@@ -67,6 +146,8 @@ public :
   std::vector<double>       *hcal_edepthHotCorrect3;
   std::vector<double>       *hcal_cdepthHot3;
   std::vector<double>       *hcal_cdepthHotBG3;
+  std::vector<bool>         *hcal_depthMatch3;
+  std::vector<bool>         *hcal_depthMatchHot3;
   std::vector<double>       *hcal_edepth4;
   std::vector<double>       *hcal_activeL4;
   std::vector<double>       *hcal_edepthHot4;
@@ -75,6 +156,8 @@ public :
   std::vector<double>       *hcal_edepthHotCorrect4;
   std::vector<double>       *hcal_cdepthHot4;
   std::vector<double>       *hcal_cdepthHotBG4;
+  std::vector<bool>         *hcal_depthMatch4;
+  std::vector<bool>         *hcal_depthMatchHot4;
   std::vector<double>       *hcal_edepth5;
   std::vector<double>       *hcal_activeL5;
   std::vector<double>       *hcal_edepthHot5;
@@ -83,6 +166,8 @@ public :
   std::vector<double>       *hcal_edepthHotCorrect5;
   std::vector<double>       *hcal_cdepthHot5;
   std::vector<double>       *hcal_cdepthHotBG5;
+  std::vector<bool>         *hcal_depthMatch5;
+  std::vector<bool>         *hcal_depthMatchHot5;
   std::vector<double>       *hcal_edepth6;
   std::vector<double>       *hcal_activeL6;
   std::vector<double>       *hcal_edepthHot6;
@@ -91,6 +176,8 @@ public :
   std::vector<double>       *hcal_edepthHotCorrect6;
   std::vector<double>       *hcal_cdepthHot6;
   std::vector<double>       *hcal_cdepthHotBG6;
+  std::vector<bool>         *hcal_depthMatch6;
+  std::vector<bool>         *hcal_depthMatchHot6;
   std::vector<double>       *hcal_edepth7;
   std::vector<double>       *hcal_activeL7;
   std::vector<double>       *hcal_edepthHot7;
@@ -99,70 +186,73 @@ public :
   std::vector<double>       *hcal_edepthHotCorrect7;
   std::vector<double>       *hcal_cdepthHot7;
   std::vector<double>       *hcal_cdepthHotBG7;
-  std::vector<double>       *TrackerLayer;
-  std::vector<double>       *matchedId;
-  std::vector<bool>         *innerTrack;
-  std::vector<double>       *innerTrackpt;
-  std::vector<double>       *innerTracketa;
-  std::vector<double>       *innerTrackphi;
-  std::vector<double>       *MatchedStat;
-  std::vector<double>       *GlobalTrckPt;
-  std::vector<double>       *GlobalTrckEta;
-  std::vector<double>       *GlobalTrckPhi;
-  std::vector<double>       *NumPixelLayers;
-  std::vector<double>       *chiTracker;
-  std::vector<double>       *DxyTracker;
-  std::vector<double>       *DzTracker;
-  std::vector<bool>         *OuterTrack;
-  std::vector<double>       *OuterTrackPt;
-  std::vector<double>       *OuterTrackEta;
-  std::vector<double>       *OuterTrackPhi;
-  std::vector<double>       *OuterTrackHits;
-  std::vector<double>       *OuterTrackRHits;
-  std::vector<double>       *OuterTrackChi;
-  std::vector<bool>         *GlobalTrack;
-  std::vector<double>       *GlobTrack_Chi;
-  std::vector<double>       *Global_Muon_Hits;
-  std::vector<double>       *MatchedStations;
-  std::vector<double>       *Global_Track_Pt;
-  std::vector<double>       *Global_Track_Eta;
-  std::vector<double>       *Global_Track_Phi;
-  std::vector<double>       *Tight_LongitudinalImpactparameter;
-  std::vector<double>       *Tight_TransImpactparameter;
-  std::vector<double>       *InnerTrackPixelHits;
-  std::vector<double>       *IsolationR04;
-  std::vector<double>       *IsolationR03;
-  std::vector<double>       *ecal_3into3;
-  std::vector<double>       *ecal_3x3;
-  std::vector<unsigned int> *ecal_detID;
-  std::vector<unsigned int> *ehcal_detID;
-  std::vector<double>       *tracker_3into3;
+  std::vector<bool>         *hcal_depthMatch7;
+  std::vector<bool>         *hcal_depthMatchHot7;
+  std::vector<double>       *activeLength;
+  std::vector<double>       *activeLengthHot;
   std::vector<int>          *hltresults;
   std::vector<std::string>  *all_triggers;
-  std::vector<double>       *muon_trkKink;
-  std::vector<double>       *muon_chi2LocalPosition;
-  std::vector<double>       *muon_segComp;
-  std::vector<double>       *tight_validFraction;
   
   // List of branches
   TBranch                   *b_Event_No;                            //!
   TBranch                   *b_Run_No;                              //!
   TBranch                   *b_LumiNumber;                          //!
   TBranch                   *b_BXNumber;                            //!
+  TBranch                   *b_GoodVertex;                          //!
+  TBranch                   *b_PF_Muon;                             //!
+  TBranch                   *b_Global_Muon;                         //!
+  TBranch                   *b_Tracker_muon;                        //!
+  TBranch                   *b_MuonIsTight;                         //!
+  TBranch                   *b_MuonIsMedium;                        //!
   TBranch                   *b_pt_of_muon;                          //!
   TBranch                   *b_eta_of_muon;                         //!
   TBranch                   *b_phi_of_muon;                         //!
   TBranch                   *b_energy_of_muon;                      //!
   TBranch                   *b_p_of_muon;                           //!
-  TBranch                   *b_PF_Muon;                             //!
-  TBranch                   *b_Global_Muon;                         //!
-  TBranch                   *b_Tracker_muon;                        //!
+  TBranch                   *b_muon_trkKink;                        //!
+  TBranch                   *b_muon_chi2LocalPosition;              //!
+  TBranch                   *b_muon_segComp;                        //!
+  TBranch                   *b_TrackerLayer;                        //!
+  TBranch                   *b_NumPixelLayers;                      //!
+  TBranch                   *b_InnerTrackPixelHits;                 //!
+  TBranch                   *b_innerTrack;                          //!
+  TBranch                   *b_chiTracker;                          //!
+  TBranch                   *b_DxyTracker;                          //!
+  TBranch                   *b_DzTracker;                           //!
+  TBranch                   *b_innerTrackpt;                        //!
+  TBranch                   *b_innerTracketa;                       //!
+  TBranch                   *b_innerTrackphi;                       //!
+  TBranch                   *b_tight_validFraction;                 //!
+  TBranch                   *b_OuterTrack;                          //!
+  TBranch                   *b_OuterTrackPt;                        //!
+  TBranch                   *b_OuterTrackEta;                       //!
+  TBranch                   *b_OuterTrackPhi;                       //!
+  TBranch                   *b_OuterTrackChi;                       //!
+  TBranch                   *b_OuterTrackHits;                      //!
+  TBranch                   *b_OuterTrackRHits;                     //!
+  TBranch                   *b_GlobalTrack;                         //!
+  TBranch                   *b_GlobalTrckPt;                        //!
+  TBranch                   *b_GlobalTrckEta;                       //!
+  TBranch                   *b_GlobalTrckPhi;                       //!
+  TBranch                   *b_Global_Muon_Hits;                    //!
+  TBranch                   *b_MatchedStations;                     //!
+  TBranch                   *b_GlobTrack_Chi;                       //!
+  TBranch                   *b_Tight_LongitudinalImpactparameter;   //!
+  TBranch                   *b_Tight_TransImpactparameter;          //!
+  TBranch                   *b_IsolationR04;                        //!
+  TBranch                   *b_IsolationR03;                        //!
+  TBranch                   *b_ecal_3into3;                         //!
   TBranch                   *b_hcal_3into3;                         //!
+  TBranch                   *b_tracker_3into3;                      //!
+  TBranch                   *b_matchedId;                           //!
+  TBranch                   *b_hcal_cellHot;                        //!
+  TBranch                   *b_ecal_3x3;                            //!
   TBranch                   *b_hcal_1x1;                            //!
   TBranch                   *b_hcal_detID;                          //!
-  TBranch                   *b_hcal_cellHot;                        //!
-  TBranch                   *b_activeLength;                        //!
-  TBranch                   *b_activeLengthHot;                     //!
+  TBranch                   *b_ecal_detID;                          //!
+  TBranch                   *b_ehcal_detID;                         //!
+  TBranch                   *b_hcal_ieta;                           //!
+  TBranch                   *b_hcal_iphi;                           //!
   TBranch                   *b_hcal_edepth1;                        //!
   TBranch                   *b_hcal_activeL1;                       //!
   TBranch                   *b_hcal_edepthHot1;                     //!
@@ -171,6 +261,8 @@ public :
   TBranch                   *b_hcal_edepthHotCorrect1;              //!
   TBranch                   *b_hcal_cdepthHot1;                     //!
   TBranch                   *b_hcal_cdepthHotBG1;                   //!
+  TBranch                   *b_hcal_depthMatch1;                    //!
+  TBranch                   *b_hcal_depthMatchHot1;                 //!
   TBranch                   *b_hcal_edepth2;                        //!
   TBranch                   *b_hcal_activeL2;                       //!
   TBranch                   *b_hcal_edepthHot2;                     //!
@@ -179,6 +271,8 @@ public :
   TBranch                   *b_hcal_edepthHotCorrect2;              //!
   TBranch                   *b_hcal_cdepthHot2;                     //!
   TBranch                   *b_hcal_cdepthHotBG2;                   //!
+  TBranch                   *b_hcal_depthMatch2;                    //!
+  TBranch                   *b_hcal_depthMatchHot2;                 //!
   TBranch                   *b_hcal_edepth3;                        //!
   TBranch                   *b_hcal_activeL3;                       //!
   TBranch                   *b_hcal_edepthHot3;                     //!
@@ -187,6 +281,8 @@ public :
   TBranch                   *b_hcal_edepthHotCorrect3;              //!
   TBranch                   *b_hcal_cdepthHot3;                     //!
   TBranch                   *b_hcal_cdepthHotBG3;                   //!
+  TBranch                   *b_hcal_depthMatch3;                    //!
+  TBranch                   *b_hcal_depthMatchHot3;                 //!
   TBranch                   *b_hcal_edepth4;                        //!
   TBranch                   *b_hcal_activeL4;                       //!
   TBranch                   *b_hcal_edepthHot4;                     //!
@@ -195,6 +291,8 @@ public :
   TBranch                   *b_hcal_edepthHotCorrect4;              //!
   TBranch                   *b_hcal_cdepthHot4;                     //!
   TBranch                   *b_hcal_cdepthHotBG4;                   //!
+  TBranch                   *b_hcal_depthMatch4;                    //!
+  TBranch                   *b_hcal_depthMatchHot4;                 //!
   TBranch                   *b_hcal_edepth5;                        //!
   TBranch                   *b_hcal_activeL5;                       //!
   TBranch                   *b_hcal_edepthHot5;                     //!
@@ -203,6 +301,8 @@ public :
   TBranch                   *b_hcal_edepthHotCorrect5;              //!
   TBranch                   *b_hcal_cdepthHot5;                     //!
   TBranch                   *b_hcal_cdepthHotBG5;                   //!
+  TBranch                   *b_hcal_depthMatch5;                    //!
+  TBranch                   *b_hcal_depthMatchHot5;                 //!
   TBranch                   *b_hcal_edepth6;                        //!
   TBranch                   *b_hcal_activeL6;                       //!
   TBranch                   *b_hcal_edepthHot6;                     //!
@@ -211,6 +311,8 @@ public :
   TBranch                   *b_hcal_edepthHotCorrect6;              //!
   TBranch                   *b_hcal_cdepthHot6;                     //!
   TBranch                   *b_hcal_cdepthHotBG6;                   //!
+  TBranch                   *b_hcal_depthMatch6;                    //!
+  TBranch                   *b_hcal_depthMatchHot6;                 //!
   TBranch                   *b_hcal_edepth7;                        //!
   TBranch                   *b_hcal_activeL7;                       //!
   TBranch                   *b_hcal_edepthHot7;                     //!
@@ -219,100 +321,93 @@ public :
   TBranch                   *b_hcal_edepthHotCorrect7;              //!
   TBranch                   *b_hcal_cdepthHot7;                     //!
   TBranch                   *b_hcal_cdepthHotBG7;                   //!
-  TBranch                   *b_TrackerLayer;                        //!
-  TBranch                   *b_matchedId;                           //!
-  TBranch                   *b_innerTrack;                          //!
-  TBranch                   *b_innerTrackpt;                        //!
-  TBranch                   *b_innerTracketa;                       //!
-  TBranch                   *b_innerTrackphi;                       //!
-  TBranch                   *b_MatchedStat;                         //!
-  TBranch                   *b_GlobalTrckPt;                        //!
-  TBranch                   *b_GlobalTrckEta;                       //!
-  TBranch                   *b_GlobalTrckPhi;                       //!
-  TBranch                   *b_NumPixelLayers;                      //!
-  TBranch                   *b_chiTracker;                          //!
-  TBranch                   *b_DxyTracker;                          //!
-  TBranch                   *b_DzTracker;                           //!
-  TBranch                   *b_OuterTrack;                          //!
-  TBranch                   *b_OuterTrackPt;                        //!
-  TBranch                   *b_OuterTrackEta;                       //!
-  TBranch                   *b_OuterTrackPhi;                       //!
-  TBranch                   *b_OuterTrackHits;                      //!
-  TBranch                   *b_OuterTrackRHits;                     //!
-  TBranch                   *b_OuterTrackChi;                       //!
-  TBranch                   *b_GlobalTrack;                         //!
-  TBranch                   *b_GlobTrack_Chi;                       //!
-  TBranch                   *b_Global_Muon_Hits;                    //!
-  TBranch                   *b_MatchedStations;                     //!
-  TBranch                   *b_Global_Track_Pt;                     //!
-  TBranch                   *b_Global_Track_Eta;                    //!
-  TBranch                   *b_Global_Track_Phi;                    //!
-  TBranch                   *b_Tight_LongitudinalImpactparameter;   //!
-  TBranch                   *b_Tight_TransImpactparameter;          //!
-  TBranch                   *b_InnerTrackPixelHits;                 //!
-  TBranch                   *b_IsolationR04;                        //!
-  TBranch                   *b_IsolationR03;                        //!
-  TBranch                   *b_ecal_3into3;                         //!
-  TBranch                   *b_ecal_3x3;                            //!
-  TBranch                   *b_ecal_detID;                          //!
-  TBranch                   *b_ehcal_detID;                         //!
-  TBranch                   *b_tracker_3into3;                      //!
+  TBranch                   *b_hcal_depthMatch7;                    //!
+  TBranch                   *b_hcal_depthMatchHot7;                 //!
+  TBranch                   *b_activeLength;                        //!
+  TBranch                   *b_activeLengthHot;                     //!
   TBranch                   *b_hltresults;                          //!
   TBranch                   *b_all_triggers;                        //!
-  TBranch                   *b_muon_trkKink;                        //!
-  TBranch                   *b_muon_chi2LocalPosition;              //!
-  TBranch                   *b_muon_segComp;                        //!
-  TBranch                   *b_tight_validFraction;                 //!
 
   
-  HBHEMuonOfflineAnalyzer(TTree *tree=0, const char *outfile="dyll_PU20_25_output_10.root", int flag=0, int mode=4, int maxDHB=5, int maxDHE=7, int runLo=297494, int runHi=99999999);
-  HBHEMuonOfflineAnalyzer(const char *infile, const char *outfile="dyll_PU20_25_output_10.root", int flag=0, int mode=4, int maxDHB=5, int maxDHE=7, int runLo=297494, int runHi=99999999);
+  HBHEMuonOfflineAnalyzer(TChain *tree=0, 
+			  const char* outfile="dyll_PU20_25_output_10.root", 
+			  const char* rcorFileName="", int flag=0, int mode=2,
+			  int maxDHB=4, int maxDHE=7, int runLo=1,
+			  int runHi=99999999, int etaMin=1, int etaMax=29,
+			  bool debug=false);
+  HBHEMuonOfflineAnalyzer(const char* infile, 
+			  const char* outfile="dyll_PU20_25_output_10.root", 
+			  const char* rcorFileName="", int flag=0, int mode=2, 
+			  int maxDHB=4, int maxDHE=7, int runLo=1, 
+			  int runHi=99999999, int etaMin=1, int etaMax=29,
+			  bool debug=false);
   // mode of LHC is kept 1 for 2017 scenario as no change in depth segmentation
   // mode of LHC is 0 for 2019
   virtual ~HBHEMuonOfflineAnalyzer();
-  virtual Int_t    Cut(Long64_t entry);
-  virtual Int_t    GetEntry(Long64_t entry);
-  virtual Long64_t LoadTree(Long64_t entry);
-  virtual void     Init(TTree *tree, int flag, int mode, int maxDHB, int maxDHE,
-			int runLo, int runHi);
-  virtual void     Loop();
-  virtual Bool_t   Notify();
-  virtual void     Show(Long64_t entry = -1);
-  
-  std::vector<std::string> firedTriggers;
-  void BookHistograms(const char* );
-  void WriteHistograms();
-  bool LooseMuon(unsigned int ml);
-  bool tightMuon(unsigned int ml);
-  bool SoftMuon(unsigned int ml);
-  bool mediumMuon2016(unsigned int ml);
-  void etaPhiHcal(unsigned int detId, int &eta, int &phi, int &depth);
-  void etaPhiEcal(unsigned int detId, int& type, int& zside,
-		  int& etaX, int& phiY, int& plane, int& strip);
-  void calculateP(double pt, double eta, double& pM);
-  void close();
-  int  NDepthBins(int ieta, int iphi);
-  int  NPhiBins(int ieta);
-  
-private:
-  static const bool debug_=false;
-  static const int maxDep=7;
-  static const int maxEta=29;
-  static const int maxPhi=72;
-  //3x16x72x2 + 5x4x72x2 + 5x9x36x2
-  static const int maxHist=20000;//13032;
-  static const int nCut_ = 1;
-  int    modeLHC, maxDepthHB_, maxDepthHE_, maxDepth_, runLo_, runHi_;
-  bool   useCorrect_, mergeDepth_;
-  int    nHist, nDepths[maxEta], nDepthsPhi[maxEta],indxEta[maxEta][maxDep][maxPhi];
-  TFile *output_file;
 
-  TTree              *outtree_;
-  int                 t_ieta, t_iphi;
-  double              t_p;
-  std::vector<double> t_ene, t_actl, t_encor;
+  virtual Int_t            Cut(Long64_t entry);
+  virtual Int_t            GetEntry(Long64_t entry);
+  virtual Long64_t         LoadTree(Long64_t entry);
+  virtual void             Init(TChain *tree, const char* rcorFileName, 
+				int flag, int mode, int maxDHB, int maxDHE,
+				int runLo, int runHi, int etaMin, int etaMax);
+  virtual void             Loop();
+  virtual Bool_t           Notify();
+  virtual void             Show(Long64_t entry = -1);
   
-  TH1D  *h_Pt_Muon[3], *h_Eta_Muon[3], *h_Phi_Muon[3], *h_P_Muon[3];
+  bool                     fillChain(TChain *chain, const char* inputFileList);
+  bool                     readCorr(const char* rcorFileName);
+  void                     bookHistograms(const char* );
+  bool                     getEnergy(unsigned int ml, int dep, double& enb,
+				     double& enu, double& enh, double& enc,
+				     double& chgS, double& chgB, double& actL);
+  void                     writeHistograms();
+  bool                     looseMuon(unsigned int ml);
+  bool                     tightMuon(unsigned int ml);
+  bool                     softMuon(unsigned int ml);
+  bool                     mediumMuon2016(unsigned int ml);
+  void                     etaPhiHcal(unsigned int detId, int &eta, 
+				      int &phi, int &depth);
+  void                     etaPhiEcal(unsigned int detId, int& type, int& zside,
+				      int& etaX, int& phiY, int& plane, 
+				      int& strip);
+  void                     calculateP(double pt, double eta, double& pM);
+  void                     close();
+  int                      nDepthBins(int ieta, int iphi);
+  int                      nPhiBins(int ieta);
+  float                    getCorr(int run, unsigned int id);
+  std::vector<std::string> splitString(const std::string&);
+  unsigned int             getDetIdHBHE(int ieta, int iphi, int depth);
+  unsigned int             getDetId(int subdet, int ieta, int iphi, int depth);
+  unsigned int             correctDetId(const unsigned int& detId);
+  void                     unpackDetId(unsigned int detId, int& subdet,
+				       int& zside, int& ieta, int& iphi,
+				       int& depth);
+private:
+  static const int              maxDep=7;
+  static const int              maxEta=29;
+  static const int              maxPhi=72;
+  //3x16x72x2 + 5x4x72x2 + 5x9x36x2
+  static const int              maxHist=20000;//13032;
+  static const int              nCut_=1;
+  static const unsigned int     nmax_=10;
+  const bool                    debug_;
+  int                           modeLHC_, maxDepthHB_, maxDepthHE_, maxDepth_;
+  int                           runLo_, runHi_, etaMin_, etaMax_;
+  bool                          cFactor_, useCorrect_, mergeDepth_;
+  int                           nHist, nDepths[maxEta], nDepthsPhi[maxEta];
+  int                           indxEta[maxEta][maxDep][maxPhi];
+  TFile                        *output_file;
+  std::map<unsigned int,float>  corrFac_[nmax_];
+  std::vector<int>              runlow_;
+
+  TTree                        *outtree_;
+  int                           t_ieta, t_iphi, t_nvtx;
+  double                        t_p;
+  std::vector<double>           t_ene, t_enec, t_actln, t_charge;
+  std::vector<int>              t_depth;
+  
+  TH1D  *h_evtype, *h_Pt_Muon[3], *h_Eta_Muon[3], *h_Phi_Muon[3], *h_P_Muon[3];
   TH1D  *h_PF_Muon[3], *h_GlobTrack_Chi[3], *h_Global_Muon_Hits[3];
   TH1D  *h_MatchedStations[3], *h_Tight_TransImpactparameter[3];
   TH1D  *h_Tight_LongitudinalImpactparameter[3], *h_InnerTrackPixelHits[3];
@@ -335,33 +430,47 @@ private:
   TProfile *h_HotWithoutIso_MuonEnergy_eta[3][maxDep], *h_HotWithoutIso_MuonEnergy_phi[3][maxDep], *h_HotWithoutIso_MuonEnergy_muon_eta[3][maxDep];
   
 };
-HBHEMuonOfflineAnalyzer::HBHEMuonOfflineAnalyzer(TTree *tree,
+
+
+HBHEMuonOfflineAnalyzer::HBHEMuonOfflineAnalyzer(TChain *tree,
 						 const char* outFileName, 
-						 int flag, int mode, 
+						 const char* rcorFileName,
+						 int flag, int mode,
 						 int maxDHB, int maxDHE,
-						 int runLo, int runHi) {
+						 int runLo, int runHi,
+						 int etaMin, int etaMax,
+						 bool deb) : debug_(deb),
+							     cFactor_(false) {
   
-  Init(tree, flag, mode, maxDHB, maxDHE, runLo, runHi);
+  Init(tree, rcorFileName, flag, mode, maxDHB, maxDHE, runLo, runHi, 
+       etaMin, etaMax);
   
   //Now book histograms
-  BookHistograms(outFileName);
+  bookHistograms(outFileName);
 }
 
 HBHEMuonOfflineAnalyzer::HBHEMuonOfflineAnalyzer(const char* infile,
 						 const char* outFileName, 
-						 int flag, int mode, 
+						 const char* rcorFileName,
+						 int flag, int mode,
 						 int maxDHB, int maxDHE,
-						 int runLo, int runHi) {
+						 int runLo,  int runHi,
+						 int etaMin, int etaMax,
+						 bool deb) : debug_(deb),
+							     cFactor_(false) {
   
-  TFile      *f   = new TFile(infile);
-  TDirectory *dir = (TDirectory*)f->Get("hcalHBHEMuon");
-  TTree *tree(0);
-  dir->GetObject("TREE",tree);
-
-  Init(tree, flag, mode, maxDHB, maxDHE, runLo, runHi);
+  TChain *chain = new TChain("hcalHBHEMuon/TREE");
+  if (!fillChain(chain,infile)) {
+    std::cout << "*****No valid tree chain can be obtained*****" << std::endl;
+  } else {
+    std::cout << "Proceed with a tree chain with " << chain->GetEntries()
+	      << " entries" << std::endl;
+    Init(chain, rcorFileName, flag, mode, maxDHB, maxDHE, runLo, runHi, 
+	 etaMin, etaMax);
   
-  //Now book histograms
-  BookHistograms(outFileName);
+    //Now book histograms
+    bookHistograms(outFileName);
+  }
 }
 
 HBHEMuonOfflineAnalyzer::~HBHEMuonOfflineAnalyzer() {
@@ -394,17 +503,26 @@ Long64_t HBHEMuonOfflineAnalyzer::LoadTree(Long64_t entry) {
   return centry;
 }
 
-void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
-				   int maxDHE, int runLo, int runHi) {
+void HBHEMuonOfflineAnalyzer::Init(TChain *tree, const char* rcorFileName,
+				   int flag, int mode, int maxDHB, int maxDHE,
+				   int runLo, int runHi, int etaMin,
+				   int etaMax) {
   
-  modeLHC     = mode;
+  modeLHC_    = mode;
   maxDepthHB_ = maxDHB;
   maxDepthHE_ = maxDHE;
   maxDepth_   = (maxDepthHB_ > maxDepthHE_) ? maxDepthHB_ : maxDepthHE_;
   runLo_      = runLo;
   runHi_      = runHi;
+  etaMin_     = (etaMin >   0) ? etaMin : 1;
+  etaMax_     = (etaMax <= 29) ? etaMax : 29;
+  if (etaMax_ <= etaMin_) {
+    if (etaMax_ == 29) etaMin_ = etaMax_ - 1;
+    else               etaMax_ = etaMin_ + 1;
+  }
   useCorrect_ = ((flag%10) > 0);
   mergeDepth_ = (((flag/10)%10) > 0);
+  if (std::string(rcorFileName) != "") cFactor_ = readCorr(rcorFileName);
   
   // The Init() function is called when the selector needs to initialize
   // a new tree or chain. Typically here the branch addresses and branch
@@ -416,120 +534,130 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   
   // Set object pointer
 
-  pt_of_muon = 0;
-  eta_of_muon = 0;
-  phi_of_muon = 0;
-  energy_of_muon = 0;
-  p_of_muon = 0;
-  PF_Muon = 0;
-  Global_Muon = 0;
-  Tracker_muon = 0;
-  hcal_3into3 = 0;
-  hcal_1x1 = 0;
-  hcal_detID = 0;
-  hcal_cellHot = 0;
-  activeLength = 0;
-  activeLengthHot = 0;
-  hcal_edepth1 = 0;
-  hcal_activeL1 = 0;
-  hcal_edepthHot1 = 0;
-  hcal_activeHotL1 = 0;
-  hcal_edepthCorrect1 = 0;
-  hcal_edepthHotCorrect1 = 0;
-  hcal_cdepthHot1 = 0;
-  hcal_cdepthHotBG1 = 0;
-  hcal_edepth2 = 0;
-  hcal_activeL2 = 0;
-  hcal_edepthHot2 = 0;
-  hcal_activeHotL2 = 0;
-  hcal_edepthCorrect2 = 0;
-  hcal_edepthHotCorrect2 = 0;
-  hcal_cdepthHot2 = 0;
-  hcal_cdepthHotBG2 = 0;
-  hcal_edepth3 = 0;
-  hcal_activeL3 = 0;
-  hcal_edepthHot3 = 0;
-  hcal_activeHotL3 = 0;
-  hcal_edepthCorrect3 = 0;
-  hcal_edepthHotCorrect3 = 0;
-  hcal_cdepthHot3 = 0;
-  hcal_cdepthHotBG3 = 0;
-  hcal_edepth4 = 0;
-  hcal_activeL4 = 0;
-  hcal_edepthHot4 = 0;
-  hcal_activeHotL4 = 0;
-  hcal_edepthCorrect4 = 0;
-  hcal_edepthHotCorrect4 = 0;
-  hcal_cdepthHot4 = 0;
-  hcal_cdepthHotBG4 = 0;
-  hcal_edepth5 = 0;
-  hcal_activeL5 = 0;
-  hcal_edepthHot5 = 0;
-  hcal_activeHotL5 = 0;
-  hcal_edepthCorrect5 = 0;
-  hcal_edepthHotCorrect5 = 0;
-  hcal_cdepthHot5 = 0;
-  hcal_cdepthHotBG5 = 0;
-  hcal_edepth6 = 0;
-  hcal_activeL6 = 0;
-  hcal_edepthHot6 = 0;
-  hcal_activeHotL6 = 0;
-  hcal_edepthCorrect6 = 0;
-  hcal_edepthHotCorrect6 = 0;
-  hcal_cdepthHot6 = 0;
-  hcal_cdepthHotBG6 = 0;
-  hcal_edepth7 = 0;
-  hcal_activeL7 = 0;
-  hcal_edepthHot7 = 0;
-  hcal_activeHotL7 = 0;
-  hcal_edepthCorrect7 = 0;
-  hcal_edepthHotCorrect7 = 0;
-  hcal_cdepthHot7 = 0;
-  hcal_cdepthHotBG7 = 0;
-  TrackerLayer = 0;
-  matchedId = 0;
-  innerTrack = 0;
-  innerTrackpt = 0;
-  innerTracketa = 0;
-  innerTrackphi = 0;
-  MatchedStat = 0;
-  GlobalTrckPt = 0;
-  GlobalTrckEta = 0;
-  GlobalTrckPhi = 0;
-  NumPixelLayers = 0;
-  chiTracker = 0;
-  DxyTracker = 0;
-  DzTracker = 0;
-  OuterTrack = 0;
-  OuterTrackPt = 0;
-  OuterTrackEta = 0;
-  OuterTrackPhi = 0;
-  OuterTrackHits = 0;
-  OuterTrackRHits = 0;
-  OuterTrackChi = 0;
-  GlobalTrack = 0;
-  GlobTrack_Chi = 0;
-  Global_Muon_Hits = 0;
-  MatchedStations = 0;
-  Global_Track_Pt = 0;
-  Global_Track_Eta = 0;
-  Global_Track_Phi = 0;
+  PF_Muon                           = 0;
+  Global_Muon                       = 0;
+  Tracker_muon                      = 0;
+  pt_of_muon                        = 0;
+  eta_of_muon                       = 0;
+  phi_of_muon                       = 0;
+  energy_of_muon                    = 0;
+  p_of_muon                         = 0;
+  muon_trkKink                      = 0;
+  muon_chi2LocalPosition            = 0;
+  muon_segComp                      = 0;
+  TrackerLayer                      = 0;
+  NumPixelLayers                    = 0;
+  InnerTrackPixelHits               = 0;
+  innerTrack                        = 0;
+  chiTracker                        = 0;
+  DxyTracker                        = 0;
+  DzTracker                         = 0;
+  innerTrackpt                      = 0;
+  innerTracketa                     = 0;
+  innerTrackphi                     = 0;
+  tight_validFraction               = 0;
+  OuterTrack                        = 0;
+  OuterTrackPt                      = 0;
+  OuterTrackEta                     = 0;
+  OuterTrackPhi                     = 0;
+  OuterTrackHits                    = 0;
+  OuterTrackRHits                   = 0;
+  OuterTrackChi                     = 0;
+  GlobalTrack                       = 0;
+  GlobalTrckPt                      = 0;
+  GlobalTrckEta                     = 0;
+  GlobalTrckPhi                     = 0;
+  Global_Muon_Hits                  = 0;
+  MatchedStations                   = 0;
+  GlobTrack_Chi                     = 0;
   Tight_LongitudinalImpactparameter = 0;
-  Tight_TransImpactparameter = 0;
-  InnerTrackPixelHits = 0;
-  IsolationR04 = 0;
-  IsolationR03 = 0;
-  ecal_3into3 = 0;
-  ecal_3x3 = 0;
-  ecal_detID = 0;
-  ehcal_detID = 0;
-  tracker_3into3 = 0;
-  hltresults = 0;
-  all_triggers = 0;
-  muon_trkKink = 0;
-  muon_chi2LocalPosition = 0;
-  muon_segComp = 0;
-  tight_validFraction = 0;
+  Tight_TransImpactparameter        = 0;
+  IsolationR04                      = 0;
+  IsolationR03                      = 0;
+  ecal_3into3                       = 0;
+  hcal_3into3                       = 0;
+  tracker_3into3                    = 0;
+  matchedId                         = 0;
+  hcal_cellHot                      = 0;
+  ecal_3x3                          = 0;
+  hcal_1x1                          = 0;
+  ecal_detID                        = 0;
+  hcal_detID                        = 0;
+  ehcal_detID                       = 0;
+  hcal_edepth1                      = 0;
+  hcal_activeL1                     = 0;
+  hcal_edepthHot1                   = 0;
+  hcal_activeHotL1                  = 0;
+  hcal_edepthCorrect1               = 0;
+  hcal_edepthHotCorrect1            = 0;
+  hcal_cdepthHot1                   = 0;
+  hcal_cdepthHotBG1                 = 0;
+  hcal_depthMatch1                  = 0;
+  hcal_depthMatchHot1               = 0;
+  hcal_edepth2                      = 0;
+  hcal_activeL2                     = 0;
+  hcal_edepthHot2                   = 0;
+  hcal_activeHotL2                  = 0;
+  hcal_edepthCorrect2               = 0;
+  hcal_edepthHotCorrect2            = 0;
+  hcal_cdepthHot2                   = 0;
+  hcal_cdepthHotBG2                 = 0;
+  hcal_depthMatch2                  = 0;
+  hcal_depthMatchHot2               = 0;
+  hcal_edepth3                      = 0;
+  hcal_activeL3                     = 0;
+  hcal_edepthHot3                   = 0;
+  hcal_activeHotL3                  = 0;
+  hcal_edepthCorrect3               = 0;
+  hcal_edepthHotCorrect3            = 0;
+  hcal_cdepthHot3                   = 0;
+  hcal_cdepthHotBG3                 = 0;
+  hcal_depthMatch3                  = 0;
+  hcal_depthMatchHot3               = 0;
+  hcal_edepth4                      = 0;
+  hcal_activeL4                     = 0;
+  hcal_edepthHot4                   = 0;
+  hcal_activeHotL4                  = 0;
+  hcal_edepthCorrect4               = 0;
+  hcal_edepthHotCorrect4            = 0;
+  hcal_cdepthHot4                   = 0;
+  hcal_cdepthHotBG4                 = 0;
+  hcal_depthMatch4                  = 0;
+  hcal_depthMatchHot4               = 0;
+  hcal_edepth5                      = 0;
+  hcal_activeL5                     = 0;
+  hcal_edepthHot5                   = 0;
+  hcal_activeHotL5                  = 0;
+  hcal_edepthCorrect5               = 0;
+  hcal_edepthHotCorrect5            = 0;
+  hcal_cdepthHot5                   = 0;
+  hcal_cdepthHotBG5                 = 0;
+  hcal_depthMatch5                  = 0;
+  hcal_depthMatchHot5               = 0;
+  hcal_edepth6                      = 0;
+  hcal_activeL6                     = 0;
+  hcal_edepthHot6                   = 0;
+  hcal_activeHotL6                  = 0;
+  hcal_edepthCorrect6               = 0;
+  hcal_edepthHotCorrect6            = 0;
+  hcal_cdepthHot6                   = 0;
+  hcal_cdepthHotBG6                 = 0;
+  hcal_depthMatch6                  = 0;
+  hcal_depthMatchHot6               = 0;
+  hcal_edepth7                      = 0;
+  hcal_activeL7                     = 0;
+  hcal_edepthHot7                   = 0;
+  hcal_activeHotL7                  = 0;
+  hcal_edepthCorrect7               = 0;
+  hcal_edepthHotCorrect7            = 0;
+  hcal_cdepthHot7                   = 0;
+  hcal_cdepthHotBG7                 = 0;
+  hcal_depthMatch7                  = 0;
+  hcal_depthMatchHot7               = 0;
+  activeLength                      = 0;
+  activeLengthHot                   = 0;
+  hltresults                        = 0;
+  all_triggers                      = 0;
   // Set branch addresses and branch pointers
   if (!tree) return;
   fChain = tree;
@@ -540,20 +668,61 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   fChain->SetBranchAddress("Run_No", &Run_No, &b_Run_No);
   fChain->SetBranchAddress("LumiNumber", &LumiNumber, &b_LumiNumber);
   fChain->SetBranchAddress("BXNumber", &BXNumber, &b_BXNumber);
+  fChain->SetBranchAddress("GoodVertex", &GoodVertex, &b_GoodVertex);
+  fChain->SetBranchAddress("PF_Muon", &PF_Muon, &b_PF_Muon);
+  fChain->SetBranchAddress("Global_Muon", &Global_Muon, &b_Global_Muon);
+  fChain->SetBranchAddress("Tracker_muon", &Tracker_muon, &b_Tracker_muon);
+  fChain->SetBranchAddress("MuonIsTight", &MuonIsTight, &b_MuonIsTight);
+  fChain->SetBranchAddress("MuonIsMedium", &MuonIsMedium, &b_MuonIsMedium);
   fChain->SetBranchAddress("pt_of_muon", &pt_of_muon, &b_pt_of_muon);
   fChain->SetBranchAddress("eta_of_muon", &eta_of_muon, &b_eta_of_muon);
   fChain->SetBranchAddress("phi_of_muon", &phi_of_muon, &b_phi_of_muon);
   fChain->SetBranchAddress("energy_of_muon", &energy_of_muon, &b_energy_of_muon);
   fChain->SetBranchAddress("p_of_muon", &p_of_muon, &b_p_of_muon);
-  fChain->SetBranchAddress("PF_Muon", &PF_Muon, &b_PF_Muon);
-  fChain->SetBranchAddress("Global_Muon", &Global_Muon, &b_Global_Muon);
-  fChain->SetBranchAddress("Tracker_muon", &Tracker_muon, &b_Tracker_muon);
+  fChain->SetBranchAddress("muon_trkKink", &muon_trkKink, &b_muon_trkKink);
+  fChain->SetBranchAddress("muon_chi2LocalPosition", &muon_chi2LocalPosition, &b_muon_chi2LocalPosition);
+  fChain->SetBranchAddress("muon_segComp", &muon_segComp, &b_muon_segComp);
+  fChain->SetBranchAddress("TrackerLayer", &TrackerLayer, &b_TrackerLayer);
+  fChain->SetBranchAddress("NumPixelLayers", &NumPixelLayers, &b_NumPixelLayers);
+  fChain->SetBranchAddress("InnerTrackPixelHits", &InnerTrackPixelHits, &b_InnerTrackPixelHits);
+  fChain->SetBranchAddress("innerTrack", &innerTrack, &b_innerTrack);
+  fChain->SetBranchAddress("chiTracker", &chiTracker, &b_chiTracker);
+  fChain->SetBranchAddress("DxyTracker", &DxyTracker, &b_DxyTracker);
+  fChain->SetBranchAddress("DzTracker", &DzTracker, &b_DzTracker);
+  fChain->SetBranchAddress("innerTrackpt", &innerTrackpt, &b_innerTrackpt);
+  fChain->SetBranchAddress("innerTracketa", &innerTracketa, &b_innerTracketa);
+  fChain->SetBranchAddress("innerTrackphi", &innerTrackphi, &b_innerTrackphi);
+  fChain->SetBranchAddress("tight_validFraction", &tight_validFraction, &b_tight_validFraction);
+  fChain->SetBranchAddress("OuterTrack", &OuterTrack, &b_OuterTrack);
+  fChain->SetBranchAddress("OuterTrackPt", &OuterTrackPt, &b_OuterTrackPt);
+  fChain->SetBranchAddress("OuterTrackEta", &OuterTrackEta, &b_OuterTrackEta);
+  fChain->SetBranchAddress("OuterTrackPhi", &OuterTrackPhi, &b_OuterTrackPhi);
+  fChain->SetBranchAddress("OuterTrackChi", &OuterTrackChi, &b_OuterTrackChi);
+  fChain->SetBranchAddress("OuterTrackHits", &OuterTrackHits, &b_OuterTrackHits);
+  fChain->SetBranchAddress("OuterTrackRHits", &OuterTrackRHits, &b_OuterTrackRHits);
+  fChain->SetBranchAddress("GlobalTrack", &GlobalTrack, &b_GlobalTrack);
+  fChain->SetBranchAddress("GlobalTrckPt", &GlobalTrckPt, &b_GlobalTrckPt);
+  fChain->SetBranchAddress("GlobalTrckEta", &GlobalTrckEta, &b_GlobalTrckEta);
+  fChain->SetBranchAddress("GlobalTrckPhi", &GlobalTrckPhi, &b_GlobalTrckPhi);
+  fChain->SetBranchAddress("Global_Muon_Hits", &Global_Muon_Hits, &b_Global_Muon_Hits);
+  fChain->SetBranchAddress("MatchedStations", &MatchedStations, &b_MatchedStations);
+  fChain->SetBranchAddress("GlobTrack_Chi", &GlobTrack_Chi, &b_GlobTrack_Chi);
+  fChain->SetBranchAddress("Tight_LongitudinalImpactparameter", &Tight_LongitudinalImpactparameter, &b_Tight_LongitudinalImpactparameter);
+  fChain->SetBranchAddress("Tight_TransImpactparameter", &Tight_TransImpactparameter, &b_Tight_TransImpactparameter);
+  fChain->SetBranchAddress("IsolationR04", &IsolationR04, &b_IsolationR04);
+  fChain->SetBranchAddress("IsolationR03", &IsolationR03, &b_IsolationR03);
+  fChain->SetBranchAddress("ecal_3into3", &ecal_3into3, &b_ecal_3into3);
   fChain->SetBranchAddress("hcal_3into3", &hcal_3into3, &b_hcal_3into3);
-  fChain->SetBranchAddress("hcal_1x1", &hcal_1x1, &b_hcal_1x1);
-  fChain->SetBranchAddress("hcal_detID", &hcal_detID, &b_hcal_detID);
+  fChain->SetBranchAddress("tracker_3into3", &tracker_3into3, &b_tracker_3into3);
+  fChain->SetBranchAddress("matchedId", &matchedId, &b_matchedId);
   fChain->SetBranchAddress("hcal_cellHot", &hcal_cellHot, &b_hcal_cellHot);
-  fChain->SetBranchAddress("activeLength", &activeLength, &b_activeLength);
-  fChain->SetBranchAddress("activeLengthHot", &activeLengthHot, &b_activeLengthHot);
+  fChain->SetBranchAddress("ecal_3x3", &ecal_3x3, &b_ecal_3x3);
+  fChain->SetBranchAddress("hcal_1x1", &hcal_1x1, &b_hcal_1x1);
+  fChain->SetBranchAddress("ecal_detID", &ecal_detID, &b_ecal_detID);
+  fChain->SetBranchAddress("hcal_detID", &hcal_detID, &b_hcal_detID);
+  fChain->SetBranchAddress("ehcal_detID", &ehcal_detID, &b_ehcal_detID);
+  fChain->SetBranchAddress("hcal_ieta", &hcal_ieta, &b_hcal_ieta);
+  fChain->SetBranchAddress("hcal_iphi", &hcal_iphi, &b_hcal_iphi);
   fChain->SetBranchAddress("hcal_edepth1", &hcal_edepth1, &b_hcal_edepth1);
   fChain->SetBranchAddress("hcal_activeL1", &hcal_activeL1, &b_hcal_activeL1);
   fChain->SetBranchAddress("hcal_edepthHot1", &hcal_edepthHot1, &b_hcal_edepthHot1);
@@ -562,6 +731,8 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   fChain->SetBranchAddress("hcal_edepthHotCorrect1", &hcal_edepthHotCorrect1, &b_hcal_edepthHotCorrect1);
   fChain->SetBranchAddress("hcal_cdepthHot1", &hcal_cdepthHot1, &b_hcal_cdepthHot1);
   fChain->SetBranchAddress("hcal_cdepthHotBG1", &hcal_cdepthHotBG1, &b_hcal_cdepthHotBG1);
+  fChain->SetBranchAddress("hcal_depthMatch1", &hcal_depthMatch1, &b_hcal_depthMatch1);
+  fChain->SetBranchAddress("hcal_depthMatchHot1", &hcal_depthMatchHot1, &b_hcal_depthMatchHot1);
   fChain->SetBranchAddress("hcal_edepth2", &hcal_edepth2, &b_hcal_edepth2);
   fChain->SetBranchAddress("hcal_activeL2", &hcal_activeL2, &b_hcal_activeL2);
   fChain->SetBranchAddress("hcal_edepthHot2", &hcal_edepthHot2, &b_hcal_edepthHot2);
@@ -570,6 +741,8 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   fChain->SetBranchAddress("hcal_edepthHotCorrect2", &hcal_edepthHotCorrect2, &b_hcal_edepthHotCorrect2);
   fChain->SetBranchAddress("hcal_cdepthHot2", &hcal_cdepthHot2, &b_hcal_cdepthHot2);
   fChain->SetBranchAddress("hcal_cdepthHotBG2", &hcal_cdepthHotBG2, &b_hcal_cdepthHotBG2);
+  fChain->SetBranchAddress("hcal_depthMatch2", &hcal_depthMatch2, &b_hcal_depthMatch2);
+  fChain->SetBranchAddress("hcal_depthMatchHot2", &hcal_depthMatchHot2, &b_hcal_depthMatchHot2);
   fChain->SetBranchAddress("hcal_edepth3", &hcal_edepth3, &b_hcal_edepth3);
   fChain->SetBranchAddress("hcal_activeL3", &hcal_activeL3, &b_hcal_activeL3);
   fChain->SetBranchAddress("hcal_edepthHot3", &hcal_edepthHot3, &b_hcal_edepthHot3);
@@ -578,6 +751,8 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   fChain->SetBranchAddress("hcal_edepthHotCorrect3", &hcal_edepthHotCorrect3, &b_hcal_edepthHotCorrect3);
   fChain->SetBranchAddress("hcal_cdepthHot3", &hcal_cdepthHot3, &b_hcal_cdepthHot3);
   fChain->SetBranchAddress("hcal_cdepthHotBG3", &hcal_cdepthHotBG3, &b_hcal_cdepthHotBG3);
+  fChain->SetBranchAddress("hcal_depthMatch3", &hcal_depthMatch3, &b_hcal_depthMatch3);
+  fChain->SetBranchAddress("hcal_depthMatchHot3", &hcal_depthMatchHot3, &b_hcal_depthMatchHot3);
   fChain->SetBranchAddress("hcal_edepth4", &hcal_edepth4, &b_hcal_edepth4);
   fChain->SetBranchAddress("hcal_activeL4", &hcal_activeL4, &b_hcal_activeL4);
   fChain->SetBranchAddress("hcal_edepthHot4", &hcal_edepthHot4, &b_hcal_edepthHot4);
@@ -586,6 +761,8 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   fChain->SetBranchAddress("hcal_edepthHotCorrect4", &hcal_edepthHotCorrect4, &b_hcal_edepthHotCorrect4);
   fChain->SetBranchAddress("hcal_cdepthHot4", &hcal_cdepthHot4, &b_hcal_cdepthHot4);
   fChain->SetBranchAddress("hcal_cdepthHotBG4", &hcal_cdepthHotBG4, &b_hcal_cdepthHotBG4);
+  fChain->SetBranchAddress("hcal_depthMatch4", &hcal_depthMatch4, &b_hcal_depthMatch4);
+  fChain->SetBranchAddress("hcal_depthMatchHot4", &hcal_depthMatchHot4, &b_hcal_depthMatchHot4);
   fChain->SetBranchAddress("hcal_edepth5", &hcal_edepth5, &b_hcal_edepth5);
   fChain->SetBranchAddress("hcal_activeL5", &hcal_activeL5, &b_hcal_activeL5);
   fChain->SetBranchAddress("hcal_edepthHot5", &hcal_edepthHot5, &b_hcal_edepthHot5);
@@ -594,6 +771,8 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   fChain->SetBranchAddress("hcal_edepthHotCorrect5", &hcal_edepthHotCorrect5, &b_hcal_edepthHotCorrect5);
   fChain->SetBranchAddress("hcal_cdepthHot5", &hcal_cdepthHot5, &b_hcal_cdepthHot5);
   fChain->SetBranchAddress("hcal_cdepthHotBG5", &hcal_cdepthHotBG5, &b_hcal_cdepthHotBG5);
+  fChain->SetBranchAddress("hcal_depthMatch5", &hcal_depthMatch5, &b_hcal_depthMatch5);
+  fChain->SetBranchAddress("hcal_depthMatchHot5", &hcal_depthMatchHot5, &b_hcal_depthMatchHot5);
   fChain->SetBranchAddress("hcal_edepth6", &hcal_edepth6, &b_hcal_edepth6);
   fChain->SetBranchAddress("hcal_activeL6", &hcal_activeL6, &b_hcal_activeL6);
   fChain->SetBranchAddress("hcal_edepthHot6", &hcal_edepthHot6, &b_hcal_edepthHot6);
@@ -602,6 +781,8 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   fChain->SetBranchAddress("hcal_edepthHotCorrect6", &hcal_edepthHotCorrect6, &b_hcal_edepthHotCorrect6);
   fChain->SetBranchAddress("hcal_cdepthHot6", &hcal_cdepthHot6, &b_hcal_cdepthHot6);
   fChain->SetBranchAddress("hcal_cdepthHotBG6", &hcal_cdepthHotBG6, &b_hcal_cdepthHotBG6);
+  fChain->SetBranchAddress("hcal_depthMatch6", &hcal_depthMatch6, &b_hcal_depthMatch6);
+  fChain->SetBranchAddress("hcal_depthMatchHot6", &hcal_depthMatchHot6, &b_hcal_depthMatchHot6);
   fChain->SetBranchAddress("hcal_edepth7", &hcal_edepth7, &b_hcal_edepth7);
   fChain->SetBranchAddress("hcal_activeL7", &hcal_activeL7, &b_hcal_activeL7);
   fChain->SetBranchAddress("hcal_edepthHot7", &hcal_edepthHot7, &b_hcal_edepthHot7);
@@ -610,52 +791,13 @@ void HBHEMuonOfflineAnalyzer::Init(TTree *tree, int flag, int mode, int maxDHB,
   fChain->SetBranchAddress("hcal_edepthHotCorrect7", &hcal_edepthHotCorrect7, &b_hcal_edepthHotCorrect7);
   fChain->SetBranchAddress("hcal_cdepthHot7", &hcal_cdepthHot7, &b_hcal_cdepthHot7);
   fChain->SetBranchAddress("hcal_cdepthHotBG7", &hcal_cdepthHotBG7, &b_hcal_cdepthHotBG7);
-  fChain->SetBranchAddress("TrackerLayer", &TrackerLayer, &b_TrackerLayer);
-  fChain->SetBranchAddress("matchedId", &matchedId, &b_matchedId);
-  fChain->SetBranchAddress("innerTrack", &innerTrack, &b_innerTrack);
-  fChain->SetBranchAddress("innerTrackpt", &innerTrackpt, &b_innerTrackpt);
-  fChain->SetBranchAddress("innerTracketa", &innerTracketa, &b_innerTracketa);
-  fChain->SetBranchAddress("innerTrackphi", &innerTrackphi, &b_innerTrackphi);
-  fChain->SetBranchAddress("MatchedStat", &MatchedStat, &b_MatchedStat);
-  fChain->SetBranchAddress("GlobalTrckPt", &GlobalTrckPt, &b_GlobalTrckPt);
-  fChain->SetBranchAddress("GlobalTrckEta", &GlobalTrckEta, &b_GlobalTrckEta);
-  fChain->SetBranchAddress("GlobalTrckPhi", &GlobalTrckPhi, &b_GlobalTrckPhi);
-  fChain->SetBranchAddress("NumPixelLayers", &NumPixelLayers, &b_NumPixelLayers);
-  fChain->SetBranchAddress("chiTracker", &chiTracker, &b_chiTracker);
-  fChain->SetBranchAddress("DxyTracker", &DxyTracker, &b_DxyTracker);
-  fChain->SetBranchAddress("DzTracker", &DzTracker, &b_DzTracker);
-  fChain->SetBranchAddress("OuterTrack", &OuterTrack, &b_OuterTrack);
-  fChain->SetBranchAddress("OuterTrackPt", &OuterTrackPt, &b_OuterTrackPt);
-  fChain->SetBranchAddress("OuterTrackEta", &OuterTrackEta, &b_OuterTrackEta);
-  fChain->SetBranchAddress("OuterTrackPhi", &OuterTrackPhi, &b_OuterTrackPhi);
-  fChain->SetBranchAddress("OuterTrackHits", &OuterTrackHits, &b_OuterTrackHits);
-  fChain->SetBranchAddress("OuterTrackRHits", &OuterTrackRHits, &b_OuterTrackRHits);
-  fChain->SetBranchAddress("OuterTrackChi", &OuterTrackChi, &b_OuterTrackChi);
-  fChain->SetBranchAddress("GlobalTrack", &GlobalTrack, &b_GlobalTrack);
-  fChain->SetBranchAddress("GlobTrack_Chi", &GlobTrack_Chi, &b_GlobTrack_Chi);
-  fChain->SetBranchAddress("Global_Muon_Hits", &Global_Muon_Hits, &b_Global_Muon_Hits);
-  fChain->SetBranchAddress("MatchedStations", &MatchedStations, &b_MatchedStations);
-  fChain->SetBranchAddress("Global_Track_Pt", &Global_Track_Pt, &b_Global_Track_Pt);
-  fChain->SetBranchAddress("Global_Track_Eta", &Global_Track_Eta, &b_Global_Track_Eta);
-  fChain->SetBranchAddress("Global_Track_Phi", &Global_Track_Phi, &b_Global_Track_Phi);
-  fChain->SetBranchAddress("Tight_LongitudinalImpactparameter", &Tight_LongitudinalImpactparameter, &b_Tight_LongitudinalImpactparameter);
-  fChain->SetBranchAddress("Tight_TransImpactparameter", &Tight_TransImpactparameter, &b_Tight_TransImpactparameter);
-  fChain->SetBranchAddress("InnerTrackPixelHits", &InnerTrackPixelHits, &b_InnerTrackPixelHits);
-  fChain->SetBranchAddress("IsolationR04", &IsolationR04, &b_IsolationR04);
-  fChain->SetBranchAddress("IsolationR03", &IsolationR03, &b_IsolationR03);
-  fChain->SetBranchAddress("ecal_3into3", &ecal_3into3, &b_ecal_3into3);
-  fChain->SetBranchAddress("ecal_3x3", &ecal_3x3, &b_ecal_3x3);
-  fChain->SetBranchAddress("ecal_detID", &ecal_detID, &b_ecal_detID);
-  fChain->SetBranchAddress("ehcal_detID", &ehcal_detID, &b_ehcal_detID);
-  fChain->SetBranchAddress("tracker_3into3", &tracker_3into3, &b_tracker_3into3);
+  fChain->SetBranchAddress("hcal_depthMatch7", &hcal_depthMatch7, &b_hcal_depthMatch7);
+  fChain->SetBranchAddress("hcal_depthMatchHot7", &hcal_depthMatchHot7, &b_hcal_depthMatchHot7);
+  fChain->SetBranchAddress("activeLength", &activeLength, &b_activeLength);
+  fChain->SetBranchAddress("activeLengthHot", &activeLengthHot, &b_activeLengthHot);
   fChain->SetBranchAddress("hltresults", &hltresults, &b_hltresults);
   fChain->SetBranchAddress("all_triggers", &all_triggers, &b_all_triggers);
-  fChain->SetBranchAddress("muon_trkKink", &muon_trkKink, &b_muon_trkKink);
-  fChain->SetBranchAddress("muon_chi2LocalPosition", &muon_chi2LocalPosition, &b_muon_chi2LocalPosition);
-  fChain->SetBranchAddress("muon_segComp", &muon_segComp, &b_muon_segComp);
-  fChain->SetBranchAddress("tight_validFraction", &tight_validFraction, &b_tight_validFraction);
   
-
   Notify();
 }
 
@@ -676,9 +818,12 @@ void HBHEMuonOfflineAnalyzer::Loop() {
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     if ((int)(Run_No) < runLo_ || (int)(Run_No) > runHi_) continue;
     if (debug_) std::cout << "Run " << Run_No << " Event " << Event_No << " Muons " << pt_of_muon->size() << std::endl;
+
+    bool loose(false), soft(false), tight(false), pcut(false), ptcut(false);
     for (unsigned int ml = 0; ml< pt_of_muon->size(); ml++) {
       
-      t_ene.clear(); t_actl.clear(); t_encor.clear();
+      t_ene.clear(); t_enec.clear(); t_charge.clear(); t_actln.clear();
+      t_depth.clear();
       
       if(debug_) std::cout << "ecal_det_id " << ecal_detID->at(ml) << std::endl;
       
@@ -695,13 +840,19 @@ void HBHEMuonOfflineAnalyzer::Loop() {
       
       int    eta      = (etaHcal > 0) ? etaHcal-1 : -(1+etaHcal);
       double etaXHcal = (etaHcal > 0) ? etaHcal-0.5 : etaHcal+0.5;
-      int    nDepth   = NDepthBins(eta+1,phiHcal);
-      int    nPhi     = NPhiBins(eta+1);
+      int    nDepth   = nDepthBins(eta+1,phiHcal);
+      int    nPhi     = nPhiBins(eta+1);
       int    PHI      = (nPhi > 36) ? (phiHcal-1) : (phiHcal-1)/2;
       double phiYHcal = (phiHcal-0.5);
       t_ieta          = etaHcal;
       t_iphi          = PHI;
       t_p             = p_of_muon->at(ml);
+      t_nvtx          = GoodVertex;
+      if (p_of_muon->at(ml) > 20)  pcut = true;
+      if (pt_of_muon->at(ml) > 20) ptcut = true;
+      if (looseMuon(ml))           loose = true;
+      if (softMuon(ml))            soft  = true;
+      if (tightMuon(ml))           tight = true;
       
       if (debug_) 
 	std::cout << " etaHcal " << etaHcal << ":" << etaXHcal << " phiHcal " 
@@ -712,11 +863,11 @@ void HBHEMuonOfflineAnalyzer::Loop() {
       for (int cut=0; cut<nCut_; ++cut) {
 	bool select(false);
 	if      (cut == 0) select = tightMuon(ml);
-	else if (cut == 1) select = SoftMuon(ml);
-	else               select = LooseMuon(ml);
+	else if (cut == 1) select = softMuon(ml);
+	else               select = looseMuon(ml);
 	
 	
-	if (select) {
+	if (select && ((eta+1) >= etaMin_) && ((eta+1) <= etaMax_)) {
 	  //	  h_P_Muon[cut]->Fill(p_of_muon->at(ml));
 	  h_Pt_Muon[cut]->Fill(pt_of_muon->at(ml));
 	  h_Eta_Muon[cut]->Fill(eta_of_muon->at(ml));
@@ -765,72 +916,26 @@ void HBHEMuonOfflineAnalyzer::Loop() {
 	  h_HotCell[cut]->Fill(hcal_cellHot->at(ml));
 	  if (mergeDepth_) {
 	    double en1(0), en2(0), energyFill(0), chargeS(0), chargeBG(0);
+	    double enh(0), enc(0);
 	    for (int dep=0; dep<nDepth; ++dep) {
-	      if (dep == 0) {
-		en1 += ((useCorrect_) ? hcal_edepthCorrect1->at(ml) : hcal_edepth1->at(ml));
-		en2 += ((useCorrect_) ? hcal_edepthHotCorrect1->at(ml) : hcal_edepthHot1->at(ml));
-		energyFill += (hcal_activeHotL1->at(ml));
-		chargeS += (hcal_cdepthHot1->at(ml));
-		chargeBG += (hcal_cdepthHotBG1->at(ml));
-		
-	      } else if (dep == 1) {
-		en1 += ((useCorrect_) ? hcal_edepthCorrect2->at(ml) : hcal_edepth2->at(ml));
-		en2 += ((useCorrect_) ? hcal_edepthHotCorrect2->at(ml) : hcal_edepthHot2->at(ml));
-		energyFill += (hcal_activeHotL2->at(ml));
-		chargeS += (hcal_cdepthHot2->at(ml));    
-		chargeBG += (hcal_cdepthHotBG2->at(ml)); 
-		
-	      } else if (dep == 2) {
-		en1 += ((useCorrect_) ? hcal_edepthCorrect3->at(ml) : hcal_edepth3->at(ml));
-		en2 += ((useCorrect_) ? hcal_edepthHotCorrect3->at(ml) : hcal_edepthHot3->at(ml));
-		energyFill += (hcal_activeHotL3->at(ml));
-		chargeS += (hcal_cdepthHot3->at(ml));    
-		chargeBG += (hcal_cdepthHotBG3->at(ml)); 
-		
-	      } else if (dep == 3) {
-		en1 += ((useCorrect_) ? hcal_edepthCorrect4->at(ml) : hcal_edepth4->at(ml));
-		en2 += ((useCorrect_) ? hcal_edepthHotCorrect4->at(ml) : hcal_edepthHot4->at(ml));
-		energyFill = hcal_activeHotL4->at(ml);  		
-		chargeS += (hcal_cdepthHot4->at(ml));    
-		chargeBG += (hcal_cdepthHotBG4->at(ml)); 
-		
-	      } else if (dep == 4) {
-		if (hcal_edepthCorrect5->size() > ml) {
-		  en1 += ((useCorrect_) ? hcal_edepthCorrect5->at(ml) : hcal_edepth5->at(ml));
-		  en2 += ((useCorrect_) ? hcal_edepthHotCorrect5->at(ml) : hcal_edepthHot5->at(ml));
-		  energyFill += (hcal_activeHotL5->at(ml));
-		  chargeS += (hcal_cdepthHot5->at(ml));    
-		  chargeBG += (hcal_cdepthHotBG5->at(ml)); 
-		  
-		}
-	      } else if (dep == 5) {
-		if (hcal_edepthCorrect6->size() > ml) {
-		  en1 += ((useCorrect_) ? hcal_edepthCorrect6->at(ml) : hcal_edepth6->at(ml));
-		  en2 += ((useCorrect_) ? hcal_edepthHotCorrect6->at(ml) : hcal_edepthHot6->at(ml));
-		  energyFill += (hcal_activeHotL6->at(ml));
-		  chargeS += (hcal_cdepthHot6->at(ml));    
-		  chargeBG += (hcal_cdepthHotBG6->at(ml)); 
-		  
-		}
-	      } else if (dep == 6) {
-		if (hcal_edepthCorrect7->size() > ml) {
-		  en1 += ((useCorrect_) ? hcal_edepthCorrect7->at(ml) : hcal_edepth7->at(ml));
-		  en2 += ((useCorrect_) ? hcal_edepthHotCorrect7->at(ml) : hcal_edepthHot7->at(ml));
-		  energyFill += (hcal_activeHotL7->at(ml));  		
-		  chargeS += (hcal_cdepthHot7->at(ml));    
-		  chargeBG += (hcal_cdepthHotBG7->at(ml)); 
-		  
-		}
-	      }
+	      double enb(0), enu(0), eh0(0), ec0(0), chgS(0), chgB(0), actL(0);
+	      getEnergy(ml, dep, enb, enu, eh0, ec0, chgS, chgB, actL);
+	      en1        += ((useCorrect_) ? enu : enb);
+	      en2        += ((useCorrect_) ? ec0 : eh0);
+	      enh        += (eh0);
+	      enc        += (ec0);
+	      energyFill += (actL);
+	      chargeS    += (chgS);
+	      chargeBG   += (chgB);
 	    }
 	    int ind = (etaHcal > 0) ? indxEta[eta][0][PHI] : 1+indxEta[eta][0][PHI];
 	    if (debug_)// || eta==15 || eta==17)
 	      std::cout << "Matched Id " << matchedId->at(ml) << " Hot "
 			<< hcal_cellHot->at(ml) << " eta " << etaHcal << ":"
 			<< eta << " phi " << phiHcal << ":" << PHI
-			<< " Index " << ind << " E " << en2 << ":" 
-			<< energyFill << " Charge " << chargeS << ":" 
-			<< chargeBG << std::endl;
+			<< " Index " << ind << " E " << en1 << ":"  << en2
+			<< ":" << enh << ":" << enc << " L " << energyFill 
+			<< " Charge " << chargeS << ":" << chargeBG <<std::endl;
 	    if (!(matchedId->at(ml))) continue;
 	    if (hcal_cellHot->at(ml)==1) {
 	      if (energyFill > 0) {
@@ -841,74 +946,32 @@ void HBHEMuonOfflineAnalyzer::Loop() {
 		h_charge_signal[cut][ind]->Fill(chargeS);
 		h_charge_bg[cut][ind]->Fill(chargeBG);
 		
-		t_ene.push_back(en2);
-		t_actl.push_back(energyFill);
-		t_encor.push_back(en2/energyFill);
+		t_ene.push_back(enh);
+		t_enec.push_back(enc);
+		t_charge.push_back(chargeS);
+		t_actln.push_back(energyFill);
+		t_depth.push_back(0);
+
 		outtree_->Fill();
 	      }
 	    }
 	  } else {
 	    bool fillTree(false);
 	    for (int dep=0; dep<nDepth; ++dep) {
-	      
+   
 	      if(debug_) std::cout<<"dep:"<<dep<<std::endl;
 	      
-	      double en1(-9999), en2(-9999), energyFill(0), chargeS(-9999), chargeBG(-9999);
-	      if (dep == 0) {
-		en1 = (useCorrect_) ? hcal_edepthCorrect1->at(ml) : hcal_edepth1->at(ml);
-		en2 = (useCorrect_) ? hcal_edepthHotCorrect1->at(ml) : hcal_edepthHot1->at(ml);
-		energyFill = hcal_activeHotL1->at(ml);  	
-		chargeS = (hcal_cdepthHot1->at(ml));                       
-		chargeBG = (hcal_cdepthHotBG1->at(ml));    	
-	      } else if (dep == 1) {
-		en1 = (useCorrect_) ? hcal_edepthCorrect2->at(ml) : hcal_edepth2->at(ml);
-		en2 = (useCorrect_) ? hcal_edepthHotCorrect2->at(ml) : hcal_edepthHot2->at(ml);
-		energyFill = hcal_activeHotL2->at(ml);  	
-		chargeS = (hcal_cdepthHot2->at(ml));                       
-		chargeBG = (hcal_cdepthHotBG2->at(ml));    	
-	      } else if (dep == 2) {
-		en1 = (useCorrect_) ? hcal_edepthCorrect3->at(ml) : hcal_edepth3->at(ml);
-		en2 = (useCorrect_) ? hcal_edepthHotCorrect3->at(ml) : hcal_edepthHot3->at(ml);
-		energyFill = hcal_activeHotL3->at(ml);  		
-		chargeS = (hcal_cdepthHot3->at(ml));                       
-		chargeBG = (hcal_cdepthHotBG3->at(ml));    
-	      } else if (dep == 3) {
-		en1 = (useCorrect_) ? hcal_edepthCorrect4->at(ml) : hcal_edepth4->at(ml);
-		en2 = (useCorrect_) ? hcal_edepthHotCorrect4->at(ml) : hcal_edepthHot4->at(ml);
-		energyFill = hcal_activeHotL4->at(ml);  		
-		chargeS = (hcal_cdepthHot4->at(ml));                       
-		chargeBG = (hcal_cdepthHotBG4->at(ml));    
-	      } else if (dep == 4) {
-		if (hcal_edepthCorrect5->size() > ml) {
-		  en1 = (useCorrect_) ? hcal_edepthCorrect5->at(ml) : hcal_edepth5->at(ml);
-		  en2 = (useCorrect_) ? hcal_edepthHotCorrect5->at(ml) : hcal_edepthHot5->at(ml);
-		  energyFill = hcal_activeHotL5->at(ml);  		
-		  chargeS = (hcal_cdepthHot5->at(ml));                       
-		  chargeBG = (hcal_cdepthHotBG5->at(ml));    
-		}
-	      } else if (dep == 5) {
-		if (hcal_edepthCorrect6->size() > ml) {
-		  en1 = (useCorrect_) ? hcal_edepthCorrect6->at(ml) : hcal_edepth6->at(ml);
-		  en2 = (useCorrect_) ? hcal_edepthHotCorrect6->at(ml) : hcal_edepthHot6->at(ml);
-		  energyFill = hcal_activeHotL6->at(ml);  		
-		  chargeS = (hcal_cdepthHot6->at(ml));                       
-		  chargeBG = (hcal_cdepthHotBG6->at(ml));    
-		}
-	      } else if (dep == 6) {
-		if (hcal_edepthCorrect7->size() > ml) {
-		  en1 = (useCorrect_) ? hcal_edepthCorrect7->at(ml) : hcal_edepth7->at(ml);
-		  en2 = (useCorrect_) ? hcal_edepthHotCorrect7->at(ml) : hcal_edepthHot7->at(ml);
-		  energyFill = hcal_activeHotL7->at(ml);  		
-		  chargeS = (hcal_cdepthHot7->at(ml));                       
-		  chargeBG = (hcal_cdepthHotBG7->at(ml));    
-		}
-	      }
+	      double energyFill(0), chargeS(-9999), chargeBG(-9999);
+	      double enh(-9999), enc(-9999), enb(0), enu(0);
+	      bool ok1 = getEnergy(ml, dep, enb, enu, enh, enc, chargeS,
+				   chargeBG, energyFill);
+	      double en1 = ((useCorrect_) ? enu : enb);
+	      double en2 = ((useCorrect_) ? enc : enh);
 	      if (debug_)
-		std::cout<<"Hello in " << dep+1 << " " << en1 << ":" << en2 
-			 << ":" << energyFill << std::endl;
+		std::cout <<"Hello in " << dep+1 << " " << en1 << ":" << en2 
+			  << ":" << energyFill << std::endl;
 	      
-	      bool ok1 = (en1 > -9999);
-	      bool ok2 = (en2 > -9999);
+	      bool ok2 = ok1;
 	      
 	      if (debug_) 
 		std::cout << "Before Index " << ok1 << ":" << ok2 << std::endl; 
@@ -919,28 +982,34 @@ void HBHEMuonOfflineAnalyzer::Loop() {
 			  << hcal_cellHot->at(ml) << " eta " << etaHcal << ":"
 			  << eta << " phi " << phiHcal << ":" << PHI 
 			  << " depth " << dep << " Index " << ind << " E " 
-			  << en2 << ":" << energyFill << " Charge "
-			  << chargeS << ":" << chargeBG << std::endl;
+			  << en1 << ":" << en2 << ":" << enh << ":" << enc
+			  << " L " << energyFill << " Charge " << chargeS 
+			  << ":" << chargeBG << std::endl;
 	      if (!(matchedId->at(ml))) continue;
 	      if (ok1) {
 		if (debug_) std::cout<<"enter ok1"<<std::endl;
 		
 		if (hcal_cellHot->at(ml)==1) {
-		  if(energyFill > 0) {
+		  if (energyFill > 0) {
 		    h_Hot_MuonEnergy_hcal_HotCell[cut][ind]->Fill(en2);
 		    h_Hot_MuonEnergy_hcal_HotCell_VsActiveLength[cut][ind]->Fill(en2/energyFill);
 		    h_active_length_Fill[cut][ind]->Fill(energyFill);
 		    h_p_muon_ineta[cut][ind]->Fill(p_of_muon->at(ml));
 		    h_charge_signal[cut][ind]->Fill(chargeS);
 		    h_charge_bg[cut][ind]->Fill(chargeBG);
-		    t_ene.push_back(en2);
-		    t_actl.push_back(energyFill);
-		    t_encor.push_back(en2/energyFill);
+		    t_ene.push_back(enh);
+		    t_enec.push_back(enc);
+		    t_charge.push_back(chargeS);
+		    t_actln.push_back(energyFill);
+		    // added depth vector AmanKalsi
+		    t_depth.push_back(dep);
 		    fillTree    = true;
 		  } else {
 		    t_ene.push_back(-999.0);
-		    t_actl.push_back(-999.0);
-		    t_encor.push_back(-999.0);
+		    t_enec.push_back(-999.0);
+		    t_charge.push_back(-999.0);
+		    t_actln.push_back(-999.0);
+		    t_depth.push_back(-999.0);
 		  }
 		  if(debug_) std::cout<<"enter hot cell"<<std::endl;
 		}
@@ -959,6 +1028,13 @@ void HBHEMuonOfflineAnalyzer::Loop() {
 	}
       }
     }
+    int evtype(0);
+    if (pcut)  evtype += 1;
+    if (ptcut) evtype += 2;
+    if (loose) evtype += 4;
+    if (soft)  evtype += 8;
+    if (tight) evtype += 16;
+    h_evtype->Fill(evtype);
   }
   close();
 }
@@ -980,27 +1056,112 @@ void HBHEMuonOfflineAnalyzer::Show(Long64_t entry) {
   fChain->Show(entry);
 }
 
-void HBHEMuonOfflineAnalyzer::BookHistograms(const char* fname) { 
+bool HBHEMuonOfflineAnalyzer::fillChain(TChain *chain, 
+					const char* inputFileList) {
 
-  std::cout<<"BookHistograms"<<std::endl;
+  std::string fname(inputFileList);
+  if (fname.substr(fname.size()-5,5) == ".root") {
+    chain->Add(fname.c_str());
+  } else {
+    std::ifstream infile(inputFileList);
+    if (!infile.is_open()) {
+      std::cout << "** ERROR: Can't open '" << inputFileList << "' for input" 
+		<< std::endl;
+      return false;
+    }
+    while (1) {
+      infile >> fname;
+      if (!infile.good()) break;
+      chain->Add(fname.c_str());
+    }
+    infile.close();
+  }
+  std::cout << "No. of Entries in this tree : " << chain->GetEntries()
+	    << std::endl;
+  return true;
+}
+
+bool HBHEMuonOfflineAnalyzer::readCorr(const char* infile) {
+
+  std::ifstream fInput(infile);
+  unsigned int ncorr(0), all(0), good(0);
+  if (!fInput.good()) {
+    std::cout << "Cannot open file " << infile << std::endl;
+  } else {
+    char buffer [1024];
+    while (fInput.getline(buffer, 1024)) {
+      ++all;
+      std::string bufferString(buffer);
+      if (bufferString.substr(0,5) == "#IOVs") {
+	std::vector<std::string> items = splitString(bufferString.substr(6));
+	ncorr = items.size() - 1;
+	for (unsigned int n=0; n<ncorr; ++n) {
+	  int run  = std::atoi (items[n].c_str());
+	  runlow_.push_back(run);
+	}
+	std::cout << ncorr << ":" << runlow_.size() << " Run ranges" 
+		  << std::endl;
+	for (unsigned int n=0; n<runlow_.size(); ++n) 
+	  std::cout << " [" << n << "] " << runlow_[n];
+	std::cout << std::endl;
+      } else if (buffer [0] == '#') {
+	continue; //ignore other comments
+      } else {
+	std::vector<std::string> items = splitString(bufferString);
+	if (items.size () != ncorr+3) {
+	  std::cout << "Ignore  line: " << buffer << std::endl;
+	} else {
+	  ++good;
+	  int   ieta  = std::atoi (items[0].c_str());
+	  int   iphi  = std::atoi (items[1].c_str());
+	  int   depth = std::atoi (items[2].c_str());
+	  unsigned int id = getDetIdHBHE(ieta,iphi,depth);
+	  for (unsigned int n=0; n<ncorr; ++n) {
+	    float corrf = std::atof (items[n+3].c_str());
+	    if (n<nmax_) corrFac_[n][id] = corrf;
+	  }
+	  if (debug_) {
+	    std::cout << "ID " << std::hex << id << std::dec << ":" << id
+		      << " (eta " << ieta << " phi " << iphi << " depth " 
+		      << depth << ")";
+	    for (unsigned int n=0; n<ncorr; ++n) 
+	      std::cout << " " << corrFac_[n][id];
+	    std::cout << std::endl;
+	  }
+	}
+      }
+    }
+    fInput.close();
+    std::cout << "Reads total of " << all << " and " << good << " good records"
+	      << std::endl;
+  }
+  return (good > 0);
+}
+
+void HBHEMuonOfflineAnalyzer::bookHistograms(const char* fname) { 
+
+  std::cout << "BookHistograms" << std::endl;
   output_file = TFile::Open(fname,"RECREATE");
   output_file->cd();
   outtree_ = new TTree("Lep_Tree","Lep_Tree");
-  outtree_->Branch("t_ieta",   &t_ieta);
-  outtree_->Branch("t_iphi",   &t_iphi);
-  outtree_->Branch("t_p",      &t_p);
-  outtree_->Branch("t_ene",    &t_ene);
-  outtree_->Branch("t_actl",   &t_actl);
-  outtree_->Branch("t_encor",  &t_encor);
-
+  outtree_->Branch("t_ieta",      &t_ieta);
+  outtree_->Branch("t_iphi",      &t_iphi);
+  outtree_->Branch("t_nvtx",      &t_nvtx);
+  outtree_->Branch("t_p",         &t_p);
+  outtree_->Branch("t_ene",       &t_ene);
+  outtree_->Branch("t_enec",      &t_enec);
+  outtree_->Branch("t_charge",    &t_charge);
+  outtree_->Branch("t_actln",     &t_actln);
+  outtree_->Branch("t_depth",     &t_depth);
+    
   std::string type[]={"tight"};//,"soft","loose"};
   char name[128], title[500];
 
   nHist = 0;
-  for (int eta=0; eta<29; ++eta) {
+  for (int eta=etaMin_; eta<=etaMax_; ++eta) {
    
-    int nDepth = NDepthBins(eta+1,-1);
-    int nPhi   = NPhiBins(eta+1);
+    int nDepth = nDepthBins(eta,-1);
+    int nPhi   = nPhiBins(eta);
     //std::cout<<"problem 2"<<std::endl;
     //std::cout<<"Eta: "<<eta<<" nDepth "<<nDepth<<" nPhi "<<nPhi<<std::endl;
     for (int depth=0; depth<nDepth; depth++) {
@@ -1008,7 +1169,7 @@ void HBHEMuonOfflineAnalyzer::BookHistograms(const char* fname) {
       //std::cout<<"Eta:"<<eta<<"Depth:"<<depth<<std::endl;
       for (int PHI=0;  PHI<nPhi; ++PHI) {
 	//std::cout<<"Eta:"<<eta<<"Depth:"<<depth<<"PHI:"<<PHI<<std::endl;
-	indxEta[eta][depth][PHI] = nHist;
+	indxEta[eta-1][depth][PHI] = nHist;
 	nHist += 2;
       }
     }
@@ -1018,6 +1179,7 @@ void HBHEMuonOfflineAnalyzer::BookHistograms(const char* fname) {
   }
   //	TDirectory *d_output_file[nCut_][29];
   //output_file->cd();
+  h_evtype = new TH1D("EvType", "Event Type", 100,0,100);
   for (int i=0; i<nCut_; ++i) {
     sprintf (name,  "h_Pt_Muon_%s", type[i].c_str());
     sprintf (title, "p_{T} of %s muons (GeV)", type[i].c_str());
@@ -1156,9 +1318,9 @@ void HBHEMuonOfflineAnalyzer::BookHistograms(const char* fname) {
     h_HotCell[i] = new TH1D(name, title,100,0,2);
 
     //		output_file->cd();
-    for (int eta=0; eta<29; ++eta) {
-      int nDepth = NDepthBins(eta+1,-1);
-      int nPhi   = NPhiBins(eta+1);
+    for (int eta=etaMin_; eta<=etaMax_; ++eta) {
+      int nDepth = nDepthBins(eta,-1);
+      int nPhi   = nPhiBins(eta);
       //sprintf(name, "Dir_muon_type_%s_ieta%d",type[i].c_str(), eta);
       //d_output_file[i][eta]= output_file->mkdir(name);
       //output_file->cd(name);
@@ -1166,68 +1328,68 @@ void HBHEMuonOfflineAnalyzer::BookHistograms(const char* fname) {
       for (int depth=0; depth<nDepth; ++depth) {
 	for (int PHI=0; PHI<nPhi; ++PHI) {
 	  int PHI0 = (nPhi == 72) ? PHI+1 : 2*PHI+1;
-	  int ih   = indxEta[eta][depth][PHI];
+	  int ih   = indxEta[eta-1][depth][PHI];
 	  if (debug_) std::cout<<"eta:"<<eta<<" depth:"<<depth<<" PHI:"<<PHI<<":"<<PHI0<<" ih:"<<ih<<std::endl; 
 	  
-	  sprintf (name,  "h_Hot_MuonEnergy_hc_%d_%d_%d_%s_HotCell", (eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (title, "HCAL energy in hot tower (i#eta=%d, depth=%d, i#phi = %d) for extrapolated %s muons (Hot Cell)", (eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_Hot_MuonEnergy_hc_%d_%d_%d_%s_HotCell", eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (title, "HCAL energy in hot tower (i#eta=%d, depth=%d, i#phi = %d) for extrapolated %s muons (Hot Cell)", eta, (depth+1), PHI0, type[i].c_str());
 	  h_Hot_MuonEnergy_hcal_HotCell[i][ih] = new TH1D(name, title,4000,0.0,10.0);
 	  h_Hot_MuonEnergy_hcal_HotCell[i][ih] ->Sumw2(); 
 	  
-	  sprintf (name,  "h_Hot_MuonEnergy_hc_%d_%d_%d_%s_HotCell_ByActiveLength", (eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (title, "HCAL energy in hot tower (i#eta=%d, depth=%d, i#phi = %d) for extrapolated %s muons (Hot Cell) divided by Active Length", (eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_Hot_MuonEnergy_hc_%d_%d_%d_%s_HotCell_ByActiveLength", eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (title, "HCAL energy in hot tower (i#eta=%d, depth=%d, i#phi = %d) for extrapolated %s muons (Hot Cell) divided by Active Length", eta, (depth+1), PHI0, type[i].c_str());
 	  h_Hot_MuonEnergy_hcal_HotCell_VsActiveLength[i][ih] = new TH1D(name, title,4000,0.0,10.0); 
 	  h_Hot_MuonEnergy_hcal_HotCell_VsActiveLength[i][ih]->Sumw2();
 	  
-	  sprintf (name,  "h_active_length_Fill_%d_%d_%d_%s",(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (title, "active_length%d_%d_%d_%s",(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_active_length_Fill_%d_%d_%d_%s", eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (title, "active_length%d_%d_%d_%s", eta, (depth+1), PHI0, type[i].c_str());
 	  h_active_length_Fill[i][ih] = new TH1D(name, title,20,0,20);
 	  h_active_length_Fill[i][ih]->Sumw2();  
 	  
-	  sprintf (name,  "h_p_muon_in_%d_%d_%d_%s",(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (title, "p_muon_in%d_%d_%d_%s",(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_p_muon_in_%d_%d_%d_%s", eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (title, "p_muon_in%d_%d_%d_%s", eta, (depth+1), PHI0, type[i].c_str());
 	  h_p_muon_ineta[i][ih] = new TH1D(name, title, 500,0,500);
 	  h_p_muon_ineta[i][ih]->Sumw2(); 
 	  
-	  sprintf (name,  "h_charge_signal_in_%d_%d_%d_%s",(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (name,  "charge_signal_in_%d_%d_%d_%s",(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_charge_signal_in_%d_%d_%d_%s", eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "charge_signal_in_%d_%d_%d_%s", eta, (depth+1), PHI0, type[i].c_str());
 	  h_charge_signal[i][ih] = new TH1D(name, title, 500,0,500);  
 	  h_charge_signal[i][ih]->Sumw2();       
 	  
-	  sprintf (name,  "h_charge_bg_in_%d_%d_%d_%s",(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (name,  "charge_bg_in_%d_%d_%d_%s",(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_charge_bg_in_%d_%d_%d_%s", eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "charge_bg_in_%d_%d_%d_%s", eta, (depth+1), PHI0, type[i].c_str());
 	  h_charge_bg[i][ih] = new TH1D(name, title, 500,0,500);  
 	  h_charge_bg[i][ih]->Sumw2();      
 	  
 	  ih++;
 	  
-	  sprintf (name,  "h_Hot_MuonEnergy_hc_%d_%d_%d_%s_HotCell", -(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (title, "HCAL energy in hot tower (i#eta=%d, depth=%d, i#phi = %d) for extrapolated %s muons (Hot Cell)", -(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_Hot_MuonEnergy_hc_%d_%d_%d_%s_HotCell", -eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (title, "HCAL energy in hot tower (i#eta=%d, depth=%d, i#phi = %d) for extrapolated %s muons (Hot Cell)", -eta, (depth+1), PHI0, type[i].c_str());
 	  h_Hot_MuonEnergy_hcal_HotCell[i][ih] = new TH1D(name, title,4000,0.0,10.0);
 	  h_Hot_MuonEnergy_hcal_HotCell[i][ih] ->Sumw2();     
 
-	  sprintf (name,  "h_Hot_MuonEnergy_hc_%d_%d_%d_%s_HotCell_ByActiveLength", -(eta+1), (depth+1),PHI0, type[i].c_str());
-	  sprintf (title, "HCAL energy in hot tower (i#eta=%d, depth=%d, i#phi=%d) for extrapolated %s muons (Hot Cell) divided by Active Length", -(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_Hot_MuonEnergy_hc_%d_%d_%d_%s_HotCell_ByActiveLength", -eta, (depth+1),PHI0, type[i].c_str());
+	  sprintf (title, "HCAL energy in hot tower (i#eta=%d, depth=%d, i#phi=%d) for extrapolated %s muons (Hot Cell) divided by Active Length", -eta, (depth+1), PHI0, type[i].c_str());
 	  h_Hot_MuonEnergy_hcal_HotCell_VsActiveLength[i][ih] = new TH1D(name, title,4000,0.0,10.0);
 	  h_Hot_MuonEnergy_hcal_HotCell_VsActiveLength[i][ih]->Sumw2();
 
-	  sprintf (name,  "h_active_length_Fill_%d_%d_%d_%s",-(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (title, "active_length%d_%d_%d_%s",-(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_active_length_Fill_%d_%d_%d_%s",-eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (title, "active_length%d_%d_%d_%s",-eta, (depth+1), PHI0, type[i].c_str());
 	  h_active_length_Fill[i][ih] = new TH1D(name, title,20,0,20);
 	  h_active_length_Fill[i][ih]->Sumw2();   
 
-	  sprintf (name,  "h_p_muon_in_%d_%d_%d_%s",-(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (title, "p_muon_in%d_%d_%d_%s",-(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_p_muon_in_%d_%d_%d_%s",-eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (title, "p_muon_in%d_%d_%d_%s",-eta, (depth+1), PHI0, type[i].c_str());
 	  h_p_muon_ineta[i][ih] = new TH1D(name, title, 500,0,500);
 	  h_p_muon_ineta[i][ih]->Sumw2(); 
 	  
-	  sprintf (name,  "h_charge_signal_in_%d_%d_%d_%s",-(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (name,  "charge_signal_in_%d_%d_%d_%s",-(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_charge_signal_in_%d_%d_%d_%s",-eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "charge_signal_in_%d_%d_%d_%s",-eta, (depth+1), PHI0, type[i].c_str());
 	  h_charge_signal[i][ih] = new TH1D(name, title, 500,0,500);  
 	  h_charge_signal[i][ih]->Sumw2();       
 
-	  sprintf (name,  "h_charge_bg_in_%d_%d_%d_%s",-(eta+1), (depth+1), PHI0, type[i].c_str());
-	  sprintf (name,  "charge_bg_in_%d_%d_%d_%s",-(eta+1), (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "h_charge_bg_in_%d_%d_%d_%s",-eta, (depth+1), PHI0, type[i].c_str());
+	  sprintf (name,  "charge_bg_in_%d_%d_%d_%s",-eta, (depth+1), PHI0, type[i].c_str());
 	  h_charge_bg[i][ih] = new TH1D(name, title, 500,0,500);  
 	  h_charge_bg[i][ih]->Sumw2();                                     
 
@@ -1239,10 +1401,100 @@ void HBHEMuonOfflineAnalyzer::BookHistograms(const char* fname) {
   //output_file->cd();
 }
 
-bool HBHEMuonOfflineAnalyzer::LooseMuon(unsigned int ml) {
+bool HBHEMuonOfflineAnalyzer::getEnergy(unsigned int ml, int dep, double& enb,
+					double& enu, double& enh, double& enc,
+					double& chgS, double& chgB, 
+					double& actL) {
+  double cfac(1.0);
+  bool   flag(true);
+  if (cFactor_) {
+    int          ieta  = hcal_ieta->at(ml);
+    int          iphi  = hcal_iphi->at(ml);
+    unsigned int detId = getDetIdHBHE(ieta, iphi, dep+1);
+    cfac               = getCorr(Run_No, detId);
+  }
+  if (dep == 0) {
+    enb  = cfac * hcal_edepth1->at(ml);
+    enu  = cfac * hcal_edepthCorrect1->at(ml);
+    enh  = cfac * hcal_edepthHot1->at(ml);
+    enc  = cfac * hcal_edepthHotCorrect1->at(ml);
+    chgS = hcal_cdepthHot1->at(ml);
+    actL = hcal_activeHotL1->at(ml);
+    chgB = hcal_cdepthHotBG1->at(ml);
+  } else if (dep == 1) {
+    enb  = cfac * hcal_edepth2->at(ml);
+    enu  = cfac * hcal_edepthCorrect2->at(ml);
+    enh  = cfac * hcal_edepthHot2->at(ml);
+    enc  = cfac * hcal_edepthHotCorrect2->at(ml);
+    chgS = hcal_cdepthHot2->at(ml);
+    actL = hcal_activeHotL2->at(ml);
+    chgB = hcal_cdepthHotBG2->at(ml);
+  } else if (dep == 2) {
+    enb  = cfac * hcal_edepth3->at(ml);
+    enu  = cfac * hcal_edepthCorrect3->at(ml);
+    enh  = cfac * hcal_edepthHot3->at(ml);
+    enc  = cfac * hcal_edepthHotCorrect3->at(ml);
+    chgS = hcal_cdepthHot3->at(ml);
+    actL = hcal_activeHotL3->at(ml);
+    chgB = hcal_cdepthHotBG3->at(ml);
+  } else if (dep == 3) {
+    enb  = cfac * hcal_edepth4->at(ml);
+    enu  = cfac * hcal_edepthCorrect4->at(ml);
+    enh  = cfac * hcal_edepthHot4->at(ml);
+    enc  = cfac * hcal_edepthHotCorrect4->at(ml);
+    chgS = hcal_cdepthHot4->at(ml);
+    actL = hcal_activeHotL4->at(ml);
+    chgB = hcal_cdepthHotBG4->at(ml);
+  } else if (dep == 4) {
+    if (hcal_edepthCorrect5->size() > ml) {
+      enb  = cfac * hcal_edepth5->at(ml);
+      enu  = cfac * hcal_edepthCorrect5->at(ml);
+      enh  = cfac * hcal_edepthHot5->at(ml);
+      enc  = cfac * hcal_edepthHotCorrect5->at(ml);
+      chgS = hcal_cdepthHot5->at(ml);
+      actL = hcal_activeHotL5->at(ml);
+      chgB = hcal_cdepthHotBG5->at(ml);
+    } else {
+      enb  = enu = enh = enc = chgS = actL = chgB = 0;
+      flag = false;
+    }
+  } else if (dep == 5) {
+    if (hcal_edepthCorrect6->size() > ml) {
+      enb  = cfac * hcal_edepth6->at(ml);
+      enu  = cfac * hcal_edepthCorrect6->at(ml);
+      enh  = cfac * hcal_edepthHot6->at(ml);
+      enc  = cfac * hcal_edepthHotCorrect6->at(ml);
+      chgS = hcal_cdepthHot6->at(ml);
+      actL = hcal_activeHotL6->at(ml);
+      chgB = hcal_cdepthHotBG6->at(ml);
+    } else {
+      enb  = enu = enh = enc = chgS = actL = chgB = 0;
+      flag = false;
+    }
+  } else if (dep == 6) {
+    if (hcal_edepthCorrect7->size() > ml) {
+      enb  = cfac * hcal_edepth7->at(ml);
+      enu  = cfac * hcal_edepthCorrect7->at(ml);
+      enh  = cfac * hcal_edepthHot7->at(ml);
+      enc  = cfac * hcal_edepthHotCorrect7->at(ml);
+      chgS = hcal_cdepthHot7->at(ml);
+      actL = hcal_activeHotL7->at(ml);
+      chgB = hcal_cdepthHotBG7->at(ml);
+    } else {
+      enb  = enu = enh = enc = chgS = actL = chgB = 0;
+      flag = false;
+    }
+  } else {
+    enb  = enu = enh = enc = chgS = actL = chgB = 0;
+    flag = false;
+  }
+  return flag;
+}
+
+bool HBHEMuonOfflineAnalyzer::looseMuon(unsigned int ml) {
   if (pt_of_muon->at(ml) > 20.) {
     if (mediumMuon2016(ml)) {
-      if (IsolationR04->at(ml) < 0.15) { 
+      if (IsolationR04->at(ml) < 0.25) { 
 	return true;   
       }
     }  
@@ -1250,10 +1502,10 @@ bool HBHEMuonOfflineAnalyzer::LooseMuon(unsigned int ml) {
   return false;   
 } 
 
-bool HBHEMuonOfflineAnalyzer::SoftMuon(unsigned int ml) {
+bool HBHEMuonOfflineAnalyzer::softMuon(unsigned int ml) {
   if (pt_of_muon->at(ml) > 20.) {
     if (mediumMuon2016(ml)) {
-      if (IsolationR04->at(ml) < 0.15) { 
+      if (IsolationR03->at(ml) < 0.10) { 
 	return true;   
       }
     }  
@@ -1286,7 +1538,8 @@ bool HBHEMuonOfflineAnalyzer::mediumMuon2016(unsigned int ml) {
   return medium16;
 }
 
-void HBHEMuonOfflineAnalyzer::etaPhiHcal(unsigned int detId, int &eta, int &phi, int &depth) {
+void HBHEMuonOfflineAnalyzer::etaPhiHcal(unsigned int detId, int &eta,
+					 int &phi, int &depth) {
   int zside, etaAbs;
   if ((detId&0x1000000)==0) {
     zside  = (detId&0x2000)?(1):(-1);
@@ -1331,7 +1584,6 @@ void HBHEMuonOfflineAnalyzer::etaPhiEcal(unsigned int detId, int& type,
   }
 }
 
-
 void HBHEMuonOfflineAnalyzer::calculateP(double pt, double eta, double& pM) {
   pM = (pt*cos(2*(1/atan(exp(eta)))));
 }
@@ -1340,15 +1592,13 @@ void HBHEMuonOfflineAnalyzer::close() {
   output_file->cd();
   std::cout << "file yet to be Written" << std::endl;
   outtree_->Write();
-  WriteHistograms();
-  //	output_file->Write();
+  writeHistograms();
   std::cout << "file Written" << std::endl;
   output_file->Close();
   std::cout << "now doing return" << std::endl;
 }
 
-
-void HBHEMuonOfflineAnalyzer::WriteHistograms() {
+void HBHEMuonOfflineAnalyzer::writeHistograms() {
 
   //output_file->cd();
   std::string type[]={"tight"};//,"soft","loose"};
@@ -1356,22 +1606,23 @@ void HBHEMuonOfflineAnalyzer::WriteHistograms() {
  
   std::cout<<"WriteHistograms"<<std::endl;
   nHist = 0;
-  for (int eta=0; eta<29; ++eta) {
+  for (int eta=etaMin_; eta<=etaMax_; ++eta) {
     
-    int nDepth = NDepthBins(eta+1,-1);
-    int nPhi   = NPhiBins(eta+1);
+    int nDepth = nDepthBins(eta,-1);
+    int nPhi   = nPhiBins(eta);
     if (debug_)
       std::cout<<"Eta:"<<eta<<" nDepths "<<nDepth<<" nPhis "<<nPhi<<std::endl;
     for (int depth=0; depth<nDepth; ++depth) {
       if(debug_) std::cout<<"Eta:"<<eta<<"Depth:"<<depth<<std::endl;
       for (int PHI=0;  PHI<nPhi; ++PHI) {
-	indxEta[eta][depth][PHI] = nHist;
+	indxEta[eta-1][depth][PHI] = nHist;
 	nHist += 2;
       }
     }
   }
 
   TDirectory *d_output_file[nCut_][29];
+  h_evtype->Write();
   //output_file->cd();
   for (int i=0; i<nCut_; ++i) {
     
@@ -1417,18 +1668,18 @@ void HBHEMuonOfflineAnalyzer::WriteHistograms() {
     h_HotCell[i]->Write();;
 
     output_file->cd();
-    for (int eta=0; eta<29; ++eta) {
-      int nDepth = NDepthBins(eta+1,-1);
-      int nPhi   = NPhiBins(eta+1);
-      sprintf(name, "Dir_muon_type_%s_ieta%d",type[i].c_str(), eta+1);
-      d_output_file[i][eta]= output_file->mkdir(name);
+    for (int eta=etaMin_; eta<=etaMax_; ++eta) {
+      int nDepth = nDepthBins(eta,-1);
+      int nPhi   = nPhiBins(eta);
+      sprintf(name, "Dir_muon_type_%s_ieta%d",type[i].c_str(), eta);
+      d_output_file[i][eta-1]= output_file->mkdir(name);
       //output_file->cd(name);
-      d_output_file[i][eta]->cd();
+      d_output_file[i][eta-1]->cd();
       for (int depth=0; depth<nDepth; ++depth) {
 	for (int PHI=0; PHI<nPhi; ++PHI) {
 
 	  //	std::cout<<"eta:"<<eta<<"depth:"<<depth<<"PHI:"<<PHI<<std::endl;
-	  int ih = indxEta[eta][depth][PHI];
+	  int ih = indxEta[eta-1][depth][PHI];
 	  //	std::cout<<"ih:"<<ih<<std::endl; 
 	  h_Hot_MuonEnergy_hcal_HotCell[i][ih]->Write();
 	  
@@ -1452,22 +1703,25 @@ void HBHEMuonOfflineAnalyzer::WriteHistograms() {
   output_file->cd();
 }
 
-int HBHEMuonOfflineAnalyzer::NDepthBins(int eta, int phi) {
+int HBHEMuonOfflineAnalyzer::nDepthBins(int eta, int phi) {
   // Run 1 scenario
   int  nDepthR1[29]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,3,1,2,2,2,2,2,2,2,2,2,3,3,2};
   // Run 2 scenario from 2018
   int  nDepthR2[29]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,4,3,5,6,6,6,6,6,6,6,7,7,7,3};
   // Run 3 scenario
   int  nDepthR3[29]={4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,3,5,6,6,6,6,6,6,6,7,7,7,3};
+  // Run 4 scenario
+  int  nDepthR4[29]={4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,7,7,7,7,7,7,7,7,7,7,7,7,7};
   // for 2019 scenario multi depth segmentation
   //    int  nDepth[29]={3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,5,5,5,5,5,5,5,5};
-  // modeLHC = 0 --> nbin defined maxDepthHB/HE
-  //         = 1 -->      corresponds to Run 1 (valid till 2016)
-  //         = 2 -->      corresponds to Run 2 (2018 geometry)
-  //         = 3 -->      corresponds to Run 3 (post LS2)
-  //         = 4 -->      corresponds to 2017 (Plan 1)
+  // modeLHC_ = 0 --> nbin defined maxDepthHB/HE
+  //          = 1 -->      corresponds to Run 1 (valid till 2016)
+  //          = 2 -->      corresponds to Run 2 (2018 geometry)
+  //          = 3 -->      corresponds to Run 3 (post LS2)
+  //          = 4 -->      corresponds to 2017 (Plan 1)
+  //          = 5 -->      corresponds to Run 4 (post LS3)
   int  nbin(0);
-  if (modeLHC == 0) {
+  if (modeLHC_ == 0) {
     if (eta<=15) {
       nbin = maxDepthHB_;
     } else if (eta == 16) {
@@ -1475,13 +1729,13 @@ int HBHEMuonOfflineAnalyzer::NDepthBins(int eta, int phi) {
     } else {
       nbin = maxDepthHE_;
     }
-  } else if (modeLHC == 1) {
+  } else if (modeLHC_ == 1) {
     nbin = nDepthR1[eta-1];
-  } else if (modeLHC == 2) {
+  } else if (modeLHC_ == 2) {
     nbin = nDepthR2[eta-1];
-  } else if (modeLHC == 3) {
+  } else if (modeLHC_ == 3) {
     nbin = nDepthR3[eta-1];
-  } else {
+  } else if (modeLHC_ == 4) {
     if (phi > 0) {
       if (eta >= 16 && phi >= 63 && phi <= 66) {
 	nbin = nDepthR2[eta-1];
@@ -1495,11 +1749,122 @@ int HBHEMuonOfflineAnalyzer::NDepthBins(int eta, int phi) {
 	nbin = nDepthR1[eta-1];
       }
     }
+  } else {
+    if (eta > 0 && eta < 30) {
+      nbin = nDepthR4[eta-1];
+    } else {
+      nbin = nDepthR4[28];
+    }
   }
   return nbin;
 }
 
-int HBHEMuonOfflineAnalyzer::NPhiBins(int eta) {
+int HBHEMuonOfflineAnalyzer::nPhiBins(int eta) {
   int nphi = (eta <= 20) ? 72 : 36;
+  if (modeLHC_ == 5 && eta > 16) nphi = 360;
   return nphi;
+}
+
+float HBHEMuonOfflineAnalyzer::getCorr(int run, unsigned int id) {
+  float cfac(1.0);
+  int ip(-1);
+  for (unsigned int k=0; k<runlow_.size(); ++k) {
+    unsigned int i = runlow_.size()-k-1;
+    if (run >= runlow_[i]) {
+      ip = (int)(i); break;
+    }
+  }
+  if (debug_) {
+    std::cout << "Run " << run << " Perdiod " << ip << std::endl;
+  }
+  unsigned idx = correctDetId(id);
+  if (ip >= 0) {
+    std::map<unsigned int,float>::iterator itr = corrFac_[ip].find(idx);
+    if (itr != corrFac_[ip].end()) cfac = itr->second;
+  }
+  if (debug_) {
+    int  subdet, zside, ieta, iphi, depth;
+    unpackDetId(idx, subdet, zside, ieta, iphi, depth);
+    std::cout << "ID " << std::hex << id << std::dec << " (Sub " << subdet 
+	      << " eta " << zside*ieta << " phi " << iphi << " depth " << depth
+	      << ")  Factor " << cfac << std::endl;
+  }
+  return cfac;
+}
+
+std::vector<std::string> HBHEMuonOfflineAnalyzer::splitString(const std::string& fLine) {
+  std::vector <std::string> result;
+  int start = 0;
+  bool empty = true;
+  for (unsigned i = 0; i <= fLine.size (); i++) {
+    if (fLine [i] == ' ' || i == fLine.size ()) {
+      if (!empty) {
+	std::string item (fLine, start, i-start);
+	result.push_back (item);
+	empty = true;
+      }
+      start = i+1;
+    } else {
+      if (empty) empty = false;
+    }
+  }
+  return result;
+}
+
+unsigned int HBHEMuonOfflineAnalyzer::getDetIdHBHE(int ieta, int iphi,
+						   int depth) {
+  int eta    = std::abs(ieta);
+  int subdet(0);
+  if (eta > 16)                    subdet = 2;
+  else if (eta == 16 && depth > 2) subdet = 2;
+  else                             subdet = 1;
+  return getDetId(subdet,ieta,iphi,depth);
+}
+
+unsigned int HBHEMuonOfflineAnalyzer::getDetId(int subdet, int ieta, int iphi,
+					       int depth) {
+  // All numbers used here are described as masks/offsets in 
+  // DataFormats/HcalDetId/interface/HcalDetId.h
+  unsigned int id = ((4<<28)|((subdet&0x7)<<25));
+  id |= ((0x1000000) | ((depth&0xF)<<20) |
+	  ((ieta>0)?(0x80000|(ieta<<10)):((-ieta)<<10)) |
+	  (iphi&0x3FF));
+  return id;
+}
+
+unsigned int HBHEMuonOfflineAnalyzer::correctDetId(const unsigned int & detId) {
+  int subdet, ieta, zside, depth, iphi;
+  unpackDetId(detId, subdet, zside, ieta, iphi, depth);
+  if (subdet == 0) {
+    if (ieta > 16)                    subdet = 2;
+    else if (ieta == 16 && depth > 2) subdet = 2;
+    else                              subdet = 1;
+  }
+  unsigned int id = getDetId(subdet,ieta*zside,iphi,depth);
+  if ((id != detId) && debug_) {
+    std::cout << "Correct Id " << std::hex << detId << " to " << id << std::dec
+	      << "(Sub " << subdet << " eta " << ieta*zside << " phi " << iphi
+	      << " depth " << depth << ")" << std::endl;
+  }
+  return id;
+}
+
+void HBHEMuonOfflineAnalyzer::unpackDetId(unsigned int detId, int& subdet,
+					  int& zside, int& ieta, int& iphi,
+					  int& depth) {
+  // The maskings are defined in DataFormats/DetId/interface/DetId.h
+  //                      and in DataFormats/HcalDetId/interface/HcalDetId.h
+  // The macro does not invoke the classes there and use them
+  subdet = ((detId >> 25) & (0x7));
+  if ((detId&0x1000000) == 0) {
+    ieta   = ((detId >> 7) & 0x3F);
+    zside  = (detId&0x2000)?(1):(-1);
+    depth  = ((detId >> 14) & 0x1F);
+    iphi   = (detId & 0x3F);
+  } else {
+    ieta   = ((detId >> 10) & 0x1FF);
+    zside  = (detId&0x80000)?(1):(-1);
+    depth  = ((detId >> 20) & 0xF);
+    iphi   = (detId & 0x3FF);
+  }
 }

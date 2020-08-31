@@ -5,6 +5,7 @@
 #define PhysicsTools_PatAlgos_PATJetSelector_h
 
 #include "FWCore/Framework/interface/stream/EDFilter.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 
 #include "DataFormats/Common/interface/RefVector.h"
 
@@ -46,7 +47,7 @@ namespace pat {
     virtual void beginJob() {}
     virtual void endJob() {}
 
-    virtual bool filter(edm::Event& iEvent, const edm::EventSetup& iSetup) override {
+    bool filter(edm::Event& iEvent, const edm::EventSetup& iSetup) override {
 
       auto patJets = std::make_unique<std::vector<Jet>>();
 
@@ -104,7 +105,7 @@ namespace pat {
 	  }
 
 	  // Copy the gen jet
-	  if ( ijet->genJet() != 0 ) {
+	  if ( ijet->genJet() != nullptr ) {
 	    genJetsOut->push_back( *(ijet->genJet()) );
 	  }
 
@@ -186,7 +187,7 @@ namespace pat {
 	  }
 
 	  // Copy the gen jet
-	  if ( ijet->genJet() != 0 ) {
+	  if ( ijet->genJet() != nullptr ) {
 	    patJets->back().updateFwdGenJetFwdRef( edm::Ref<reco::GenJetCollection>( oh_genJetsOut, genJetIndex) // ref to "this" genjet in the global list
 						   );
 	    ++genJetIndex;
@@ -197,7 +198,7 @@ namespace pat {
 
 
       // put genEvt  in Event
-      bool pass = patJets->size() > 0;
+      bool pass = !patJets->empty();
       iEvent.put(std::move(patJets));
 
       if ( filter_ )

@@ -43,12 +43,11 @@ class Event(object):
     print_nstrip = 10
     print_patterns = ['*']
 
-    def __init__(self, iEv, input_data=None, setup=None, eventWeight=1, eventSystWeight=1):
+    def __init__(self, iEv, input_data=None, setup=None, eventWeight=1):
         self.iEv = iEv
         self.input = input_data
         self.setup = setup
         self.eventWeight = eventWeight
-	self.eventSystWeight = eventSystWeight
         self.analyzers = []
 
     def _get_print_attrs(self, subname=""):
@@ -58,10 +57,6 @@ class Event(object):
         selected_attrs = copy.copy(self.__dict__) #initial selection of what we can print
         selected_attrs.pop('setup') #get rid of some bits
         selected_attrs.pop('input')
-        
-        # Colin: the following are unused: 
-        matched_attrs = dict() #this applies pattern matching to obtain a subset of selected_attrs
-        print_attrs=dict() #ready for printing
         
         # Colin: defining stripped_attrs
         stripped_attrs = dict()

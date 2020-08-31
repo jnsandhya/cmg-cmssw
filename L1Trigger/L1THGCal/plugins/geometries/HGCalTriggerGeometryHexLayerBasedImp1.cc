@@ -16,27 +16,31 @@ class HGCalTriggerGeometryHexLayerBasedImp1 : public HGCalTriggerGeometryBase
     public:
         HGCalTriggerGeometryHexLayerBasedImp1(const edm::ParameterSet& conf);
 
-        virtual void initialize(const edm::ESHandle<CaloGeometry>& ) override final;
-        virtual void reset() override final;
+        void initialize(const edm::ESHandle<CaloGeometry>& ) final;
+        void initialize(const edm::ESHandle<HGCalGeometry>&,
+                const edm::ESHandle<HGCalGeometry>&,
+                const edm::ESHandle<HGCalGeometry>&) final;
+        void reset() final;
 
-        virtual unsigned getTriggerCellFromCell( const unsigned ) const override final;
-        virtual unsigned getModuleFromCell( const unsigned ) const override final;
-        virtual unsigned getModuleFromTriggerCell( const unsigned ) const override final;
+        unsigned getTriggerCellFromCell( const unsigned ) const final;
+        unsigned getModuleFromCell( const unsigned ) const final;
+        unsigned getModuleFromTriggerCell( const unsigned ) const final;
 
-        virtual geom_set getCellsFromTriggerCell( const unsigned ) const override final;
-        virtual geom_set getCellsFromModule( const unsigned ) const override final;
-        virtual geom_set getTriggerCellsFromModule( const unsigned ) const override final;
+        geom_set getCellsFromTriggerCell( const unsigned ) const final;
+        geom_set getCellsFromModule( const unsigned ) const final;
+        geom_set getTriggerCellsFromModule( const unsigned ) const final;
 
-        virtual geom_ordered_set getOrderedCellsFromModule( const unsigned ) const override final;
-        virtual geom_ordered_set getOrderedTriggerCellsFromModule( const unsigned ) const override final;
+        geom_ordered_set getOrderedCellsFromModule( const unsigned ) const final;
+        geom_ordered_set getOrderedTriggerCellsFromModule( const unsigned ) const final;
 
-        virtual geom_set getNeighborsFromTriggerCell( const unsigned ) const override final;
+        geom_set getNeighborsFromTriggerCell( const unsigned ) const final;
 
-        virtual GlobalPoint getTriggerCellPosition(const unsigned ) const override final;
-        virtual GlobalPoint getModulePosition(const unsigned ) const override final;
+        GlobalPoint getTriggerCellPosition(const unsigned ) const final;
+        GlobalPoint getModulePosition(const unsigned ) const final;
 
-        virtual bool validTriggerCell( const unsigned ) const override final;
-        virtual bool disconnectedModule(const unsigned) const override final;
+        bool validTriggerCell( const unsigned ) const final;
+        bool disconnectedModule(const unsigned) const final;
+        unsigned triggerLayer(const unsigned) const final;
 
     private:
         edm::FileInPath l1tCellsMapping_;
@@ -65,8 +69,15 @@ class HGCalTriggerGeometryHexLayerBasedImp1 : public HGCalTriggerGeometryBase
         std::unordered_map<int, std::set<std::pair<short,short>>> trigger_cell_neighbors_;
         std::unordered_map<int, std::set<std::pair<short,short>>> trigger_cell_neighbors_bh_;
 
-        // Disconnected modules
+        // Disconnected modules and layers
         std::unordered_set<unsigned> disconnected_modules_;
+        std::unordered_set<unsigned> disconnected_layers_;
+        std::vector<unsigned> trigger_layers_;
+
+        // layer offsets 
+        unsigned fhOffset_;
+        unsigned bhOffset_;
+        unsigned totalLayers_;
 
         void fillMaps();
         void fillNeighborMaps(const edm::FileInPath&,  std::unordered_map<int, std::set<std::pair<short,short>>>&);
@@ -81,6 +92,8 @@ class HGCalTriggerGeometryHexLayerBasedImp1 : public HGCalTriggerGeometryBase
         unsigned packIetaIphi(unsigned ieta, unsigned iphi) const;
         void unpackWaferCellId(unsigned wafer_cell, unsigned& wafer, unsigned& cell) const;
         void unpackIetaIphi(unsigned ieta_iphi, unsigned& ieta, unsigned& iphi) const;
+
+        unsigned layerWithOffset(unsigned) const;
 };
 
 
@@ -95,6 +108,8 @@ HGCalTriggerGeometryHexLayerBasedImp1(const edm::ParameterSet& conf):
 {
     std::vector<unsigned> tmp_vector = conf.getParameter<std::vector<unsigned>>("DisconnectedModules");
     std::move(tmp_vector.begin(), tmp_vector.end(), std::inserter(disconnected_modules_, disconnected_modules_.end()));
+    tmp_vector = conf.getParameter<std::vector<unsigned>>("DisconnectedLayers");
+    std::move(tmp_vector.begin(), tmp_vector.end(), std::inserter(disconnected_layers_, disconnected_layers_.end()));
 }
 
 void
@@ -118,11 +133,40 @@ HGCalTriggerGeometryHexLayerBasedImp1::
 initialize(const edm::ESHandle<CaloGeometry>& calo_geometry)
 {
     setCaloGeometry(calo_geometry);
+    fhOffset_ = eeTopology().dddConstants().layers(true);
+    bhOffset_ = fhOffset_ + fhTopology().dddConstants().layers(true);
+    totalLayers_ =  bhOffset_ + bhTopology().dddConstants()->getMaxDepth(1);
+    trigger_layers_.resize(totalLayers_+1);
+    unsigned trigger_layer = 0;
+    for(unsigned layer=0; layer<trigger_layers_.size(); layer++)
+    {
+        if(disconnected_layers_.find(layer)==disconnected_layers_.end())
+        {
+            // Increase trigger layer number if the layer is not disconnected
+            trigger_layers_[layer] = trigger_layer;
+            trigger_layer++;
+        }
+        else
+        {
+            trigger_layers_[layer] = 0;
+        }
+    }
     fillMaps();
     fillNeighborMaps(l1tCellNeighborsMapping_, trigger_cell_neighbors_);
     fillNeighborMaps(l1tCellNeighborsBHMapping_, trigger_cell_neighbors_bh_);
     fillInvalidTriggerCells();
 
+}
+
+void
+HGCalTriggerGeometryHexLayerBasedImp1::
+initialize(const edm::ESHandle<HGCalGeometry>& hgc_ee_geometry,
+        const edm::ESHandle<HGCalGeometry>& hgc_hsi_geometry,
+        const edm::ESHandle<HGCalGeometry>& hgc_hsc_geometry
+        )
+{
+    throw cms::Exception("BadGeometry")
+        << "HGCalTriggerGeometryHexLayerBasedImp1 geometry cannot be initialized with the V9 HGCAL geometry";
 }
 
 unsigned 
@@ -208,7 +252,7 @@ getModuleFromTriggerCell( const unsigned trigger_cell_id ) const
         }
         module = module_itr->second;
     }
-    return HGCalDetId((ForwardSubdetector)trigger_cell_det_id.subdetId(), trigger_cell_det_id.zside(), trigger_cell_det_id.layer(), trigger_cell_det_id.waferType(), module, HGCalDetId::kHGCalCellMask).rawId();
+    return HGCalDetId((ForwardSubdetector)trigger_cell_det_id.subdetId(), trigger_cell_det_id.zside(), trigger_cell_det_id.layer(), (trigger_cell_det_id.waferType()==1 ? 1:0), module, HGCalDetId::kHGCalCellMask).rawId();
 }
 
 HGCalTriggerGeometryBase::geom_set 
@@ -245,7 +289,7 @@ getCellsFromTriggerCell( const unsigned trigger_cell_id ) const
             unsigned wafer = 0;
             unsigned cell = 0;
             unpackWaferCellId(tc_c_itr->second, wafer, cell);
-            unsigned wafer_type = detIdWaferType(subdet, wafer);
+            unsigned wafer_type = (detIdWaferType(subdet, wafer)==1 ? 1 : 0);
             unsigned cell_det_id = HGCalDetId((ForwardSubdetector)trigger_cell_det_id.subdetId(), trigger_cell_det_id.zside(), trigger_cell_det_id.layer(), wafer_type, wafer, cell).rawId();
             if(validCellId(subdet, cell_det_id)) cell_det_ids.emplace(cell_det_id);
         }
@@ -405,7 +449,7 @@ getTriggerCellPosition(const unsigned trigger_cell_det_id) const
         for(const auto& cell : cell_ids)
         {
             HcalDetId cellDetId(cell);
-            triggerCellVector += bhGeometry().getPosition(cellDetId).basicVector();
+            triggerCellVector += bhGeometry()->getPosition(cellDetId).basicVector();
         }
     }
     // EE or FH
@@ -414,7 +458,7 @@ getTriggerCellPosition(const unsigned trigger_cell_det_id) const
         for(const auto& cell : cell_ids)
         {
             HGCalDetId cellDetId(cell);
-            triggerCellVector += (cellDetId.subdetId()==ForwardSubdetector::HGCEE ? eeGeometry().getPosition(cellDetId) :  fhGeometry().getPosition(cellDetId)).basicVector();
+            triggerCellVector += (cellDetId.subdetId()==ForwardSubdetector::HGCEE ? eeGeometry()->getPosition(cellDetId) :  fhGeometry()->getPosition(cellDetId)).basicVector();
         }
     }
     return GlobalPoint( triggerCellVector/cell_ids.size() );
@@ -435,7 +479,7 @@ getModulePosition(const unsigned module_det_id) const
         for(const auto& cell : cell_ids)
         {
             HcalDetId cellDetId(cell);
-            moduleVector += bhGeometry().getPosition(cellDetId).basicVector();
+            moduleVector += bhGeometry()->getPosition(cellDetId).basicVector();
         }
     }
     // EE or FH
@@ -444,7 +488,7 @@ getModulePosition(const unsigned module_det_id) const
         for(const auto& cell : cell_ids)
         {
             HGCalDetId cellDetId(cell);
-            moduleVector += (cellDetId.subdetId()==ForwardSubdetector::HGCEE ? eeGeometry().getPosition(cellDetId) :  fhGeometry().getPosition(cellDetId)).basicVector();
+            moduleVector += (cellDetId.subdetId()==ForwardSubdetector::HGCEE ? eeGeometry()->getPosition(cellDetId) :  fhGeometry()->getPosition(cellDetId)).basicVector();
         }
     }
     return GlobalPoint( moduleVector/cell_ids.size() );
@@ -549,7 +593,7 @@ fillNeighborMaps(const edm::FileInPath& file,  std::unordered_map<int, std::set<
         std::vector<std::string> key_tokens {
             std::sregex_token_iterator(line.begin(), line.end(), key_regex), {}
         };
-        if(key_tokens.size()<1)
+        if(key_tokens.empty())
         {
             throw cms::Exception("BadGeometry")
                 << "Syntax error in the L1TCellNeighborsMapping:\n"
@@ -681,7 +725,19 @@ bool
 HGCalTriggerGeometryHexLayerBasedImp1::
 disconnectedModule(const unsigned module_id) const
 {
-    return disconnected_modules_.find(HGCalDetId(module_id).wafer())!=disconnected_modules_.end();
+    bool disconnected = false;
+    if(disconnected_modules_.find(HGCalDetId(module_id).wafer())!=disconnected_modules_.end()) disconnected = true;
+    if(disconnected_layers_.find(layerWithOffset(module_id))!=disconnected_layers_.end()) disconnected = true;
+    return disconnected;
+}
+
+unsigned 
+HGCalTriggerGeometryHexLayerBasedImp1::
+triggerLayer(const unsigned id) const
+{
+    unsigned layer = layerWithOffset(id);
+    if(layer>=trigger_layers_.size()) return 0;
+    return trigger_layers_[layer];
 }
 
 bool 
@@ -758,6 +814,28 @@ detIdWaferType(unsigned subdet, short wafer) const
             break;
     };
     return wafer_type;
+}
+
+
+unsigned
+HGCalTriggerGeometryHexLayerBasedImp1::
+layerWithOffset(unsigned id) const
+{
+    HGCalDetId detid(id);
+    unsigned layer = 0;
+    switch(detid.subdetId())
+    {
+        case ForwardSubdetector::HGCEE:
+            layer = detid.layer();
+            break;
+        case ForwardSubdetector::HGCHEF:
+            layer = fhOffset_ + detid.layer();
+            break;
+        case ForwardSubdetector::HGCHEB:
+            layer = bhOffset_ + detid.layer();
+            break;
+    };
+    return layer;
 }
 
 

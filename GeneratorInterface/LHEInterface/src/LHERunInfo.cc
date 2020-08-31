@@ -459,22 +459,22 @@ void LHERunInfo::statistics() const
 }
 
 LHERunInfo::Header::Header() :
-	xmlDoc(0)
+	xmlDoc(nullptr)
 {
 }
 
 LHERunInfo::Header::Header(const std::string &tag) :
-	LHERunInfoProduct::Header(tag), xmlDoc(0)
+	LHERunInfoProduct::Header(tag), xmlDoc(nullptr)
 {
 }
 
 LHERunInfo::Header::Header(const Header &orig) :
-	LHERunInfoProduct::Header(orig), xmlDoc(0)
+	LHERunInfoProduct::Header(orig), xmlDoc(nullptr)
 {
 }
 
 LHERunInfo::Header::Header(const LHERunInfoProduct::Header &orig) :
-	LHERunInfoProduct::Header(orig), xmlDoc(0)
+	LHERunInfoProduct::Header(orig), xmlDoc(nullptr)
 {
 }
 
@@ -487,7 +487,7 @@ LHERunInfo::Header::~Header()
 static void fillLines(std::vector<std::string> &lines, const char *data,
                       int len = -1)
 {
-	const char *end = len >= 0 ? (data + len) : 0;
+	const char *end = len >= 0 ? (data + len) : nullptr;
 	while(*data && (!end || data < end)) {
 		std::size_t len = std::strcspn(data, "\r\n");
 		if (end && data + len > end)
@@ -507,9 +507,9 @@ static std::vector<std::string> domToLines(const DOMNode *node)
 	DOMImplementation *impl =
 		DOMImplementationRegistry::getDOMImplementation(
 							XMLUniStr("Core"));
-	std::auto_ptr<DOMLSSerializer> writer(((DOMImplementationLS*)(impl))->createLSSerializer());
+	std::unique_ptr<DOMLSSerializer> writer(((DOMImplementationLS*)(impl))->createLSSerializer());
 
-	std::auto_ptr<DOMLSOutput> outputDesc(((DOMImplementationLS*)impl)->createLSOutput());
+	std::unique_ptr<DOMLSOutput> outputDesc(((DOMImplementationLS*)impl)->createLSOutput());
  	assert(outputDesc.get());
 	outputDesc->setEncoding(XMLUniStr("UTF-8"));
 	
@@ -524,7 +524,7 @@ static std::vector<std::string> domToLines(const DOMNode *node)
 
 std::vector<std::string> LHERunInfo::findHeader(const std::string &tag) const
 {
-	const LHERunInfo::Header *header = 0;
+	const LHERunInfo::Header *header = nullptr;
 	for(std::vector<Header>::const_iterator iter = headers.begin();
 	    iter != headers.end(); ++iter) {
 		if (iter->tag() == tag)
@@ -598,7 +598,7 @@ namespace {
 const DOMNode *LHERunInfo::Header::getXMLNode() const
 {
 	if (tag().empty())
-		return 0;
+		return nullptr;
 
 	if (!xmlDoc) {
 		XercesDOMParser parser;
@@ -612,7 +612,7 @@ const DOMNode *LHERunInfo::Header::getXMLNode() const
 		parser.setCreateEntityReferenceNodes(false);
 
 		try {
-			std::auto_ptr<CBInputStream::Reader> reader(
+			std::unique_ptr<CBInputStream::Reader> reader(
 						new HeaderReader(this));
 			CBInputSource source(reader);
 			parser.parse(source);

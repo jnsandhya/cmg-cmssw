@@ -33,7 +33,6 @@
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
 
 #include "TDirectory.h"
 #include "TFile.h"
@@ -76,8 +75,6 @@ public:
   // Operations
 
   void analyze(const edm::Event & event, const edm::EventSetup&) override;
-  void beginJob();
-  void endJob();
 
   void dqmBeginRun(edm::Run const&, edm::EventSetup const&) override;
   void bookHistograms(DQMStore::IBooker &, edm::Run const &, edm::EventSetup const &) override;

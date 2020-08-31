@@ -95,6 +95,7 @@ void ElectronIdMVABased::produce(edm::StreamID, edm::Event& iEvent, const edm::E
   }
 
   iEvent.put(std::move(mvaElectrons));
+
 }
 
 //define this as a plug-in

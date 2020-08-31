@@ -154,9 +154,14 @@ void V0Fitter::fitAll(const edm::Event& iEvent, const edm::EventSetup& iSetup,
       }
 
       // measure distance between tracks at their closest approach
-      if (!posTransTkPtr->impactPointTSCP().isValid() || !negTransTkPtr->impactPointTSCP().isValid()) continue;
-      FreeTrajectoryState const & posState = posTransTkPtr->impactPointTSCP().theState();
-      FreeTrajectoryState const & negState = negTransTkPtr->impactPointTSCP().theState();
+
+      //these two variables are needed to 'pin' the temporary value returned to the stack
+      // in order to keep posState and negState from pointing to destructed objects
+      auto const& posImpact = posTransTkPtr->impactPointTSCP();
+      auto const& negImpact = negTransTkPtr->impactPointTSCP();
+      if (!posImpact.isValid() || !negImpact.isValid()) continue;
+      FreeTrajectoryState const & posState = posImpact.theState();
+      FreeTrajectoryState const & negState = negImpact.theState();
       ClosestApproachInRPhi cApp;
       cApp.calculate(posState, negState);
       if (!cApp.status()) continue;
@@ -232,8 +237,8 @@ void V0Fitter::fitAll(const edm::Event& iEvent, const edm::EventSetup& iSetup,
          if (sqrt(negTkHitPosD2) < (distMagXY - sigmaDistMagXY*innerHitPosCut_)) continue;
       }
       
-      std::auto_ptr<TrajectoryStateClosestToPoint> trajPlus;
-      std::auto_ptr<TrajectoryStateClosestToPoint> trajMins;
+      std::unique_ptr<TrajectoryStateClosestToPoint> trajPlus;
+      std::unique_ptr<TrajectoryStateClosestToPoint> trajMins;
       std::vector<reco::TransientTrack> theRefTracks;
       if (theRecoVertex.hasRefittedTracks()) {
          theRefTracks = theRecoVertex.refittedTracks();

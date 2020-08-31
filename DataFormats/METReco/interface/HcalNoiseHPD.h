@@ -17,6 +17,8 @@
 #include "DataFormats/HcalDetId/interface/HcalSubdetector.h"
 #include "DataFormats/HcalDigi/interface/HBHEDataFrame.h"
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
+#include "DataFormats/HcalRecHit/interface/HBHERecHitAuxSetter.h"
+#include "DataFormats/HcalRecHit/interface/CaloRecHitAuxSetter.h"
 #include "DataFormats/Common/interface/RefVector.h"
 #include "DataFormats/Common/interface/Ref.h"
 #include "DataFormats/Common/interface/RefProd.h"
@@ -41,7 +43,7 @@ namespace reco {
   //
   // RefHBHERecHitEnergyComparison is a class functor to compare energies between Ref<HBHERecHitCollection>
   //
-  class RefHBHERecHitEnergyComparison : public std::binary_function<HBHERecHit,HBHERecHit,bool> {
+  class RefHBHERecHitEnergyComparison {
   public:
     bool operator()(const edm::Ref<HBHERecHitCollection>& x, const edm::Ref<HBHERecHitCollection>& y) const
     { return x->energy()>y->energy(); }

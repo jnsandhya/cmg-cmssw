@@ -38,7 +38,7 @@
 class RPCTriggerBxOrConfig : public edm::ESProducer {
    public:
       RPCTriggerBxOrConfig(const edm::ParameterSet&);
-      ~RPCTriggerBxOrConfig();
+      ~RPCTriggerBxOrConfig() override;
 
       typedef std::unique_ptr<L1RPCBxOrConfig> ReturnType;
 
@@ -88,7 +88,6 @@ RPCTriggerBxOrConfig::~RPCTriggerBxOrConfig()
 RPCTriggerBxOrConfig::ReturnType
 RPCTriggerBxOrConfig::produce(const L1RPCBxOrConfigRcd& iRecord)
 {
-   using namespace edm::es;
    auto pRPCTriggerBxOrConfig = std::make_unique<L1RPCBxOrConfig>();
 
    if (m_firstBX > m_lastBX )

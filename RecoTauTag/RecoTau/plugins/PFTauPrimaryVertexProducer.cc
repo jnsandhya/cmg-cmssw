@@ -47,7 +47,6 @@
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 #include <memory>
-#include <boost/foreach.hpp>
 #include <TFormula.h>
 
 #include <memory>
@@ -85,9 +84,6 @@ class PFTauPrimaryVertexProducer final : public edm::stream::EDProducer<> {
   edm::EDGetTokenT<reco::VertexCollection> PVToken_;
   edm::InputTag beamSpotTag_;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
-  edm::InputTag TrackCollectionTag_;
-  edm::EDGetTokenT<reco::TrackCollection> TrackCollectionToken_;
-  edm::InputTag TracksTag_;
   int Algorithm_;
   edm::ParameterSet qualityCutsPSet_;
   bool useBeamSpot_;
@@ -95,8 +91,8 @@ class PFTauPrimaryVertexProducer final : public edm::stream::EDProducer<> {
   bool RemoveMuonTracks_;
   bool RemoveElectronTracks_;
   DiscCutPairVec discriminators_;
-  std::auto_ptr<StringCutObjectSelector<reco::PFTau> > cut_;
-  std::auto_ptr<tau::RecoTauVertexAssociator> vertexAssociator_;
+  std::unique_ptr<StringCutObjectSelector<reco::PFTau> > cut_;
+  std::unique_ptr<tau::RecoTauVertexAssociator> vertexAssociator_;
 };
 
 PFTauPrimaryVertexProducer::PFTauPrimaryVertexProducer(const edm::ParameterSet& iConfig):
@@ -110,8 +106,6 @@ PFTauPrimaryVertexProducer::PFTauPrimaryVertexProducer(const edm::ParameterSet& 
   PVToken_(consumes<reco::VertexCollection>(PVTag_)),
   beamSpotTag_(iConfig.getParameter<edm::InputTag>("beamSpot")),
   beamSpotToken_(consumes<reco::BeamSpot>(beamSpotTag_)),
-  TrackCollectionTag_(iConfig.getParameter<edm::InputTag>("TrackCollectionTag")),
-  TrackCollectionToken_(consumes<reco::TrackCollection>(TrackCollectionTag_)),
   Algorithm_(iConfig.getParameter<int>("Algorithm")),
   qualityCutsPSet_(iConfig.getParameter<edm::ParameterSet>("qualityCuts")),
   useBeamSpot_(iConfig.getParameter<bool>("useBeamSpot")),
@@ -122,7 +116,7 @@ PFTauPrimaryVertexProducer::PFTauPrimaryVertexProducer(const edm::ParameterSet& 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   std::vector<edm::ParameterSet> discriminators =iConfig.getParameter<std::vector<edm::ParameterSet> >("discriminators");
   // Build each of our cuts
-  BOOST_FOREACH(const edm::ParameterSet &pset, discriminators) {
+  for(auto const& pset : discriminators) {
     DiscCutPair* newCut = new DiscCutPair();
     newCut->inputToken_ =consumes<reco::PFTauDiscriminator>(pset.getParameter<edm::InputTag>("discriminator"));
 
@@ -161,16 +155,13 @@ void PFTauPrimaryVertexProducer::produce(edm::Event& iEvent,const edm::EventSetu
   edm::Handle<reco::BeamSpot> beamSpot;
   iEvent.getByToken(beamSpotToken_,beamSpot);
 
-  edm::Handle<reco::TrackCollection> trackCollection;
-  iEvent.getByToken(TrackCollectionToken_,trackCollection);
-
   // Set Association Map
   auto AVPFTauPV = std::make_unique<edm::AssociationVector<PFTauRefProd, std::vector<reco::VertexRef>>>(PFTauRefProd(Tau));
   auto VertexCollection_out = std::make_unique<VertexCollection>();
   reco::VertexRefProd VertexRefProd_out = iEvent.getRefBeforePut<reco::VertexCollection>("PFTauPrimaryVertices");
 
   // Load each discriminator
-  BOOST_FOREACH(DiscCutPair *disc, discriminators_) {
+  for(auto& disc : discriminators_) {
     edm::Handle<reco::PFTauDiscriminator> discr;
     iEvent.getByToken(disc->inputToken_, discr);
     disc->discr_ = &(*discr);
@@ -194,7 +185,7 @@ void PFTauPrimaryVertexProducer::produce(edm::Event& iEvent,const edm::EventSetu
       ///////////////////////
       // Check if it passed all the discrimiantors
       bool passed(true); 
-      BOOST_FOREACH(const DiscCutPair* disc, discriminators_) {
+      for(auto const& disc : discriminators_) {
         // Check this discriminator passes
 	bool passedDisc = true;
 	if ( disc->cutFormula_ )passedDisc = (disc->cutFormula_->Eval((*disc->discr_)[tau]) > 0.5);
@@ -238,21 +229,6 @@ void PFTauPrimaryVertexProducer::produce(edm::Event& iEvent,const edm::EventSetu
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Get Non-Tau tracks
 	reco::TrackCollection nonTauTracks;
-// 	if (trackCollection.isValid()) {
-// 	  // remove tau tracks and only tracks associated with the vertex
-// 	  unsigned int idx = 0;
-// 	  for (reco::TrackCollection::const_iterator iTrk = trackCollection->begin(); iTrk != trackCollection->end(); ++iTrk, idx++) {
-// 	    reco::TrackRef tmpRef(trackCollection, idx);
-// 	    reco::TrackRef tmpRefForBase=tmpRef;
-// 	    bool isSigTrk = false;
-// 	    bool fromVertex=false;
-// 	    for (unsigned int sigTrk = 0; sigTrk < SignalTracks.size(); sigTrk++) {
-// 	      if (reco::TrackBaseRef(tmpRefForBase)==SignalTracks.at(sigTrk)){isSigTrk = true; break;}
-// 	    }
-// 	  if (!isSigTrk) nonSigTracks.push_back(*iTrk);
-// 	  }
-// 	}
-	
 	for(std::vector<reco::TrackBaseRef>::const_iterator vtxTrkRef=thePV.tracks_begin();vtxTrkRef<thePV.tracks_end();vtxTrkRef++){
 	  bool matched = false;
 	  for (unsigned int sigTrk = 0; sigTrk < SignalTracks.size(); sigTrk++) {

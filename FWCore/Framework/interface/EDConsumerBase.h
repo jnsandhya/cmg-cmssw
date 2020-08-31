@@ -4,7 +4,7 @@
 //
 // Package:     FWCore/Framework
 // Class  :     EDConsumerBase
-// 
+//
 /**\class edm::EDConsumerBase
 
  Description: Allows declaration of what data is being consumed
@@ -23,15 +23,20 @@
 #include <string>
 #include <vector>
 #include <array>
+
 // user include files
+#include "DataFormats/Provenance/interface/BranchType.h"
 #include "FWCore/Framework/interface/ProductResolverIndexAndSkipBit.h"
+#include "FWCore/Framework/interface/EventSetupRecordKey.h"
 #include "FWCore/ServiceRegistry/interface/ConsumesInfo.h"
 #include "FWCore/Utilities/interface/TypeID.h"
 #include "FWCore/Utilities/interface/TypeToGet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Utilities/interface/EDGetToken.h"
+#include "FWCore/Utilities/interface/ESGetToken.h"
+#include "FWCore/Utilities/interface/ESInputTag.h"
 #include "FWCore/Utilities/interface/SoATuple.h"
-#include "DataFormats/Provenance/interface/BranchType.h"
+#include "FWCore/Utilities/interface/Transition.h"
 #include "FWCore/Utilities/interface/ProductResolverIndex.h"
 #include "FWCore/Utilities/interface/ProductKindOfType.h"
 #include "FWCore/Utilities/interface/ProductLabels.h"
@@ -48,21 +53,22 @@ namespace edm {
 
   class EDConsumerBase
   {
-    
+
   public:
     EDConsumerBase() : frozen_(false), containsCurrentProcessAlias_(false) {}
     virtual ~EDConsumerBase() noexcept(false);
-    
+
     // disallow copying
     EDConsumerBase(EDConsumerBase const&) = delete;
     EDConsumerBase const& operator=(EDConsumerBase const&) = delete;
-    
+
     // allow moving
     EDConsumerBase(EDConsumerBase&&) = default;
     EDConsumerBase& operator=(EDConsumerBase&&) = default;
 
     // ---------- const member functions ---------------------
     ProductResolverIndexAndSkipBit indexFrom(EDGetToken, BranchType, TypeID const&) const;
+    ProductResolverIndexAndSkipBit uncheckedIndexFrom(EDGetToken) const;
 
     void itemsToGet(BranchType, std::vector<ProductResolverIndexAndSkipBit>&) const;
     void itemsMayGet(BranchType, std::vector<ProductResolverIndexAndSkipBit>&) const;
@@ -71,19 +77,19 @@ namespace edm {
 
     ///\return true if the product corresponding to the index was registered via consumes or mayConsume call
     bool registeredToConsume(ProductResolverIndex, bool, BranchType) const;
-    
+
     ///\return true of TypeID corresponds to a type specified in a consumesMany call
     bool registeredToConsumeMany(TypeID const&, BranchType) const;
     // ---------- static member functions --------------------
-    
+
     // ---------- member functions ---------------------------
     void updateLookup(BranchType iBranchType,
                       ProductResolverIndexHelper const&,
                       bool iPrefetchMayGet);
-    
+
     typedef ProductLabels Labels;
     void labelsForToken(EDGetToken iToken, Labels& oLabels) const;
-    
+
     void modulesWhoseProductsAreConsumed(std::vector<ModuleDescription const*>& modules,
                                          ProductRegistry const& preg,
                                          std::map<std::string, ModuleDescription const*> const& labelsToDesc,
@@ -99,7 +105,7 @@ namespace edm {
     template<typename T> friend class WillGetIfMatch;
     ///Use a ConsumesCollector to gather consumes information from helper functions
     ConsumesCollector consumesCollector();
-    
+
     template <typename ProductType, BranchType B=InEvent>
     EDGetTokenT<ProductType> consumes(edm::InputTag const& tag) {
       TypeToGet tid=TypeToGet::make<ProductType>();
@@ -143,6 +149,25 @@ namespace edm {
     template <BranchType B>
     void consumesMany(const TypeToGet& id) {
       recordConsumes(B,id,edm::InputTag{},true);
+    }
+
+    // For consuming event-setup products
+    template <typename ESProduct, typename ESRecord, Transition Tr = Transition::Event>
+    auto esConsumes()
+    {
+      return esConsumes<ESProduct, ESRecord, Tr>(ESInputTag{});
+    }
+
+    template <typename ESProduct, typename ESRecord, Transition Tr = Transition::Event>
+    auto esConsumes(ESInputTag const& tag)
+    {
+      return ESGetTokenT<ESProduct>{tag};
+    }
+
+    template <typename ESProduct, Transition Tr = Transition::Event>
+    auto esConsumes(eventsetup::EventSetupRecordKey const&, ESInputTag const& tag)
+    {
+      return ESGetTokenT<ESProduct>{tag};
     }
 
   private:

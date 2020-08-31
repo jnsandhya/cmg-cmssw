@@ -30,7 +30,6 @@ hiDetachedQuadStepSeedLayers.FPix.skipClusters = cms.InputTag('hiDetachedQuadSte
 from RecoTracker.TkTrackingRegions.globalTrackingRegionWithVertices_cfi import globalTrackingRegionWithVertices as _globalTrackingRegionWithVertices
 from RecoTracker.TkHitPairs.hitPairEDProducer_cfi import hitPairEDProducer as _hitPairEDProducer
 from RecoPixelVertexing.PixelTriplets.pixelTripletHLTEDProducer_cfi import pixelTripletHLTEDProducer as _pixelTripletHLTEDProducer
-from RecoPixelVertexing.PixelTriplets.pixelQuadrupletEDProducer_cfi import pixelQuadrupletEDProducer as _pixelQuadrupletEDProducer
 from RecoPixelVertexing.PixelLowPtUtilities.ClusterShapeHitFilterESProducer_cfi import *
 from RecoPixelVertexing.PixelLowPtUtilities.trackCleaner_cfi import *
 from RecoPixelVertexing.PixelTrackFitting.pixelFitterByHelixProjections_cfi import *
@@ -57,7 +56,7 @@ hiDetachedQuadStepTracksHitDoubletsCA = _hitPairEDProducer.clone(
     clusterCheck = "",
     seedingLayers = "hiDetachedQuadStepSeedLayers",
     trackingRegions = "hiDetachedQuadStepTrackingRegions",
-    maxElement = 0,
+    maxElement = 50000000,
     produceIntermediateHitDoublets = True,
     layerPairs = [0,1,2]
 )

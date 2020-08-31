@@ -73,8 +73,6 @@ L1TriggerKeyOnlineProd::~L1TriggerKeyOnlineProd()
 L1TriggerKeyOnlineProd::ReturnType
 L1TriggerKeyOnlineProd::produce(const L1TriggerKeyRcd& iRecord)
 {
-   using namespace edm::es;
-
    // Start with "SubsystemKeysOnly"
    edm::ESHandle< L1TriggerKey > subsystemKeys ;
    try
@@ -86,7 +84,7 @@ L1TriggerKeyOnlineProd::produce(const L1TriggerKeyRcd& iRecord)
        throw ex ;
      }
 
-   std::shared_ptr<L1TriggerKey> pL1TriggerKey = std::make_shared< L1TriggerKey >( *subsystemKeys ) ;
+   std::unique_ptr<L1TriggerKey> pL1TriggerKey = std::make_unique< L1TriggerKey >( *subsystemKeys ) ;
 
   // Collate object keys
   std::vector< std::string >::const_iterator itr = m_subsystemLabels.begin() ;

@@ -351,7 +351,7 @@ DEutils<L1MuRegionalCandCollection>::DEDigi(col_cit itd,  col_cit itm, int aflag
   digi.setRank((float)de,(float)ee);
   //note: phi,eta,pt 'values' not always set for all muon tf systems
   //(under discussion) need universal mechanism for setting up physical units
-  if(0) //check print
+  if(false) //check print
     std::cout << "L1DataEmulDigi DEutils<L1MuRegionalCandCollection>] dedigi info"
       //<< " phivalue:" << itd->phiValue()   << "," << itm->phiValue()
       //<< " etavalue:" << itd->etaValue()   << "," << itm->etaValue()
@@ -380,7 +380,7 @@ DEutils<L1MuGMTCandCollection>::DEDigi(col_cit itd,  col_cit itm, int aflag) {
   int de = (aflag==4)?0:itd->ptIndex();//ptValue();
   int ee = (aflag==3)?0:itm->ptIndex();//ptValue();
   digi.setRank((float)de,(float)ee);
-  if(0) //check print
+  if(false) //check print
   std::cout << "l1dataemuldigi l1mugmtcandcoll type:" << cid 
     //<< " eta:" << itd->etaValue() << ", " << itm->etaValue()
     //<< " phi:" << itd->phiValue() << ", " << itm->phiValue()
@@ -1520,7 +1520,7 @@ std::string DEutils<T>::GetName(int i) const {
 /// --- order candidates ---
 
 template <typename T>
-struct de_rank : public DEutils<T> , public std::binary_function<typename DEutils<T>::cand_type, typename DEutils<T>::cand_type, bool> {
+struct de_rank : public DEutils<T> {
   typedef DEtrait<T> de_trait;
   typedef typename de_trait::cand_type cand_type;
   bool operator()(const cand_type& x, const cand_type& y) const {
@@ -1537,7 +1537,7 @@ inline bool de_rank<L1CaloEmCollection>::operator()
   if       (x.rank()      != y.rank())     {
     return (x.rank()      <  y.rank())     ;
   } else if(x.isolated()  != y.isolated()) {
-    return (x.isolated())?1:0;
+    return (x.isolated())?true:false;
   } else if(x.rctRegion() != y.rctRegion()){
     return (x.rctRegion() <  y.rctRegion());
   } else if(x.rctCrate()  != y.rctCrate()) {

@@ -42,12 +42,12 @@ public:
     L1GtTriggerMaskAlgoTrigTrivialProducer(const edm::ParameterSet&);
 
     /// destructor
-    ~L1GtTriggerMaskAlgoTrigTrivialProducer();
+    ~L1GtTriggerMaskAlgoTrigTrivialProducer() override;
 
 
     /// public methods
 
-    std::shared_ptr<L1GtTriggerMask> produceTriggerMask(
+    std::unique_ptr<L1GtTriggerMask> produceTriggerMask(
         const L1GtTriggerMaskAlgoTrigRcd&);
 
 private:

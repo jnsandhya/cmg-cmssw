@@ -15,7 +15,6 @@
 #include <Geometry/DTGeometry/interface/DTLayer.h> 
 #include "CondFormats/Alignment/interface/Alignments.h" 
 #include "CondFormats/Alignment/interface/AlignmentErrorsExtended.h" 
-#include "CondFormats/Alignment/interface/AlignmentSorter.h" 
 
 // Muon  components
 #include "Alignment/MuonAlignment/interface/AlignableDTChamber.h"
@@ -425,16 +424,13 @@ align::Alignables AlignableMuon::CSCEndcaps()
 //__________________________________________________________________________________________________
 void AlignableMuon::recursiveSetMothers( Alignable* alignable )
 {
-  
-  align::Alignables components = alignable->components();
-  for ( align::Alignables::iterator iter = components.begin();
-		iter != components.end(); iter++ )
-	{
-	  (*iter)->setMother( alignable );
-	  recursiveSetMothers( *iter );
-	}
-
+  for (const auto& iter: alignable->components()) {
+    iter->setMother(alignable);
+    recursiveSetMothers(iter);
+  }
 }
+
+
 //__________________________________________________________________________________________________
 Alignments* AlignableMuon::alignments( void ) const
 {
@@ -450,8 +446,8 @@ Alignments* AlignableMuon::alignments( void ) const
 	  delete tmpAlignments;
     }
 
-  std::sort( m_alignments->m_align.begin(), m_alignments->m_align.end(), 
-			 lessAlignmentDetId<AlignTransform>() );
+  // sort by rawId
+  std::sort( m_alignments->m_align.begin(), m_alignments->m_align.end());
 
   return m_alignments;
 
@@ -472,8 +468,8 @@ AlignmentErrorsExtended* AlignableMuon::alignmentErrors( void ) const
 	  delete tmpAlignmentErrorsExtended;
     }
 
-  std::sort( m_alignmentErrors->m_alignError.begin(), m_alignmentErrors->m_alignError.end(), 
-			 lessAlignmentDetId<AlignTransformErrorExtended>() );
+  // sort by rawId
+  std::sort( m_alignmentErrors->m_alignError.begin(), m_alignmentErrors->m_alignError.end());
 
   return m_alignmentErrors;
 

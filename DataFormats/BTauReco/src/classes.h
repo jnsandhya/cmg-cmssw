@@ -33,6 +33,7 @@
 #include "DataFormats/BTauReco/interface/SecondaryVertexTagInfo.h"
 #include "DataFormats/BTauReco/interface/CandSecondaryVertexTagInfo.h"
 #include "DataFormats/BTauReco/interface/BoostedDoubleSVTagInfo.h"
+#include "DataFormats/BTauReco/interface/BoostedDoubleSVTagInfoFeatures.h"
 #include "DataFormats/BTauReco/interface/ShallowTagInfo.h"
 #include "DataFormats/BTauReco/interface/SoftLeptonTagInfo.h"
 #include "DataFormats/BTauReco/interface/CandSoftLeptonTagInfo.h"
@@ -53,6 +54,11 @@
 #include "DataFormats/BTauReco/interface/ChargedCandidateFeatures.h"
 #include "DataFormats/BTauReco/interface/DeepFlavourFeatures.h"
 #include "DataFormats/BTauReco/interface/DeepFlavourTagInfo.h"
+#include "DataFormats/BTauReco/interface/DeepDoubleXFeatures.h"
+#include "DataFormats/BTauReco/interface/DeepDoubleXTagInfo.h"
+#include "DataFormats/BTauReco/interface/DeepBoostedJetTagInfo.h"
+
+
 
 namespace reco {
     typedef TrackTauImpactParameterAssociationCollection::map_type          TrackTauImpactParameterAssociationMapType;
@@ -285,7 +291,7 @@ namespace DataFormats_BTauReco {
     reco::HTTTopJetTagInfoRefVector                                      htttopjet_rv;
     edm::Wrapper<reco::HTTTopJetTagInfoCollection>                       htttopjet_wc;
     edm::reftobase::Holder<reco::BaseTagInfo, reco::HTTTopJetTagInfoRef> rb_htttopjet;
-    edm::reftobase::RefHolder<reco::HTTTopJetTagInfoRef>                 rbh_htttopjet; 
+    edm::reftobase::RefHolder<reco::HTTTopJetTagInfoRef>                 rbh_htttopjet;
 
     std::vector<Measurement1D>                                          vm1d;
 
@@ -412,5 +418,24 @@ namespace DataFormats_BTauReco {
     reco::DeepFlavourTagInfoRefProd deep_flavour_tag_info_collection_ref_prod;
     reco::DeepFlavourTagInfoRefVector deep_flavour_tag_info_collection_ref_vector;
     edm::Wrapper<reco::DeepFlavourTagInfoCollection> deep_flavour_tag_info_collection_edm_wrapper;
+
+    btagbtvdeep::BoostedDoubleSVTagInfoFeatures boosted_double_sv_tag_info_features;
+    btagbtvdeep::DeepDoubleXFeatures deep_doublex_features;
+    reco::DeepDoubleXTagInfo deep_doublex_tag_info;
+    reco::DeepDoubleXTagInfoCollection deep_doublex_tag_info_collection;
+    reco::DeepDoubleXTagInfoRef deep_doublex_tag_info_collection_ref;
+    reco::DeepDoubleXTagInfoFwdRef deep_doublex_tag_info_collection_fwd_ref;
+    reco::DeepDoubleXTagInfoRefProd deep_doublex_tag_info_collection_ref_prod;
+    reco::DeepDoubleXTagInfoRefVector deep_doublex_tag_info_collection_ref_vector;
+    edm::Wrapper<reco::DeepDoubleXTagInfoCollection> deep_doublex_tag_info_collection_edm_wrapper;
+    
+    btagbtvdeep::DeepBoostedJetFeatures deep_boosted_jet_tag_info_features;
+    reco::DeepBoostedJetTagInfo deep_boosted_jet_tag_info;
+    reco::DeepBoostedJetTagInfoCollection deep_boosted_jet_tag_info_collection;
+    reco::DeepBoostedJetTagInfoRef deep_boosted_jet_tag_info_collection_ref;
+    reco::DeepBoostedJetTagInfoFwdRef deep_boosted_jet_tag_info_collection_fwd_ref;
+    reco::DeepBoostedJetTagInfoRefProd deep_boosted_jet_tag_info_collection_ref_prod;
+    reco::DeepBoostedJetTagInfoRefVector deep_boosted_jet_tag_info_collection_ref_vector;
+    edm::Wrapper<reco::DeepBoostedJetTagInfoCollection> deep_boosted_jet_tag_info_collection_edm_wrapper;
   };
 }

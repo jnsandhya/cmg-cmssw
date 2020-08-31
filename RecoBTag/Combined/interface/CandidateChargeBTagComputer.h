@@ -3,7 +3,7 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/ESHandle.h"
-#include "CommonTools/Utils/interface/TMVAEvaluator.h"
+#include "CommonTools/MVAUtils/interface/TMVAEvaluator.h"
 #include "DataFormats/BTauReco/interface/CandIPTagInfo.h"
 #include "DataFormats/BTauReco/interface/CandSecondaryVertexTagInfo.h"
 #include "DataFormats/BTauReco/interface/CandSoftLeptonTagInfo.h"
@@ -16,7 +16,7 @@
 class CandidateChargeBTagComputer : public JetTagComputer {
  public:
   CandidateChargeBTagComputer(const edm::ParameterSet &parameters);
-  virtual ~CandidateChargeBTagComputer();
+  ~CandidateChargeBTagComputer() override;
   void initialize(const JetTagComputerRecord & record) override;
   float discriminator(const TagInfoHelper & tagInfo) const override;
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);

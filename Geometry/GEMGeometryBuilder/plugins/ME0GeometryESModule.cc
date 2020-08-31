@@ -5,7 +5,6 @@
 
 #include "Geometry/GEMGeometryBuilder/plugins/ME0GeometryESModule.h"
 #include "Geometry/GEMGeometryBuilder/src/ME0GeometryBuilderFromDDD.h"
-#include "Geometry/GEMGeometryBuilder/src/ME0GeometryBuilderFromDDD10EtaPart.h"
 #include "Geometry/GEMGeometryBuilder/src/ME0GeometryBuilderFromCondDB.h"
 
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
@@ -28,7 +27,6 @@ using namespace edm;
 ME0GeometryESModule::ME0GeometryESModule(const edm::ParameterSet & p)
 {
   useDDD       = p.getParameter<bool>("useDDD");
-  use10EtaPart = p.getParameter<bool>("use10EtaPart");
   setWhatProduced(this);
 }
 
@@ -36,36 +34,27 @@ ME0GeometryESModule::ME0GeometryESModule(const edm::ParameterSet & p)
 ME0GeometryESModule::~ME0GeometryESModule(){}
 
 
-std::shared_ptr<ME0Geometry>
-ME0GeometryESModule::produce(const MuonGeometryRecord & record) 
+std::unique_ptr<ME0Geometry>
+ME0GeometryESModule::produce(const MuonGeometryRecord & record)
 {
 
-  LogTrace("ME0GeometryESModule")<<"ME0GeometryESModule::produce with useDDD = "<<useDDD<<" and use10EtaPart = "<<use10EtaPart;
+  LogTrace("ME0GeometryESModule")<<"ME0GeometryESModule::produce with useDDD = "<<useDDD;
 
-  if(useDDD && !use10EtaPart){
+  if(useDDD){
     LogTrace("ME0GeometryESModule")<<"ME0GeometryESModule::produce :: ME0GeometryBuilderFromDDD builder";
     edm::ESTransientHandle<DDCompactView> cpv;
     record.getRecord<IdealGeometryRecord>().get(cpv);
     edm::ESHandle<MuonDDDConstants> mdc;
     record.getRecord<MuonNumberingRecord>().get(mdc);
     ME0GeometryBuilderFromDDD builder;
-    return std::shared_ptr<ME0Geometry>(builder.build(&(*cpv), *mdc));
-  }
-  else if(useDDD && use10EtaPart){
-    LogTrace("ME0GeometryESModule")<<"ME0GeometryESModule::produce :: ME0GeometryBuilderFromDDD10EtaPart builder";
-    edm::ESTransientHandle<DDCompactView> cpv;
-    record.getRecord<IdealGeometryRecord>().get(cpv);
-    edm::ESHandle<MuonDDDConstants> mdc;
-    record.getRecord<MuonNumberingRecord>().get(mdc);
-    ME0GeometryBuilderFromDDD10EtaPart builder;
-    return std::shared_ptr<ME0Geometry>(builder.build(&(*cpv), *mdc));
+    return std::unique_ptr<ME0Geometry>(builder.build(&(*cpv), *mdc));
   }
   else{
     LogTrace("ME0GeometryESModule")<<"ME0GeometryESModule::produce :: ME0GeometryBuilderFromCondDB builder";
     edm::ESHandle<RecoIdealGeometry> rigme0;
     record.getRecord<ME0RecoGeometryRcd>().get(rigme0);
     ME0GeometryBuilderFromCondDB builder;
-    return std::shared_ptr<ME0Geometry>(builder.build(*rigme0));
+    return std::unique_ptr<ME0Geometry>(builder.build(*rigme0));
   }
 }
 

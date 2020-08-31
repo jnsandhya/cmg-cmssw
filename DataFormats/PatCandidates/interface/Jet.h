@@ -441,6 +441,9 @@ namespace pat {
       ///    Else return the reco Jet number of constituents
       const reco::Candidate * daughter(size_t i) const override;
 
+      reco::CandidatePtr daughterPtr( size_t i ) const override;
+      const reco::CompositePtrCandidate::daughters & daughterPtrVector() const override;
+
       using reco::LeafCandidate::daughter; // avoid hiding the base implementation
 
       /// Return number of daughters:
@@ -448,6 +451,12 @@ namespace pat {
       ///    Else check the old version of PAT (embedded constituents size > 0)
       ///    Else return the reco Jet number of constituents
       size_t numberOfDaughters() const override;
+
+      /// clear daughter references
+      void clearDaughters() override {
+        PATObject<reco::Jet>::clearDaughters();
+        daughtersTemp_.reset(); // need to reset daughtersTemp_ as well
+      }
 
       /// accessing Jet ID information
       reco::JetID const & jetID () const { return jetID_;}
@@ -507,10 +516,10 @@ namespace pat {
 
       /// Check to see if the subjet collection exists
       bool hasSubjets( std::string const & label ) const { return find( subjetLabels_.begin(), subjetLabels_.end(), label) != subjetLabels_.end(); }
-      
+
       /// Number of subjet collections
       unsigned int nSubjetCollections(  ) const { return  subjetCollections_.size(); }
-      
+
       /// Subjet collection names
       std::vector<std::string> const & subjetCollectionNames() const { return subjetLabels_; }
 
@@ -550,7 +559,8 @@ namespace pat {
 
       // ---- Jet Substructure ----
       std::vector< pat::JetPtrCollection> subjetCollections_;
-      std::vector< std::string>          subjetLabels_; 
+      std::vector< std::string>          subjetLabels_;
+      edm::AtomicPtrCache<std::vector< reco::CandidatePtr > > daughtersTemp_;
 
       // ---- MC info ----
 
@@ -637,6 +647,7 @@ namespace pat {
       /// cache calo towers
       void cacheCaloTowers() const;
       void cachePFCandidates() const;
+      void cacheDaughters() const;
 
   };
 }

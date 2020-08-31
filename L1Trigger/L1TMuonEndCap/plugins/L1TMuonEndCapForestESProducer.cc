@@ -25,7 +25,7 @@ public:
   L1TMuonEndCapForestESProducer(const edm::ParameterSet&);
   ~L1TMuonEndCapForestESProducer() override {}
 
-  typedef std::shared_ptr<L1TMuonEndCapForest> ReturnType;
+  using ReturnType = std::unique_ptr<L1TMuonEndCapForest>;
 
   ReturnType produce(const L1TMuonEndCapForestRcd&);
 
@@ -95,21 +95,20 @@ L1TMuonEndCapForestESProducer::produce(const L1TMuonEndCapForestRcd& iRecord)
   PtAssignmentEngine* pt_assign_engine_;
   std::unique_ptr<PtAssignmentEngine> pt_assign_engine_2016_;
   std::unique_ptr<PtAssignmentEngine> pt_assign_engine_2017_;
-  
+
   pt_assign_engine_2016_.reset(new PtAssignmentEngine2016());
   pt_assign_engine_2017_.reset(new PtAssignmentEngine2017());
-  
+
   if (ptLUTVersion <= 5) pt_assign_engine_ = pt_assign_engine_2016_.get();
   else                   pt_assign_engine_ = pt_assign_engine_2017_.get();
 
-  pt_assign_engine_->configure( true, ptLUTVersion, false, false, false, false, false );
-  pt_assign_engine_->read(bdtXMLDir);
-  
+  pt_assign_engine_->read(ptLUTVersion, bdtXMLDir);
+
   // get a hold on the forests; copy to non-const locals
   std::array<emtf::Forest, 16> forests = pt_assign_engine_->getForests();
   std::vector<int> allowedModes = pt_assign_engine_->getAllowedModes();
   // construct empty cond payload
-  std::shared_ptr<L1TMuonEndCapForest> pEMTFForest(new L1TMuonEndCapForest());
+  auto pEMTFForest = std::make_unique<L1TMuonEndCapForest>();
   // pack the forests into the cond payload for each mode
   pEMTFForest->forest_coll_.resize(0);
   for (unsigned int i = 0; i < allowedModes.size(); i++) {
@@ -125,7 +124,7 @@ L1TMuonEndCapForestESProducer::produce(const L1TMuonEndCapForestRcd& iRecord)
     // of course, move has no effect here, but I'll keep it in case move constructor will be provided some day
     pEMTFForest->forest_coll_.push_back( std::move( cond_forest ) );
   }
-  
+
   return pEMTFForest;
 }
 

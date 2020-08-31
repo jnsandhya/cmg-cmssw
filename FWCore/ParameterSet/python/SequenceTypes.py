@@ -300,6 +300,10 @@ class _ModuleSequenceType(_ConfigureComponent, _Labelable):
         visitor = NodeNameVisitor(result)
         self.visit(visitor)
         return result
+    def contains(self, mod):
+        visitor = ContainsModuleVisitor(mod)
+        self.visit(visitor)
+        return visitor.result()
     def copy(self):
         returnValue =_ModuleSequenceType.__new__(type(self))
         if self._seq is not None:
@@ -366,6 +370,8 @@ class _ModuleSequenceType(_ConfigureComponent, _Labelable):
     def insert(self,index,item):
         """Inserts the item at the index specified"""
         _checkIfSequenceable(self, item)
+        if self._seq is None:
+            self.__dict__["_seq"] = _SequenceCollection()
         self._seq.insert(index,item)
     def remove(self, something):
         """Remove the first occurrence of 'something' (a sequence or a module)
@@ -435,7 +441,7 @@ class _UnarySequenceOperator(_BooleanLogicSequenceable):
            raise RuntimeError("This operator cannot accept a non sequenceable type")
     def __eq__(self, other):
         # allows replace(~a, b)
-        return type(self) == type(other) and self._operand==other._operand
+        return isinstance(self, type(other)) and self._operand==other._operand
     def __ne__(self, other):
         return not self.__eq__(other)
     def _findDependencies(self,knownDeps, presentDeps):
@@ -618,6 +624,17 @@ class Schedule(_ValidatingParameterListBase,_ConfigureComponent,_Unlabelable):
         for t in self._tasks:
             t.visit(visitor)
         return result
+    def contains(self, mod):
+        visitor = ContainsModuleVisitor(mod)
+        for seq in self:
+            seq.visit(visitor)
+            if visitor.result():
+                return True
+        for t in self._tasks:
+            t.visit(visitor)
+            if visitor.result():
+                return True
+        return visitor.result()
     def dumpPython(self, options=PrintOptions()):
         pathNames = ['process.'+p.label_() for p in self]
         if pathNames:
@@ -731,6 +748,26 @@ class ModuleNodeNotOnTaskVisitor(object):
         if self._levelInTasks > 0:
             if isinstance(visitee, Task):
                 self._levelInTasks -= 1
+
+# Can visit Tasks, Sequences, Paths, and EndPaths
+# result will be set to True if and only if
+# the module is in the object directly or
+# indirectly through contained Sequences or
+# associated Tasks.
+class ContainsModuleVisitor(object):
+    def __init__(self,mod):
+        self._mod = mod
+        self._result = False
+
+    def result(self):
+        return self._result
+
+    def enter(self,visitee):
+        if self._mod is visitee:
+            self._result = True
+
+    def leave(self,visitee):
+        pass
 
 # Can visit Tasks, Sequences, Paths, and EndPaths
 # Fills a set of the names of the visited leaves.
@@ -1332,6 +1369,10 @@ class Task(_ConfigureComponent, _Labelable) :
         visitor = NodeNameVisitor(result)
         self.visit(visitor)
         return result
+    def contains(self, mod):
+        visitor = ContainsModuleVisitor(mod)
+        self.visit(visitor)
+        return visitor.result()
     def copy(self):
         return Task(*self._collection)
     def copyAndExclude(self,listOfModulesToExclude):
@@ -1858,7 +1899,14 @@ if __name__=="__main__":
             self.assertEqual(s.index(m1),0)
             self.assertEqual(s.index(m2),1)        
             self.assertEqual(s.index(m3),2)
-            
+
+            s = Sequence()
+            s.insert(0, m1)
+            self.assertEqual(s.index(m1),0)
+
+            p = Path()
+            p.insert(0, m1)
+            self.assertEqual(s.index(m1),0)
         
         def testExpandAndClone(self):
             m1 = DummyModule("m1")

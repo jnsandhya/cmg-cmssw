@@ -185,7 +185,7 @@ class PileUpAnalyzer( Analyzer ):
                     event.puWeight = data/mc
                 else:
                     event.puWeight = 1
-        #import pdb; pdb.set_trace()
+
         event.eventWeight *= event.puWeight
         self.averages['puWeight'].add( event.puWeight )
         return True

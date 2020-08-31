@@ -261,7 +261,11 @@ class L1TdeStage2CaloLayer2 : public DQMEDAnalyzer {
     NMBHFSUMS,
     MBHFSUMGOOD,
     NTOWCOUNTS,
-    TOWCOUNTGOOD
+    TOWCOUNTGOOD,
+    NASYMCOUNTS,
+    ASYMCOUNTGOOD,
+    NCENTRCOUNTS,
+    CENTRCOUNTGOOD
   };
 
   // objects to represent individual plots shown in DQM
@@ -279,6 +283,8 @@ class L1TdeStage2CaloLayer2 : public DQMEDAnalyzer {
   MonitorElement * jetEtEmul;
   MonitorElement * jetEtaEmul;
   MonitorElement * jetPhiEmul;
+  MonitorElement * jet2DEtaPhiData; // This histogram will be filled only if enable2DComp is true 
+  MonitorElement * jet2DEtaPhiEmul; // This histogram will be filled only if enable2DComp is true  
 
   // histograms to store the properties of mismatched non-isolated e/g
   MonitorElement * egEtData;
@@ -287,7 +293,9 @@ class L1TdeStage2CaloLayer2 : public DQMEDAnalyzer {
   MonitorElement * egEtEmul;
   MonitorElement * egEtaEmul;
   MonitorElement * egPhiEmul;
-
+  MonitorElement * eg2DEtaPhiData; // This histogram will be filled only if enable2DComp is true
+  MonitorElement * eg2DEtaPhiEmul; // This histogram will be filled only if enable2DComp is true
+  
   // histograms to store the properties of mismatched isolated e/g
   MonitorElement * isoEgEtData;
   MonitorElement * isoEgEtaData;
@@ -295,7 +303,9 @@ class L1TdeStage2CaloLayer2 : public DQMEDAnalyzer {
   MonitorElement * isoEgEtEmul;
   MonitorElement * isoEgEtaEmul;
   MonitorElement * isoEgPhiEmul;
-
+  MonitorElement * isoEg2DEtaPhiData; // This histogram will be filled only if enable2DComp is true
+  MonitorElement * isoEg2DEtaPhiEmul; // This histogram will be filled only if enable2DComp is true
+  
   // histograms to store the properties of mismatched non-isolated taus
   MonitorElement * tauEtData;
   MonitorElement * tauEtaData;
@@ -303,6 +313,8 @@ class L1TdeStage2CaloLayer2 : public DQMEDAnalyzer {
   MonitorElement * tauEtEmul;
   MonitorElement * tauEtaEmul;
   MonitorElement * tauPhiEmul;
+  MonitorElement * tau2DEtaPhiData; // This histogram will be filled only if enable2DComp is true 
+  MonitorElement * tau2DEtaPhiEmul; // This histogram will be filled only if enable2DComp is true
 
   // histograms to store the properties of mismatched isolated taus
   MonitorElement * isoTauEtData;
@@ -311,7 +323,9 @@ class L1TdeStage2CaloLayer2 : public DQMEDAnalyzer {
   MonitorElement * isoTauEtEmul;
   MonitorElement * isoTauEtaEmul;
   MonitorElement * isoTauPhiEmul;
-
+  MonitorElement * isoTau2DEtaPhiData; // This histogram will be filled only if enable2DComp is true
+  MonitorElement * isoTau2DEtaPhiEmul; // This histogram will be filled only if enable2DComp is true
+  
   // histograms for mismatched ett sums
   MonitorElement * ettData;
   MonitorElement * ettEmul;
@@ -360,7 +374,20 @@ class L1TdeStage2CaloLayer2 : public DQMEDAnalyzer {
   MonitorElement * towCountData;
   MonitorElement * towCountEmul;
 
+  // mismatched assymetry
+  
+  MonitorElement * asymCountData;
+  MonitorElement * asymCountEmul;
+
+  // mismatched centrality
+     
+  MonitorElement * centrCountData;
+  MonitorElement * centrCountEmul;
+
+
+
   bool verbose;
+  bool enable2DComp; // Default value is false. Set to true in the configuration file for enabling 2D eta-phi histograms
 
   // use only bx = 0 since it only contains RAW data (needed for emulator)
   const unsigned int currBx = 0;

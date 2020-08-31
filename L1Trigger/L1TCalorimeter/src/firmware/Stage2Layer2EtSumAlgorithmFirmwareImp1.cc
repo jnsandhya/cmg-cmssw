@@ -9,25 +9,23 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "L1Trigger/L1TCalorimeter/interface/Stage2Layer2EtSumAlgorithmFirmware.h"
 #include "L1Trigger/L1TCalorimeter/interface/CaloTools.h"
-#include <math.h>
+#include <cmath>
 
 
-l1t::Stage2Layer2EtSumAlgorithmFirmwareImp1::Stage2Layer2EtSumAlgorithmFirmwareImp1(CaloParamsHelper* params) :
+l1t::Stage2Layer2EtSumAlgorithmFirmwareImp1::Stage2Layer2EtSumAlgorithmFirmwareImp1(CaloParamsHelper const* params) :
   params_(params)
 {
 
   // Add some LogDebug for these settings
-  metEtaMax_ = params_->etSumEtaMax(0);
+  metEtaMax_ = params_->etSumEtaMax(2);
   metEtaMaxHF_ = CaloTools::kHFEnd;
-  ettEtaMax_ = params_->etSumEtaMax(2);
+  ettEtaMax_ = params_->etSumEtaMax(0);
   ettEtaMaxHF_ = CaloTools::kHFEnd;
 
   nTowThresholdHw_ = floor(params_->etSumEtThreshold(4)/params_->towerLsbSum());
   nTowEtaMax_ = params_->etSumEtaMax(4);
 }
 
-
-l1t::Stage2Layer2EtSumAlgorithmFirmwareImp1::~Stage2Layer2EtSumAlgorithmFirmwareImp1() {}
 
 void l1t::Stage2Layer2EtSumAlgorithmFirmwareImp1::processEvent(const std::vector<l1t::CaloTower> & towers,
                                                                std::vector<l1t::EtSum> & etsums) {
@@ -38,6 +36,7 @@ void l1t::Stage2Layer2EtSumAlgorithmFirmwareImp1::processEvent(const std::vector
   int nTT4 = CaloTools::calNrTowers(-1*params_->egPUSParam(1),
 				    params_->egPUSParam(1),
 				    1,72,towers,1+params_->pileUpTowerThreshold(),999,CaloTools::CALO);
+  if(nTT4 > 255) nTT4 = 255;
   unsigned int compNTT4 = params_->egCompressShapesLUT()->data((0x1<<7)+(0x1<<8)+(0x1<<5)+nTT4);
 
 
@@ -49,7 +48,7 @@ void l1t::Stage2Layer2EtSumAlgorithmFirmwareImp1::processEvent(const std::vector
     int etem(0);
     unsigned int mb0(0), mb1(0);
 
-    bool ettSat(0), ettHFSat(0), ecalEtSat(0), metSat(0), metHFSat(0);
+    bool ettSat(false), ettHFSat(false), ecalEtSat(false), metSat(false), metHFSat(false);
 
     for (unsigned absieta=1; absieta<=(unsigned int)CaloTools::mpEta(CaloTools::kHFEnd); absieta++) {
 
@@ -152,7 +151,11 @@ void l1t::Stage2Layer2EtSumAlgorithmFirmwareImp1::processEvent(const std::vector
 	    CaloTools::mpEta(abs(tower.hwEta()))<=CaloTools::mpEta(CaloTools::kHFEnd) &&
 	    (tower.hwQual() & 0x4) > 0) 
 	  ringMB0 += 1;
-	  
+	if (CaloTools::mpEta(abs(tower.hwEta()))>=CaloTools::mpEta(CaloTools::kHFBegin) &&
+	    CaloTools::mpEta(abs(tower.hwEta()))<=CaloTools::mpEta(CaloTools::kHFEnd) &&
+	    (tower.hwQual() & 0x8) > 0) 
+	  ringMB1 += 1;
+	
         // tower counting 
 	if (tower.hwPt()>nTowThresholdHw_ && CaloTools::mpEta(abs(tower.hwEta()))<=nTowEtaMax_) 
 	  ringNtowers += 1;
@@ -179,17 +182,13 @@ void l1t::Stage2Layer2EtSumAlgorithmFirmwareImp1::processEvent(const std::vector
 
     // saturate energy sums if saturated TP/tower
 
-    if(ecalEtSat) etem = 0xffff;
-    if(ettSat) et = 0xffff;
-    if(ettHFSat) etHF = 0xffff;
-    if(metSat){ 
-      ex = 0x7fffffff;
-      ey = 0x7fffffff;
-    }
-    if(metHFSat){
-      exHF = 0x7fffffff;
-      eyHF = 0x7fffffff;
-    }
+    if(ecalEtSat || etem > 0xffff) etem = 0xffff;
+    if(ettSat || et > 0xffff) et = 0xffff;
+    if(ettHFSat || etHF > 0xffff) etHF = 0xffff;
+    if(metSat || ex > 0x7fffffff) ex = 0x7fffffff;
+    if(metSat || ey > 0x7fffffff) ey = 0x7fffffff;
+    if(metHFSat || exHF > 0x7fffffff) exHF = 0x7fffffff;
+    if(metHFSat || eyHF > 0x7fffffff) eyHF = 0x7fffffff;
     
     l1t::EtSum etSumTotalEt(p4,l1t::EtSum::EtSumType::kTotalEt,et,0,0,0);
     l1t::EtSum etSumEx(p4,l1t::EtSum::EtSumType::kTotalEtx,ex,0,0,0);

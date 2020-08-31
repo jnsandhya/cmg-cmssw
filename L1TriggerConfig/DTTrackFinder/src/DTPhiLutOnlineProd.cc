@@ -37,10 +37,10 @@ class DTPhiLutOnlineProd :
 {
    public:
       DTPhiLutOnlineProd(const edm::ParameterSet&);
-      ~DTPhiLutOnlineProd();
+      ~DTPhiLutOnlineProd() override;
 
-  virtual std::shared_ptr< L1MuDTPhiLut > newObject(
-    const std::string& objectKey ) override ;
+      std::unique_ptr< L1MuDTPhiLut > newObject(
+         const std::string& objectKey ) override ;
 
    private:
       // ----------member data ---------------------------
@@ -77,13 +77,13 @@ DTPhiLutOnlineProd::~DTPhiLutOnlineProd()
 
 }
 
-std::shared_ptr< L1MuDTPhiLut >
+std::unique_ptr< L1MuDTPhiLut >
 DTPhiLutOnlineProd::newObject( const std::string& objectKey )
 {
   edm::LogError( "L1-O2O" ) << "L1MuDTPhiLut object with key "
 			    << objectKey << " not in ORCON!" ;
 
-  return std::shared_ptr< L1MuDTPhiLut >() ;
+  return std::unique_ptr< L1MuDTPhiLut >() ;
 }
 
 //

@@ -51,12 +51,10 @@ class TransientTrackBuilder;
 class SoftLepton : public edm::stream::EDProducer<> {
 public:
   explicit SoftLepton(const edm::ParameterSet& iConfig);
-  ~SoftLepton();
+  ~SoftLepton() override;
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);
 
-  struct TrackCompare :
-    public std::binary_function<edm::RefToBase<reco::Track>,
-                                edm::RefToBase<reco::Track>, bool> {
+  struct TrackCompare {
     inline bool operator () (const edm::RefToBase<reco::Track> &t1,
                              const edm::RefToBase<reco::Track> &t2) const
     { return t1.key() < t2.key();}
@@ -93,7 +91,7 @@ protected:
   );
 
 private:
-  virtual void produce(edm::Event & event, const edm::EventSetup & setup);
+  void produce(edm::Event & event, const edm::EventSetup & setup) override;
 
   // configuration
   const edm::InputTag                                           m_jets;

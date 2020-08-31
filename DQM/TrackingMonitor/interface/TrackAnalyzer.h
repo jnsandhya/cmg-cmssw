@@ -27,7 +27,7 @@ Monitoring source for general quantities related to tracks.
 #include "DataFormats/SiPixelCluster/interface/SiPixelCluster.h"
 #include "DataFormats/Scalers/interface/LumiScalers.h"
 
-class DQMStore;
+#include "DQMServices/Core/interface/DQMStore.h"
 
 class BeamSpot;
 namespace dqm {
@@ -333,7 +333,7 @@ class TrackAnalyzer
 	MonitorElement* NumberOfLayersPerTrackVsTheta;
 	MonitorElement* NumberOfLayersPerTrackVsEta;
 
-	MonitorElement* NumberOfLayersVsPhiVsEtaPerTrack[4]= {nullptr,nullptr,nullptr,nullptr};
+	MonitorElement* NumberOfLayersVsPhiVsEtaPerTrack[5]= {nullptr,nullptr,nullptr,nullptr,nullptr};
 
 
 	MonitorElement* Chi2;
@@ -351,10 +351,17 @@ class TrackAnalyzer
 	MonitorElement* Chi2ProbVsTheta;
 	
 	MonitorElement* DistanceOfClosestApproach;
+	MonitorElement* DistanceOfClosestApproachError;
+	MonitorElement* DistanceOfClosestApproachErrorVsPt;
+	MonitorElement* DistanceOfClosestApproachErrorVsEta;
+	MonitorElement* DistanceOfClosestApproachErrorVsPhi;
+	MonitorElement* DistanceOfClosestApproachErrorVsDxy;
 	MonitorElement* DistanceOfClosestApproachToBS;
 	MonitorElement* AbsDistanceOfClosestApproachToBS;
 	MonitorElement* DistanceOfClosestApproachToPV;
+        MonitorElement* DistanceOfClosestApproachToPVZoom;
 	MonitorElement* DeltaZToPV;
+        MonitorElement* DeltaZToPVZoom;
 	MonitorElement* DistanceOfClosestApproachVsTheta;
 	MonitorElement* DistanceOfClosestApproachVsPhi;
 	MonitorElement* DistanceOfClosestApproachToBSVsPhi;

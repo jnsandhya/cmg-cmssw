@@ -38,7 +38,7 @@
 class RPCTriggerHsbConfig : public edm::ESProducer {
    public:
       RPCTriggerHsbConfig(const edm::ParameterSet&);
-      ~RPCTriggerHsbConfig();
+      ~RPCTriggerHsbConfig() override;
 
       typedef std::unique_ptr<L1RPCHsbConfig> ReturnType;
 
@@ -94,8 +94,6 @@ RPCTriggerHsbConfig::~RPCTriggerHsbConfig()
 RPCTriggerHsbConfig::ReturnType
 RPCTriggerHsbConfig::produce(const L1RPCHsbConfigRcd& iRecord)
 {
-
-   using namespace edm::es;
    auto pRPCTriggerHsbConfig = std::make_unique<L1RPCHsbConfig>();
 
    pRPCTriggerHsbConfig->setHsbMask(0, m_hsb0);

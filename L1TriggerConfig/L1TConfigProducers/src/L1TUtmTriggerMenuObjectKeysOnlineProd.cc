@@ -6,10 +6,10 @@ class L1TUtmTriggerMenuObjectKeysOnlineProd : public L1ObjectKeysOnlineProdBaseE
 private:
 
 public:
-    virtual void fillObjectKeys( ReturnType pL1TriggerKey ) override ;
+    void fillObjectKeys( L1TriggerKeyExt* pL1TriggerKey ) override ;
 
     L1TUtmTriggerMenuObjectKeysOnlineProd(const edm::ParameterSet&);
-    ~L1TUtmTriggerMenuObjectKeysOnlineProd(void){}
+    ~L1TUtmTriggerMenuObjectKeysOnlineProd(void) override{}
 };
 
 L1TUtmTriggerMenuObjectKeysOnlineProd::L1TUtmTriggerMenuObjectKeysOnlineProd(const edm::ParameterSet& iConfig)
@@ -17,7 +17,7 @@ L1TUtmTriggerMenuObjectKeysOnlineProd::L1TUtmTriggerMenuObjectKeysOnlineProd(con
 }
 
 
-void L1TUtmTriggerMenuObjectKeysOnlineProd::fillObjectKeys( ReturnType pL1TriggerKey ){
+void L1TUtmTriggerMenuObjectKeysOnlineProd::fillObjectKeys( L1TriggerKeyExt* pL1TriggerKey ){
 
     std::string uGTKey = pL1TriggerKey->subsystemKey( L1TriggerKeyExt::kuGT ) ;
 

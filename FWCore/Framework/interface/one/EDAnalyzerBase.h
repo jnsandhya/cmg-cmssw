@@ -63,6 +63,13 @@ namespace edm {
       // Warning: the returned moduleDescription will be invalid during construction
       ModuleDescription const& moduleDescription() const { return moduleDescription_; }
 
+      virtual bool wantsGlobalRuns() const =0;
+      virtual bool wantsGlobalLuminosityBlocks() const =0;
+      bool wantsStreamRuns() const {return false;}
+      bool wantsStreamLuminosityBlocks() const {return false;};
+
+      virtual SerialTaskQueue* globalRunsQueue();
+      virtual SerialTaskQueue* globalLuminosityBlocksQueue();
       void callWhenNewProductsRegistered(std::function<void(BranchDescription const&)> const& func);
 
     private:
@@ -72,7 +79,8 @@ namespace edm {
       //For now this is a placeholder
       /*virtual*/ void preActionBeforeRunEventAsync(WaitingTask* iTask, ModuleCallingContext const& iModuleCallingContext, Principal const& iPrincipal) const {}
 
-      void doPreallocate(PreallocationConfiguration const&) {}
+      void doPreallocate(PreallocationConfiguration const&);
+      virtual void preallocLumis(unsigned int);
       void doBeginJob();
       void doEndJob();
       
@@ -106,6 +114,9 @@ namespace edm {
       virtual void doEndRun_(Run const& rp, EventSetup const& c);
       virtual void doBeginLuminosityBlock_(LuminosityBlock const& lbp, EventSetup const& c);
       virtual void doEndLuminosityBlock_(LuminosityBlock const& lbp, EventSetup const& c);
+
+      bool hasAcquire() const { return false; }
+      bool hasAccumulator() const { return false; }
 
       virtual SharedResourcesAcquirer createAcquirer();
 

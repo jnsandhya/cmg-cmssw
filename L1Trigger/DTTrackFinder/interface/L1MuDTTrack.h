@@ -21,7 +21,6 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
-#include <functional>
 
 //----------------------
 // Base Class Headers --
@@ -60,10 +59,10 @@ class L1MuDTTrack : public L1MuRegionalCand {
     L1MuDTTrack(const L1MuDTTrack&);
 
     /// destructor
-    virtual ~L1MuDTTrack();
+    ~L1MuDTTrack() override;
 
     /// reset muon candidate
-    void reset();
+    void reset() override;
 
     /// get name of object
     inline std::string name() const { return m_name; }
@@ -87,7 +86,7 @@ class L1MuDTTrack : public L1MuRegionalCand {
     inline TrackClass tc() const { return m_tc; }
 
     /// is it an empty  muon candidate?
-    inline bool empty() const { return m_empty; }
+    inline bool empty() const override { return m_empty; }
     
     /// return Sector Processor in which the muon candidate was found
     inline const L1MuDTSecProcId& spid() const { return m_spid; }
@@ -174,23 +173,19 @@ class L1MuDTTrack : public L1MuRegionalCand {
     bool operator!=(const L1MuDTTrack&) const;
 
     /// print parameters of muon candidate
-    void print() const;
+    void print() const override;
   
     /// output stream operator
     friend std::ostream& operator<<(std::ostream&, const L1MuDTTrack&);
 
     /// define a rank for muon candidates
-    class Rank : std::binary_function< const L1MuDTTrack*, const L1MuDTTrack*, bool> {
-      public :
-        bool operator()( const L1MuDTTrack* first, const L1MuDTTrack* second ) const {
-         unsigned short int rank_f = 0;  // rank of first
-         unsigned short int rank_s = 0;  // rank of second
-         if ( first )  rank_f = 10 * first->pt()  + first->quality(); 
-         if ( second ) rank_s = 10 * second->pt() + second->quality(); 
-         return rank_f > rank_s;
-       }
-    };
-
+    static bool rank( const L1MuDTTrack* first, const L1MuDTTrack* second ) {
+      unsigned short int rank_f = 0;  // rank of first
+      unsigned short int rank_s = 0;  // rank of second
+      if ( first )  rank_f = 10 * first->pt()  + first->quality(); 
+      if ( second ) rank_s = 10 * second->pt() + second->quality(); 
+      return rank_f > rank_s;
+    }
 
   private:
 

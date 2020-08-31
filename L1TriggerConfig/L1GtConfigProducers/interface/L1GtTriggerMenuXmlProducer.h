@@ -43,13 +43,13 @@ public:
     L1GtTriggerMenuXmlProducer(const edm::ParameterSet&);
 
     /// destructor
-    ~L1GtTriggerMenuXmlProducer();
+    ~L1GtTriggerMenuXmlProducer() override;
 
 
     /// public methods
 
     /// L1 GT parameters
-    std::shared_ptr<L1GtTriggerMenu> produceGtTriggerMenu(
+    std::unique_ptr<L1GtTriggerMenu> produceGtTriggerMenu(
         const L1GtTriggerMenuRcd&);
 
 private:

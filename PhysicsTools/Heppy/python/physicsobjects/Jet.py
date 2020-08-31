@@ -47,6 +47,28 @@ _btagWPs = {
     "DeepCSVL": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.1522),
     "DeepCSVM": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.4941),
     "DeepCSVT": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.8001),
+### Full run 2, year-by-year WPs:  
+ # https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation2016Legacy
+ # https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation94X
+ # https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation102X
+    "DeepCSV_2016_L": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.2217),
+    "DeepCSV_2016_M": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.6321),
+    "DeepCSV_2016_T": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.8953),
+    "DeepCSV_2017_L": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.1522),
+    "DeepCSV_2017_M": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.4941),
+    "DeepCSV_2017_T": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.8001),
+    "DeepCSV_2018_L": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.1241),
+    "DeepCSV_2018_M": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.4184),
+    "DeepCSV_2018_T": ("pfDeepCSVJetTags:probb + pfDeepCSVJetTags:probbb", 0.7527),
+    "DeepFlav_2016_L": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.0614),
+    "DeepFlav_2016_M": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.3093),
+    "DeepFlav_2016_T": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.7221),
+    "DeepFlav_2017_L": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.0521),
+    "DeepFlav_2017_M": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.3033),
+    "DeepFlav_2017_T": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.7489),
+    "DeepFlav_2018_L": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.0494),
+    "DeepFlav_2018_M": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.2770),
+    "DeepFlav_2018_T": ("pfDeepFlavourJetTags:probb + pfDeepFlavourJetTags:probbb + pfDeepFlavourJetTags:problepb", 0.7264),
 }
 
 class Jet(PhysicsObject):   
@@ -127,7 +149,7 @@ class Jet(PhysicsObject):
             #elif self.jetID("POG_PFID_Medium") : return 2;  commented this line because this working point doesn't exist anymore (as 12/05/15)
             # elif self.jetID("POG_PFID_Loose")  : return 1;
             else                               : return 0;
-        
+
         # jetID from here: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID#Recommendations_for_13_TeV_data
         if name == "POG_PFID_Loose2016":    return ((eta<2.7 and ((npr>1 and phf<0.99 and nhf<0.99) and (eta>2.4 or (elf<0.99 and chf>0 and chm>0)))) or ((eta>2.7 and eta<3.0) and (nhf<0.98 and phf>0.01 and npn>2)) or (eta>3.0 and (phf<0.90 and npn>10)))
         if name == "POG_PFID_Tight2016":    return ((eta<2.7 and ((npr>1 and phf<0.90 and nhf<0.90) and (eta>2.4 or (elf<0.99 and chf>0 and chm>0)))) or ((eta>2.7 and eta<3.0) and (nhf<0.98 and  phf>0.01 and npn>2)) or (eta>3.0 and (phf<0.90 and npn>10)))
@@ -141,9 +163,8 @@ class Jet(PhysicsObject):
         if name == "VBFHBB_PFID_Tight":  return (npr>1 and phf<0.99 and nhf<0.99) and ((eta<=2.4 and nhf<0.9 and phf<0.9 and elf<0.70 and muf<0.70 and chf>0 and chm>0) or eta>2.4);
         if name == "PAG_monoID_Loose":    return (eta<3.0 and chf>0.05 and nhf<0.7 and phf<0.8);
         if name == "PAG_monoID_Tight":    return (eta<3.0 and chf>0.2 and nhf<0.7 and phf<0.7);
-        if name == "PAG_ttbarID_Loose": return (chf>=0 and elf <= 0.99 and nhf < 0.99 and phf < 0.99)
 
-        raise RuntimeError, "jetID '%s' not supported" % name
+        raise RuntimeError("jetID '%s' not supported" % name)
 
     def looseJetId(self):
         '''PF Jet ID (loose operation point) [method provided for convenience only]'''
@@ -228,7 +249,7 @@ class Jet(PhysicsObject):
         if ret == -1000 and name.startswith("pf"):
             ret = self.bDiscriminator(name[2].lower()+name[3:])
         return ret
- 
+
     def btagWP(self,name):
         global _btagWPs
         (disc,val) = _btagWPs[name]
@@ -246,91 +267,89 @@ class Jet(PhysicsObject):
     def leadTrackPt(self):
         lt=self.leadingTrack()
         if lt :
-             return lt.pt()
+            return lt.pt()
         else :
-             return 0. 
+            return 0. 
     def qgl(self) :
-       if not hasattr(self,"qgl_value") :
-	  if hasattr(self,"qgl_rho") : #check if qgl calculator is configured
-              self.computeQGvars()
-              self.qgl_value=self.qgl_calc(self,self.qgl_rho)
-	  else :
-              self.qgl_value=-1. #if no qgl calculator configured
-		  
-       return self.qgl_value
+        if not hasattr(self,"qgl_value") :
+            if hasattr(self,"qgl_rho") : #check if qgl calculator is configured
+                self.computeQGvars()
+                self.qgl_value=self.qgl_calc(self,self.qgl_rho)
+            else :
+                self.qgl_value=-1. #if no qgl calculator configured
+
+        return self.qgl_value
 
     def computeQGvars(self):
-       #return immediately if qgvars already computed or if qgl is disabled
-       if not hasattr(self,"qgl_rho") or getattr(self,"hasQGVvars",False) :
-	  return self
-       self.hasQGvars = True
-	 
-       jet = self
-       jet.mult = 0
-       sum_weight = 0.
-       sum_pt = 0.    
-       sum_deta = 0.  
-       sum_dphi = 0.  
-       sum_deta2 = 0. 
-       sum_detadphi = 0.
-       sum_dphi2 = 0.   
+        #return immediately if qgvars already computed or if qgl is disabled
+        if not hasattr(self,"qgl_rho") or getattr(self,"hasQGVvars",False) :
+            return self
+        self.hasQGvars = True
+
+        jet = self
+        jet.mult = 0
+        sum_weight = 0.
+        sum_pt = 0.    
+        sum_deta = 0.  
+        sum_dphi = 0.  
+        sum_deta2 = 0. 
+        sum_detadphi = 0.
+        sum_dphi2 = 0.   
 
 
 
-       for ii in range(0, jet.numberOfDaughters()) :
+        for ii in range(0, jet.numberOfDaughters()) :
 
-         part = jet.daughter(ii)
+            part = jet.daughter(ii)
 
-         if part.charge() == 0 : # neutral particles 
+            if part.charge() == 0 : # neutral particles 
 
-           if part.pt() < 1.: continue
+                if part.pt() < 1.: continue
 
-         else : # charged particles
+            else : # charged particles
 
-           if part.trackHighPurity()==False: continue
-           if part.fromPV()<=1: continue             
-
-
-         jet.mult += 1
-
-         deta = part.eta() - jet.eta()
-         dphi = deltaPhi(part.phi(), jet.phi())
-         partPt = part.pt()                    
-         weight = partPt*partPt                
-         sum_weight += weight                  
-         sum_pt += partPt                      
-         sum_deta += deta*weight               
-         sum_dphi += dphi*weight               
-         sum_deta2 += deta*deta*weight         
-         sum_detadphi += deta*dphi*weight      
-         sum_dphi2 += dphi*dphi*weight         
+                if part.trackHighPurity()==False: continue
+                if part.fromPV()<=1: continue             
 
 
+            jet.mult += 1
+
+            deta = part.eta() - jet.eta()
+            dphi = deltaPhi(part.phi(), jet.phi())
+            partPt = part.pt()                    
+            weight = partPt*partPt                
+            sum_weight += weight                  
+            sum_pt += partPt                      
+            sum_deta += deta*weight               
+            sum_dphi += dphi*weight               
+            sum_deta2 += deta*deta*weight         
+            sum_detadphi += deta*dphi*weight      
+            sum_dphi2 += dphi*dphi*weight         
 
 
-       a = 0.
-       b = 0.
-       c = 0.
+        a = 0.
+        b = 0.
+        c = 0.
 
-       if sum_weight > 0 :
-         jet.ptd = math.sqrt(sum_weight)/sum_pt
-         ave_deta = sum_deta/sum_weight        
-         ave_dphi = sum_dphi/sum_weight        
-         ave_deta2 = sum_deta2/sum_weight      
-         ave_dphi2 = sum_dphi2/sum_weight      
-         a = ave_deta2 - ave_deta*ave_deta     
-         b = ave_dphi2 - ave_dphi*ave_dphi     
-         c = -(sum_detadphi/sum_weight - ave_deta*ave_dphi)
-       else: jet.ptd = 0.                                  
+        if sum_weight > 0 :
+            jet.ptd = math.sqrt(sum_weight)/sum_pt
+            ave_deta = sum_deta/sum_weight        
+            ave_dphi = sum_dphi/sum_weight        
+            ave_deta2 = sum_deta2/sum_weight      
+            ave_dphi2 = sum_dphi2/sum_weight      
+            a = ave_deta2 - ave_deta*ave_deta     
+            b = ave_dphi2 - ave_dphi*ave_dphi     
+            c = -(sum_detadphi/sum_weight - ave_deta*ave_dphi)
+        else: jet.ptd = 0.                                  
 
-       delta = math.sqrt(math.fabs((a-b)*(a-b)+4.*c*c))
+        delta = math.sqrt(math.fabs((a-b)*(a-b)+4.*c*c))
 
-       if a+b-delta > 0: jet.axis2 = -math.log(math.sqrt(0.5*(a+b-delta)))
-       else: jet.axis2 = -1.                                              
-       if a+b+delta > 0: jet.axis1 = -math.log(math.sqrt(0.5*(a+b+delta)))
-       else: jet.axis1 = -1.
+        if a+b-delta > 0: jet.axis2 = -math.log(math.sqrt(0.5*(a+b-delta)))
+        else: jet.axis2 = -1.                                              
+        if a+b+delta > 0: jet.axis1 = -math.log(math.sqrt(0.5*(a+b+delta)))
+        else: jet.axis1 = -1.
 
-       return jet	
+        return jet
    
 
 

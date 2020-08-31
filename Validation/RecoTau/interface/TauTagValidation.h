@@ -73,11 +73,11 @@ class TauTagValidation : public DQMEDAnalyzer{
 
 public:
   explicit TauTagValidation(const edm::ParameterSet&);
-  ~TauTagValidation();
+  ~TauTagValidation() override;
 
   void bookHistograms(DQMStore::IBooker &, edm::Run const &, edm::EventSetup const &) override;
   void dqmBeginRun(const edm::Run&, const edm::EventSetup&) override;
-  virtual void analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) override;
+  void analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) override;
 
 private:
   /// label of the current module
@@ -137,8 +137,9 @@ private:
   std::map<std::string,  MonitorElement *> nTauVisibleMap;
   std::map<std::string,  MonitorElement *> massTauVisibleMap;
   std::map<std::string,  MonitorElement *> plotMap_;
+  std::map<std::string,  MonitorElement *> summaryMap;
 
-  std::map<std::string,  int> tauDeacyCountMap_;
+  std::map<std::string,  int> tauDecayCountMap_;
 
   MonitorElement* nTaus_;
 

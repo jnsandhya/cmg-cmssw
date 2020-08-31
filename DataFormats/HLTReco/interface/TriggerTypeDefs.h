@@ -48,6 +48,19 @@ namespace trigger
     TriggerL1EG           = -98, // stage2
     TriggerL1Jet          = -99, // stage2
     TriggerL1Tau          =-100, // stage2
+    TriggerL1ETMHF        =-101,
+    TriggerL1Centrality   =-102,
+    TriggerL1MinBiasHFP0  =-103,
+    TriggerL1MinBiasHFM0  =-104,
+    TriggerL1MinBiasHFP1  =-105,
+    TriggerL1MinBiasHFM1  =-106,
+    TriggerL1TotalEtEm    =-107,
+    TriggerL1MissingHtHF  =-108,
+    TriggerL1TowerCount   =-109,
+    TriggerL1AsymEt       =-110,
+    TriggerL1AsymHt       =-111,
+    TriggerL1AsymEtHF     =-112,
+    TriggerL1AsymHtHF     =-113,
 
     /// HLT
 

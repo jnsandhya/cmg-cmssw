@@ -3,6 +3,7 @@
 #include "TrackingTools/DetLayers/interface/MeasurementEstimator.h"
 #include "DataFormats/GeometrySurface/interface/Plane.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateOnSurface.h"
+#include "DataFormats/GeometryVector/interface/VectorUtil.h"
 
 namespace tkDetUtil {
 
@@ -27,7 +28,7 @@ namespace tkDetUtil {
     LocalPoint start = ts.localPosition();
     //     std::cout << "plane z " << plane.normalVector() << std::endl;
     float dphi=0;
-    if likely(std::abs(1.f-std::abs(plane.normalVector().z()))<tolerance) {
+    if LIKELY(std::abs(1.f-std::abs(plane.normalVector().z()))<tolerance) {
       auto ori = plane.toLocal(GlobalPoint(0.,0.,0.));
       auto xc = std::abs(start.x() - ori.x());
       auto yc = std::abs(start.y() - ori.y());

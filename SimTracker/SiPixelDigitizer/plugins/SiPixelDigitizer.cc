@@ -29,7 +29,7 @@
 #include "SimDataFormats/TrackingHit/interface/PSimHit.h"
 #include "DataFormats/Common/interface/Handle.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
-#include "FWCore/Framework/interface/stream/EDProducer.h"
+#include "FWCore/Framework/interface/ProducerBase.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -63,17 +63,12 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "SimGeneral/MixingModule/interface/PileUpEventPrincipal.h"
-
+#include "DataFormats/SiPixelDetId/interface/PixelFEDChannel.h"
 //Random Number
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "FWCore/Utilities/interface/RandomNumberGenerator.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 #include "FWCore/Utilities/interface/Exception.h"
-
-namespace CLHEP {
-  class HepRandomEngine;
-}
-
 
 //
 // constants, enums and typedefs
@@ -91,7 +86,7 @@ namespace CLHEP {
 
 namespace cms
 {
-  SiPixelDigitizer::SiPixelDigitizer(const edm::ParameterSet& iConfig, edm::stream::EDProducerBase& mixMod, edm::ConsumesCollector& iC):
+  SiPixelDigitizer::SiPixelDigitizer(const edm::ParameterSet& iConfig, edm::ProducerBase& mixMod, edm::ConsumesCollector& iC):
     firstInitializeEvent_(true),
     firstFinalizeEvent_(true),
     _pixeldigialgo(),
@@ -107,6 +102,8 @@ namespace cms
     
     mixMod.produces<edm::DetSetVector<PixelDigi> >().setBranchAlias(alias);
     mixMod.produces<edm::DetSetVector<PixelDigiSimLink> >().setBranchAlias(alias + "siPixelDigiSimLink");
+    
+
     for(auto const& trackerContainer : trackerContainers) {
       edm::InputTag tag(hitsProducer, trackerContainer);
       iC.consumes<std::vector<PSimHit> >(edm::InputTag(hitsProducer, trackerContainer));
@@ -120,13 +117,16 @@ namespace cms
     }
 
     _pixeldigialgo.reset(new SiPixelDigitizerAlgorithm(iConfig));
+    if (_pixeldigialgo->killBadFEDChannels()){
+      mixMod.produces<PixelFEDChannelCollection>();
+    }
   }
   
   SiPixelDigitizer::~SiPixelDigitizer(){  
     edm::LogInfo ("PixelDigitizer ") <<"Destruct the Pixel Digitizer";
   }
 
-
+  
   //
   // member functions
   //
@@ -135,7 +135,6 @@ namespace cms
   SiPixelDigitizer::accumulatePixelHits(edm::Handle<std::vector<PSimHit> > hSimHits,
 					size_t globalSimHitIndex,
 					const unsigned int tofBin,
-					CLHEP::HepRandomEngine* engine,
 					edm::EventSetup const& iSetup) {
     if(hSimHits.isValid()) {
        std::set<unsigned int> detIds;
@@ -157,7 +156,7 @@ namespace cms
              GlobalVector bfield = pSetup->inTesla(pixdet->surface().position());
              LogDebug ("PixelDigitizer ") << "B-field(T) at " << pixdet->surface().position() << "(cm): " 
                                           << pSetup->inTesla(pixdet->surface().position());
-             _pixeldigialgo->accumulateSimHits(it, itEnd, globalSimHitIndex, tofBin, pixdet, bfield, tTopo, engine);
+             _pixeldigialgo->accumulateSimHits(it, itEnd, globalSimHitIndex, tofBin, pixdet, bfield, tTopo, randomEngine_);
            }
          }
        }
@@ -176,6 +175,10 @@ namespace cms
     // indices used to create the digi-sim link (if configured to do so) rather than starting
     // from zero for each crossing.
     crossingSimHitIndexOffset_.clear();
+
+    // Cache random number engine
+    edm::Service<edm::RandomNumberGenerator> rng;
+    randomEngine_ = &rng->getEngine(e.streamID());
 
     _pixeldigialgo->initializeEvent();
     iSetup.get<TrackerDigiGeometryRecord>().get(geometryType, pDD);
@@ -213,7 +216,7 @@ namespace cms
       iEvent.getByLabel(tag, simHits);
       unsigned int tofBin = PixelDigiSimLink::LowTof;
       if ((*i).find(std::string("HighTof")) != std::string::npos) tofBin = PixelDigiSimLink::HighTof;
-      accumulatePixelHits(simHits, crossingSimHitIndexOffset_[tag.encode()], tofBin, randomEngine(iEvent.streamID()), iSetup);
+      accumulatePixelHits(simHits, crossingSimHitIndexOffset_[tag.encode()], tofBin, iSetup);
       // Now that the hits have been processed, I'll add the amount of hits in this crossing on to
       // the global counter. Next time accumulateStripHits() is called it will count the sim hits
       // as though they were on the end of this collection.
@@ -233,7 +236,7 @@ namespace cms
       iEvent.getByLabel(tag, simHits);
       unsigned int tofBin = PixelDigiSimLink::LowTof;
       if ((*i).find(std::string("HighTof")) != std::string::npos) tofBin = PixelDigiSimLink::HighTof;
-      accumulatePixelHits(simHits, crossingSimHitIndexOffset_[tag.encode()], tofBin, randomEngine(streamID), iSetup);
+      accumulatePixelHits(simHits, crossingSimHitIndexOffset_[tag.encode()], tofBin, iSetup);
       // Now that the hits have been processed, I'll add the amount of hits in this crossing on to
       // the global counter. Next time accumulateStripHits() is called it will count the sim hits
       // as though they were on the end of this collection.
@@ -246,31 +249,35 @@ namespace cms
   // ------------ method called to produce the data  ------------
   void
   SiPixelDigitizer::finalizeEvent(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-
-    edm::Service<edm::RandomNumberGenerator> rng;
-    CLHEP::HepRandomEngine* engine = &rng->getEngine(iEvent.streamID());
-
     edm::ESHandle<TrackerTopology> tTopoHand;
     iSetup.get<TrackerTopologyRcd>().get(tTopoHand);
     const TrackerTopology *tTopo=tTopoHand.product();
 
     std::vector<edm::DetSet<PixelDigi> > theDigiVector;
     std::vector<edm::DetSet<PixelDigiSimLink> > theDigiLinkVector;
- 
-    PileupInfo_ = getEventPileupInfo();
+    
     if (firstFinalizeEvent_) {
       const unsigned int bunchspace = PileupInfo_->getMix_bunchSpacing();
       _pixeldigialgo->init_DynIneffDB(iSetup, bunchspace);
       firstFinalizeEvent_ = false;
     }
-    _pixeldigialgo->calculateInstlumiFactor(PileupInfo_);   
-
+    _pixeldigialgo->calculateInstlumiFactor(PileupInfo_.get());
+    
+    if (_pixeldigialgo->killBadFEDChannels()){
+      std::unique_ptr<PixelFEDChannelCollection> PixelFEDChannelCollection_ = _pixeldigialgo->chooseScenario(PileupInfo_.get(), randomEngine_);         					    
+      if (PixelFEDChannelCollection_ == nullptr){
+	throw cms::Exception("NullPointerError") << "PixelFEDChannelCollection not set in chooseScenario function.\n";
+      }      
+      iEvent.put(std::move(PixelFEDChannelCollection_));      
+    }
+    
+    
     for( const auto& iu : pDD->detUnits()) {
       
       if(iu->type().isTrackerPixel()) {
-
+	
 	//
-
+	
         edm::DetSet<PixelDigi> collector(iu->geographicalId().rawId());
         edm::DetSet<PixelDigiSimLink> linkcollector(iu->geographicalId().rawId());
         
@@ -279,7 +286,7 @@ namespace cms
                                  collector.data,
                                  linkcollector.data,
 				 tTopo,
-                                 engine);
+                                 randomEngine_);
         if(!collector.data.empty()) {
           theDigiVector.push_back(std::move(collector));
         }
@@ -298,21 +305,8 @@ namespace cms
     // Step D: write output to file 
     iEvent.put(std::move(output));
     iEvent.put(std::move(outputlink));
-  }
 
-  CLHEP::HepRandomEngine* SiPixelDigitizer::randomEngine(edm::StreamID const& streamID) {
-    unsigned int index = streamID.value();
-    if(index >= randomEngines_.size()) {
-      randomEngines_.resize(index + 1, nullptr);
-    }
-    CLHEP::HepRandomEngine* ptr = randomEngines_[index];
-    if(!ptr) {
-      edm::Service<edm::RandomNumberGenerator> rng;
-      ptr = &rng->getEngine(streamID);
-      randomEngines_[index] = ptr;
-    }
-    return ptr;
+    randomEngine_ = nullptr; // to prevent access outside event
   }
-
 }// end namespace cms::
 

@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 import sys
 import imp
 import copy
@@ -13,8 +14,8 @@ from PhysicsTools.HeppyCore.utils.batchmanager import BatchManager
 from PhysicsTools.HeppyCore.framework.heppy_loop import split
 
 def batchScriptPADOVA( index, jobDir='./'):
-   '''prepare the LSF version of the batch script, to run on LSF'''
-   script = """#!/bin/bash
+    '''prepare the LSF version of the batch script, to run on LSF'''
+    script = """#!/bin/bash
 #BSUB -q local
 #BSUB -J test
 #BSUB -o test.log
@@ -39,11 +40,11 @@ exit $?
 #echo cp -r Loop/* $LS_SUBCWD 
 """.format(jdir=jobDir)
 
-   return script
+    return script
 
 def batchScriptPISA( index, remoteDir=''):
-   '''prepare the LSF version of the batch script, to run on LSF'''
-   script = """#!/bin/bash
+    '''prepare the LSF version of the batch script, to run on LSF'''
+    script = """#!/bin/bash
 #BSUB -q cms
 echo 'PWD:'
 pwd
@@ -71,7 +72,7 @@ exit $?
 #echo 'sending the job directory back'
 #echo cp -r Loop/* $LS_SUBCWD 
 """
-   return script
+    return script
 
 def batchScriptCERN( runningMode, jobDir, remoteDir=''):
    if runningMode == "LXPLUS-CONDOR-TRANSFER": 
@@ -85,6 +86,8 @@ tar xzf ../src.tar.gz
 cd src
 eval $(scram runtime -sh)
 cd $_CONDOR_JOB_IWD
+mkdir -p cache
+export TMPDIR=$PWD/cache
 mkdir -p chunk
 cd chunk
 tar xzf ../chunk.tar.gz
@@ -103,7 +106,8 @@ pushd $CMSSW_BASE/src
 eval $(scram runtime -sh)
 popd
 echo
-mkdir tmp && export TMPDIR=$PWD/tmp
+mkdir cache
+export TMPDIR=$PWD/cache
 mkdir job
 cd job
 echo '==== copying job dir to worker ===='
@@ -167,8 +171,8 @@ echo
           dirCopy = dirCopy
           )
    else:
-       print "chosen location not supported yet: ", remoteDir
-       print 'path must start with /store/'
+       print("chosen location not supported yet: "+ remoteDir)
+       print('path must start with /store/')
        sys.exit(1)
 
    script = """#!/bin/bash
@@ -189,22 +193,21 @@ echo
 rm Loop/cmsswPreProcessing.root 2> /dev/null
 {copy}
 """.format(copy=cpCmd, init=init)
-
    return script
 
 
 def batchScriptPSI( index, jobDir, remoteDir=''):
-   '''prepare the SGE version of the batch script, to run on the PSI tier3 batch system'''
+    '''prepare the SGE version of the batch script, to run on the PSI tier3 batch system'''
 
-   cmssw_release = os.environ['CMSSW_BASE']
-   VO_CMS_SW_DIR = "/swshare/cms"  # $VO_CMS_SW_DIR doesn't seem to work in the new SL6 t3wn
+    cmssw_release = os.environ['CMSSW_BASE']
+    VO_CMS_SW_DIR = "/swshare/cms"  # $VO_CMS_SW_DIR doesn't seem to work in the new SL6 t3wn
 
-   if remoteDir=='':
-       cpCmd="""echo 'sending the job directory back'
+    if remoteDir=='':
+        cpCmd="""echo 'sending the job directory back'
 rm Loop/cmsswPreProcessing.root
 cp -r Loop/* $SUBMISIONDIR"""
-   elif remoteDir.startswith("/pnfs/psi.ch"):
-       cpCmd="""echo 'sending root files to remote dir'
+    elif remoteDir.startswith("/pnfs/psi.ch"):
+        cpCmd="""echo 'sending root files to remote dir'
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/dcap/ # Fabio's workaround to fix gfal-tools
 for f in Loop/mt2*.root
 do
@@ -222,13 +225,13 @@ do
 done
 rm Loop/cmsswPreProcessing.root
 cp -r Loop/* $SUBMISIONDIR""".format(idx=index, srm='srm://t3se01.psi.ch'+remoteDir+jobDir[jobDir.rfind("/"):jobDir.find("_Chunk")])
-   else:
-      print "remote directory not supported yet: ", remoteDir
-      print 'path must start with "/pnfs/psi.ch"'
-      sys.exit(1)
-      
+    else:
+        print("remote directory not supported yet: ", remoteDir)
+        print('path must start with "/pnfs/psi.ch"')
+        sys.exit(1)
 
-   script = """#!/bin/bash
+
+    script = """#!/bin/bash
 shopt expand_aliases
 ##### MONITORING/DEBUG INFORMATION ###############################
 DATE_START=`date +%s`
@@ -287,14 +290,14 @@ echo "Wallclock running time: $RUNTIME s"
 exit 0
 """.format(jdir=jobDir, vo=VO_CMS_SW_DIR,cmssw=cmssw_release, copy=cpCmd)
 
-   return script
+    return script
 
 def batchScriptIC(jobDir):
-   '''prepare a IC version of the batch script'''
+    '''prepare a IC version of the batch script'''
 
 
-   cmssw_release = os.environ['CMSSW_BASE']
-   script = """#!/bin/bash
+    cmssw_release = os.environ['CMSSW_BASE']
+    script = """#!/bin/bash
 export X509_USER_PROXY=/home/hep/$USER/myproxy
 source /vols/cms/grid/setup.sh
 cd {jobdir}
@@ -307,28 +310,28 @@ echo
 echo 'sending the job directory back'
 mv Loop/* ./ && rm -r Loop
 """.format(jobdir = jobDir,cmssw = cmssw_release)
-   return script
+    return script
 
 def batchScriptLocal(  remoteDir, index ):
-   '''prepare a local version of the batch script, to run using nohup'''
+    '''prepare a local version of the batch script, to run using nohup'''
 
-   script = """#!/bin/bash
+    script = """#!/bin/bash
 echo 'running'
 python $CMSSW_BASE/src/PhysicsTools/HeppyCore/python/framework/looper.py pycfg.py config.pck --options=options.json
 echo
 echo 'sending the job directory back'
 mv Loop/* ./
 """ 
-   return script
+    return script
 
 
 class MyBatchManager( BatchManager ):
-   '''Batch manager specific to cmsRun processes.''' 
-         
-   def PrepareJobUser(self, jobDir, value ):
+    '''Batch manager specific to cmsRun processes.''' 
+
+    def PrepareJobUser(self, jobDir, value ):
        '''Prepare one job. This function is called by the base class.'''
-       print value
-       print components[value]
+       print(value)
+       print(components[value])
 
        #prepare the batch script
        scriptFileName = jobDir+'/batchScript.sh'
@@ -343,7 +346,7 @@ class MyBatchManager( BatchManager ):
        elif mode == 'LOCAL':
            scriptFile.write( batchScriptLocal( storeDir, value) )  # watch out arguments are swapped (although not used)
        elif mode == 'PISA' :
-	   scriptFile.write( batchScriptPISA( storeDir, value) ) 	
+           scriptFile.write( batchScriptPISA( storeDir, value) )
        elif mode == 'PADOVA' :
            scriptFile.write( batchScriptPADOVA( value, jobDir) )        
        elif mode == 'IC':
@@ -360,9 +363,9 @@ class MyBatchManager( BatchManager ):
        # pickle.dump( cfo, cfgFile )
        cfgFile.close()
        if hasattr(self,"heppyOptions_"):
-          optjsonfile = open(jobDir+'/options.json','w')
-          optjsonfile.write(json.dumps(self.heppyOptions_))
-          optjsonfile.close()
+            optjsonfile = open(jobDir+'/options.json','w')
+            optjsonfile.write(json.dumps(self.heppyOptions_))
+            optjsonfile.close()
 
 if __name__ == '__main__':
     batchManager = MyBatchManager()

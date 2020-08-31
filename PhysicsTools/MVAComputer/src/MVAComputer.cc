@@ -174,7 +174,7 @@ void MVAComputer::evalInternal(T &ctx) const
 	while(iter != varProcessors.end()) {
 		std::vector<Processor>::const_iterator loop = iter;
 		int *loopOutConf = outConf;
-		int *loopStart = 0;
+		int *loopStart = nullptr;
 		double *loopOutput = output;
                 VarProcessor::LoopCtx loopCtx;
 
@@ -217,7 +217,7 @@ void MVAComputer::evalInternal(T &ctx) const
 			if (status == VarProcessor::kReset) {
 				outConf = loopOutConf;
 				output = loopOutput;
-				loopStart = 0;
+				loopStart = nullptr;
 				offset = 0;
 				iter = loop;
 			} else {
@@ -266,7 +266,7 @@ Calibration::MVAComputer *MVAComputer::readCalibration(std::istream &is)
 			static_cast<const void*>(buf.c_str())), kFALSE);
 	buffer.InitMap();
 
-	std::auto_ptr<Calibration::MVAComputer> calib(
+	std::unique_ptr<Calibration::MVAComputer> calib(
 					new Calibration::MVAComputer());
 	buffer.StreamObject(static_cast<void*>(calib.get()), rootClass);
 

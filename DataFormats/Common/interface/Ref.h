@@ -44,10 +44,8 @@ Ref: A template for a interproduct reference to a member of a product_.
  
      It is possible to customize the 'lookup' algorithm used.  
 
-     1) The helper class F should inherit from
-     std::binary_function<const C&, typename IndexT, const T*> (or
-     must provide the typedefs obtained from that inheritance
-     directly).
+     1) The helper class F must provide `value_type`,
+     `first_argument_type` and `second_argument_type` typedefs.
 
      2) The helper class F must define the function call operator in
      such a way that the following call is well-formed:
@@ -216,7 +214,7 @@ namespace edm {
     { }
 
     Ref(ProductID const& iProductID, T const* item, key_type itemKey, bool transient) :
-      product_(iProductID, item, 0, transient), index_(itemKey)
+      product_(iProductID, item, nullptr, transient), index_(itemKey)
     { }
 
     /// Constructor that creates an invalid ("null") Ref that is
@@ -243,7 +241,7 @@ namespace edm {
 
     /// Returns C++ pointer to the item
     T const* get() const {
-      return isNull() ? 0 : this->operator->();
+      return isNull() ? nullptr : this->operator->();
     }
 
     /// Checks for null

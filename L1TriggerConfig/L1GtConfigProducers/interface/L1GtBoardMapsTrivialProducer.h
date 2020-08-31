@@ -40,13 +40,13 @@ public:
     L1GtBoardMapsTrivialProducer(const edm::ParameterSet&);
 
     /// destructor
-    ~L1GtBoardMapsTrivialProducer();
+    ~L1GtBoardMapsTrivialProducer() override;
 
 
     /// public methods
 
     /// produce mappings of the L1 GT boards
-    std::shared_ptr<L1GtBoardMaps> produceBoardMaps(
+    std::unique_ptr<L1GtBoardMaps> produceBoardMaps(
         const L1GtBoardMapsRcd&);
 
 private:

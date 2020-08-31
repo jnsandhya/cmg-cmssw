@@ -1,3 +1,4 @@
+from __future__ import print_function
 from PhysicsTools.Heppy.analyzers.core.Analyzer import Analyzer
 from PhysicsTools.Heppy.analyzers.core.AutoHandle import AutoHandle
 from PhysicsTools.Heppy.physicsutils.genutils import isNotFromHadronicShower, realGenMothers, realGenDaughters, motherRef
@@ -142,7 +143,7 @@ class GeneratorAnalyzer( Analyzer ):
                 if ancestorKey in keymap:
                     gp.motherIndex = keymap[ancestorKey]
                     if ancestor.pdgId() != good[gp.motherIndex].pdgId():
-                        print "Error keying %d: motherIndex %d, ancestor.pdgId %d, good[gp.motherIndex].pdgId() %d " % (igp, gp.motherIndex, ancestor.pdgId(),  good[gp.motherIndex].pdgId())
+                        print("Error keying %d: motherIndex %d, ancestor.pdgId %d, good[gp.motherIndex].pdgId() %d " % (igp, gp.motherIndex, ancestor.pdgId(),  good[gp.motherIndex].pdgId()))
                     break
                 (ancestor, ancestorKey) = (None,-1) if ancestor.numberOfMothers() == 0 else motherRef(ancestor)
             if abs(gp.pdgId()) not in [1,2,3,4,5,11,12,13,14,15,16,21]:
@@ -167,12 +168,12 @@ class GeneratorAnalyzer( Analyzer ):
                 p.motherId = -9999
                 p.grandmotherId = -9999
             if verbose:
-                print "%3d  {%6d}: %+8d  %3d :  %8.2f   %+5.2f   %+5.2f : %d %2d : %+8d {%3d}: %s" % ( ip,p.rawIndex,
+                print("%3d  {%6d}: %+8d  %3d :  %8.2f   %+5.2f   %+5.2f : %d %2d : %+8d {%3d}: %s" % ( ip,p.rawIndex,
                         p.pdgId(), p.status(), p.pt(), p.eta(), p.phi(), len(moms), p.numberOfDaughters(), 
                         p.motherId, p.motherIndex,
-                        "  ".join("%d[%d]" % (p.daughter(i).pdgId(), p.daughter(i).status()) for i in xrange(p.numberOfDaughters())))
+                        "  ".join("%d[%d]" % (p.daughter(i).pdgId(), p.daughter(i).status()) for i in xrange(p.numberOfDaughters()))))
         if verbose:
-            print "\n\n"
+            print("\n\n")
 
         if self.makeAllGenParticles:
             event.genParticles = allGenParticles

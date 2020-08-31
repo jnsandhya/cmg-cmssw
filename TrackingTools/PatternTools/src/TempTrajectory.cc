@@ -121,7 +121,7 @@ void TempTrajectory::check() const {
 
 bool TempTrajectory::lost( const TrackingRecHit& hit)
 {
-  if  likely(hit.isValid()) return false;
+  if  LIKELY(hit.isValid()) return false;
 
   //     // A DetLayer is always inactive in this logic.
   //     // The DetLayer is the Det of an invalid RecHit only if no DetUnit 
@@ -133,7 +133,7 @@ bool TempTrajectory::lost( const TrackingRecHit& hit)
 }
 
 bool TempTrajectory::badForCCC(const TrajectoryMeasurement &tm) {
-  if (trackerHitRTTI::isUndef(*tm.recHit())) return false;
+  if (!trackerHitRTTI::isFromDet(*tm.recHit())) return false;
   auto const * thit = static_cast<const BaseTrackerRecHit*>( tm.recHit()->hit() );
   if (!thit)
     return false;

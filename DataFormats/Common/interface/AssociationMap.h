@@ -78,7 +78,7 @@ namespace edm {
       typedef value_type * pointer;
       typedef value_type & reference;
       typedef typename map_type::const_iterator::iterator_category iterator_category;
-      const_iterator(): map_(0) { }
+      const_iterator(): map_(nullptr) { }
       const_iterator(const self * map, typename map_type::const_iterator mi) :
 	map_(map), i(mi) { }
       const_iterator& operator++() { ++i; return *this; }
@@ -221,12 +221,14 @@ namespace edm {
     // Find should be private!  However, generated reflex dictionaries do not compile
     // if Find is private.  
     /// find helper
-    struct Find :
-      public std::binary_function<const self&, size_type, const value_type *> {
-      typedef Find self;
-      const value_type * operator()(typename self::first_argument_type c,
-				     typename self::second_argument_type i) {
-	return &(*c.find(i));
+    struct Find {
+
+      using first_argument_type  = const self&;
+      using second_argument_type = size_type;
+      using result_type          = const value_type *;
+
+      const result_type operator()(first_argument_type c, second_argument_type i) {
+        return &(*c.find(i));
       }
     };
 

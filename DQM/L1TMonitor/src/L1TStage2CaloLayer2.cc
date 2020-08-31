@@ -102,7 +102,10 @@ void L1TStage2CaloLayer2::bookHistograms(DQMStore::IBooker &ibooker, edm::Run co
   stage2CaloLayer2MHTHFPhi_ = ibooker.book1D("MHTHFPhi", "MHTHF Phi; MHTHF i#phi; Counts", 144, -0.5, 143.5);
   // stage2CaloLayer2HTTHFRank_ = ibooker.book1D("HTTHFRank", "HTTHF E_{T}", 4096, -0.5, 4095.5);
   stage2CaloLayer2ETTEMRank_ = ibooker.book1D("ETTEMRank", "ETTEM E_{T}; ETTEM iE_{T}; Counts", 4096, -0.5, 4095.5);
-
+  
+  stage2CaloLayer2Asymmetry_ = ibooker.book1D("Asymmetry", "Asymmetry; Assymmetry; Counts", 256, -0.5, 255.5);
+  stage2CaloLayer2Centrality_ = ibooker.book1D("Centrality", "Centrality; Centrality; Counts", 9, -1.5, 7.5);
+ 
   stage2CaloLayer2MinBiasHFP0_ = ibooker.book1D("MinBiasHFP0", "HF Min Bias Sum Threshold 0, Positive #eta; N_{towers}; Events", 16, -0.5, 15.5);
   stage2CaloLayer2MinBiasHFM0_ = ibooker.book1D("MinBiasHFM0", "HF Min Bias Sum Threshold 1, Nevagive #eta; N_{towers}; Events", 16, -0.5, 15.5);
   stage2CaloLayer2MinBiasHFP1_ = ibooker.book1D("MinBiasHFP1", "HF Min Bias Sum Threshold 1, Positive #eta; N_{towers}; Events", 16, -0.5, 15.5);
@@ -118,6 +121,16 @@ void L1TStage2CaloLayer2::bookHistograms(DQMStore::IBooker &ibooker, edm::Run co
   timingStage2CaloLayer2IsoTauBxOcc_ = stage2CaloLayer2TauBxOcc_;
   timingStage2CaloLayer2TauBxOcc_ = stage2CaloLayer2EtSumBxOcc_;
   timingStage2CaloLayer2EtSumBxOcc_ = stage2CaloLayer2EtSumBxOcc_;
+ 
+  //Shifter
+  ibooker.setCurrentFolder(monitorDir_+"/shifter");
+  stage2CaloLayer2CenJetEtEtaPhi_shift_ = ibooker.book2D("CenJetsEtEtaPhi_shift", "CENTRAL JET E_{T} ETA PHI; Jet i#eta; Jet i#phi", 68, -68, 68, 72, -0.5, 143.5); 	
+  stage2CaloLayer2ForJetEtEtaPhi_shift_ = ibooker.book2D("ForJetsEtEtaPhi_shift", "FORWARD JET E_{T} ETA PHI; Jet i#eta; Jet i#phi", 58, -116, 116, 36, -0.5, 143.5);
+  stage2CaloLayer2IsoEGEtEtaPhi_shift_ = ibooker.book2D("IsoEGsEtEtaPhi_shift", "ISO EG E_{T} ETA PHI; i#eta; i#phi", 70, -70, 70, 72, -0.5, 143.5);
+  stage2CaloLayer2NonIsoEGEtEtaPhi_shift_ = ibooker.book2D("NonIsoEGsEtEtaPhi_shift", "NonISO EG E_{T} ETA PHI; i#eta; i#phi", 70, -70, 70, 72, -0.5, 143.5);	
+  stage2CaloLayer2IsoTauEtEtaPhi_shift_ = ibooker.book2D("IsoTausEtEtaPhi_shift", "ISO Tau E_{T} ETA PHI; i#eta; i#phi", 60, -60, 60, 72, -0.5, 143.5);
+  stage2CaloLayer2TauEtEtaPhi_shift_ = ibooker.book2D("TausEtEtaPhi_shift", "Tau E_{T} ETA PHI; i#eta; i#phi", 60, -60, 60, 72, -0.5, 143.5);
+  
 }
 
 void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & c)
@@ -139,6 +152,7 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 	  stage2CaloLayer2ForJetRank_->Fill(itJet->hwPt());
 	  if (itJet->hwPt() !=0 ){
 	    stage2CaloLayer2ForJetEtEtaPhi_->Fill(itJet->hwEta(), itJet->hwPhi(), itJet->hwPt());
+	    stage2CaloLayer2ForJetEtEtaPhi_shift_->Fill(itJet->hwEta(), itJet->hwPhi(), itJet->hwPt());
 	    stage2CaloLayer2ForJetOcc_->Fill(itJet->hwEta(), itJet->hwPhi());
             stage2CaloLayer2ForJetPhi_->Fill(itJet->hwPhi());
             stage2CaloLayer2ForJetEta_->Fill(itJet->hwEta());
@@ -152,6 +166,7 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 	  stage2CaloLayer2CenJetRank_->Fill(itJet->hwPt());
 	  if (itJet->hwPt() !=0 ){
 	    stage2CaloLayer2CenJetEtEtaPhi_->Fill(itJet->hwEta(), itJet->hwPhi(), itJet->hwPt());
+	    stage2CaloLayer2CenJetEtEtaPhi_shift_->Fill(itJet->hwEta(), itJet->hwPhi(), itJet->hwPt());
 	    stage2CaloLayer2CenJetOcc_->Fill(itJet->hwEta(), itJet->hwPhi());
             stage2CaloLayer2CenJetPhi_->Fill(itJet->hwPhi());
             stage2CaloLayer2CenJetEta_->Fill(itJet->hwEta());
@@ -175,6 +190,7 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 	  stage2CaloLayer2IsoEGRank_->Fill(itEG->hwPt());
 	  if(itEG->hwPt() !=0 ){
 	    stage2CaloLayer2IsoEGEtEtaPhi_->Fill(itEG->hwEta(), itEG->hwPhi(), itEG->hwPt());
+	    stage2CaloLayer2IsoEGEtEtaPhi_shift_->Fill(itEG->hwEta(), itEG->hwPhi(), itEG->hwPt());
 	    stage2CaloLayer2IsoEGOcc_->Fill(itEG->hwEta(), itEG->hwPhi());
             stage2CaloLayer2IsoEGPhi_->Fill(itEG->hwPhi());
             stage2CaloLayer2IsoEGEta_->Fill(itEG->hwEta());
@@ -189,7 +205,8 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 	  stage2CaloLayer2NonIsoEGRank_->Fill(itEG->hwPt());
 	  if(itEG->hwPt() !=0 ){
 	    stage2CaloLayer2NonIsoEGEtEtaPhi_->Fill(itEG->hwEta(), itEG->hwPhi(), itEG->hwPt());
-	    stage2CaloLayer2NonIsoEGOcc_->Fill(itEG->hwEta(), itEG->hwPhi());
+	    stage2CaloLayer2NonIsoEGEtEtaPhi_shift_->Fill(itEG->hwEta(), itEG->hwPhi(), itEG->hwPt());
+            stage2CaloLayer2NonIsoEGOcc_->Fill(itEG->hwEta(), itEG->hwPhi());
             stage2CaloLayer2NonIsoEGPhi_->Fill(itEG->hwPhi());
             stage2CaloLayer2NonIsoEGEta_->Fill(itEG->hwEta());
             stage2CaloLayer2NonIsoEGQual_->Fill(itEG->hwQual());
@@ -212,6 +229,7 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 	  stage2CaloLayer2IsoTauRank_->Fill(itTau->hwPt());
 	  if(itTau->hwPt() !=0 ){
 	    stage2CaloLayer2IsoTauEtEtaPhi_->Fill(itTau->hwEta(), itTau->hwPhi(), itTau->hwPt());
+	    stage2CaloLayer2IsoTauEtEtaPhi_shift_->Fill(itTau->hwEta(), itTau->hwPhi(), itTau->hwPt());
 	    stage2CaloLayer2IsoTauOcc_->Fill(itTau->hwEta(), itTau->hwPhi());
             stage2CaloLayer2IsoTauPhi_->Fill(itTau->hwPhi());
             stage2CaloLayer2IsoTauEta_->Fill(itTau->hwEta());
@@ -226,6 +244,7 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 	  stage2CaloLayer2TauRank_->Fill(itTau->hwPt());
 	  if(itTau->hwPt() !=0 ){
 	    stage2CaloLayer2TauEtEtaPhi_->Fill(itTau->hwEta(), itTau->hwPhi(), itTau->hwPt());
+            stage2CaloLayer2TauEtEtaPhi_shift_->Fill(itTau->hwEta(), itTau->hwPhi(), itTau->hwPt());
 	    stage2CaloLayer2TauOcc_->Fill(itTau->hwEta(), itTau->hwPhi());
             stage2CaloLayer2TauPhi_->Fill(itTau->hwPhi());
             stage2CaloLayer2TauEta_->Fill(itTau->hwEta());
@@ -257,10 +276,12 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 	  // stage2CaloLayer2ETTHFRank_->Fill(itEtSum->hwPt());
 	} else if(l1t::EtSum::EtSumType::kMissingHt == itEtSum->getType()){    // MHT
 	  stage2CaloLayer2MHTRank_->Fill(itEtSum->hwPt());
-	  stage2CaloLayer2MHTPhi_->Fill(itEtSum->hwPhi());
+          if (itEtSum->hwPt()>0)
+		  stage2CaloLayer2MHTPhi_->Fill(itEtSum->hwPhi());
 	} else if(l1t::EtSum::EtSumType::kMissingHtHF == itEtSum->getType()){  // MHTHF
 	  stage2CaloLayer2MHTHFRank_->Fill(itEtSum->hwPt());
-	  stage2CaloLayer2MHTHFPhi_->Fill(itEtSum->hwPhi());
+	  if (itEtSum->hwPt()>0)
+	          stage2CaloLayer2MHTHFPhi_->Fill(itEtSum->hwPhi());
 	} else if(l1t::EtSum::EtSumType::kMinBiasHFP0 == itEtSum->getType()){  // MBHFP0
 	  stage2CaloLayer2MinBiasHFP0_->Fill(itEtSum->hwPt());
 	} else if(l1t::EtSum::EtSumType::kMinBiasHFM0 == itEtSum->getType()){  // MBHFM0
@@ -275,9 +296,17 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 	  stage2CaloLayer2ETTEMRank_->Fill(itEtSum->hwPt());
 	} else if (l1t::EtSum::EtSumType::kTowerCount == itEtSum->getType()) {
 	  stage2CaloLayer2TowCount_->Fill(itEtSum->hwPt());
-	} else{
+	} else if (l1t::EtSum::EtSumType::kTotalHt == itEtSum->getType()){
 	  stage2CaloLayer2HTTRank_->Fill(itEtSum->hwPt());
-	}
+	} else if (l1t::EtSum::EtSumType::kAsymEt == itEtSum->getType()){     //Asym ET
+	  stage2CaloLayer2Asymmetry_->Fill(itEtSum->hwPt());
+        } else if (l1t::EtSum::EtSumType::kCentrality == itEtSum->getType()){     //Centrality
+          if (itEtSum->hwPt()==0) stage2CaloLayer2Centrality_->Fill(-1);
+          else {
+          	for (int i=0; i<8; i++)
+	        	if (((itEtSum->hwPt()>>i)&1)==1) stage2CaloLayer2Centrality_->Fill(i);
+	       }
+        }
       }
     }
   }
@@ -286,4 +315,3 @@ void L1TStage2CaloLayer2::analyze(const edm::Event & e, const edm::EventSetup & 
 void L1TStage2CaloLayer2::dqmBeginRun(edm::Run const& iRrun, edm::EventSetup const& evSetup)
 {}
 
-void L1TStage2CaloLayer2::beginLuminosityBlock(const edm::LuminosityBlock& iLumi, const edm::EventSetup& evSetup) {}

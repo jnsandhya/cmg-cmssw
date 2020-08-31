@@ -30,9 +30,10 @@ TGeoManager* FWGeometryTableViewManager::s_geoManager = nullptr;
 
 TGeoManager* FWGeometryTableViewManager_GetGeoManager() { return FWGeometryTableViewManager::getGeoMangeur(); }
 
-FWGeometryTableViewManager::FWGeometryTableViewManager(FWGUIManager* iGUIMgr, std::string fileName):
-   FWViewManagerBase(),
-   m_fileName(fileName)
+FWGeometryTableViewManager::FWGeometryTableViewManager(FWGUIManager* iGUIMgr, std::string fileName, std::string geoName)
+   : FWViewManagerBase(),
+     m_fileName(fileName),
+     m_TGeoName(geoName)
 {
    FWGUIManager::ViewBuildFunctor f;
    f=boost::bind(&FWGeometryTableViewManager::buildView, this, _1, _2);                
@@ -87,7 +88,7 @@ FWGeometryTableViewManager::colorsChanged()
 TGeoManager*
 FWGeometryTableViewManager::getGeoMangeur()
 {
-   // Function used in geomtery table views.
+   // Function used in geometry table views.
 
    assert( s_geoManager);
    return s_geoManager;
@@ -115,14 +116,14 @@ FWGeometryTableViewManager::setGeoManagerFromFile()
       
       file->ls();
       
-      s_geoManager = (TGeoManager*) file->Get("cmsGeo;1");      
+      s_geoManager = (TGeoManager*) file->Get( m_TGeoName.c_str());
       if ( ! s_geoManager)
          throw std::runtime_error("Can't find TGeoManager object in selected file.");
 
    }
    catch (std::runtime_error &e)
    {
-      fwLog(fwlog::kError) << "Failed to find simulation geomtery file. Please set the file path with --sim-geom-file option.\n";
+      fwLog(fwlog::kError) << "Failed to find simulation geometry file. Please set the file path with --sim-geom-file option.\n";
       exit(0);
    }
 }

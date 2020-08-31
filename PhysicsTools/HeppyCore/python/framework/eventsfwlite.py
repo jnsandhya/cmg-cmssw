@@ -1,3 +1,4 @@
+from __future__ import print_function
 from DataFormats.FWLite import Events as FWLiteEvents
 
 import logging
@@ -5,7 +6,7 @@ import pprint
 
 from ROOT import gROOT, gSystem, AutoLibraryLoader
 
-print "Loading FW Lite"
+print("Loading FW Lite")
 gSystem.Load("libFWCoreFWLite");
 gROOT.ProcessLine('FWLiteEnabler::enable();')
 
@@ -18,17 +19,22 @@ gInterpreter.ProcessLine("using edm::refhelper::FindUsingAdvance;")
 
 class Events(object):
     def __init__(self, files, tree_name,  options=None):
-        logging.info('opening input files:')
-        logging.info(pprint.pformat(files))
+        logging.info(
+            'opening input files:\n{}'.format(pprint.pformat(files))
+            )
         if options is not None :
             if not hasattr(options,"inputFiles"):
                 options.inputFiles=files
             if not hasattr(options,"maxEvents"):
-                options.maxEvents = 0	
+                options.maxEvents = 0
             if not hasattr(options,"secondaryInputFiles"):
                 options.secondaryInputFiles = []
+            elif options.secondaryInputFiles: # only if it's a non-empty list
+                logging.info('using secondary input files:\n{}'.format(
+                        pprint.pformat(options.secondaryInputFiles)
+                        ))
             self.events = FWLiteEvents(options=options)
-	else :
+        else :
             self.events = FWLiteEvents(files)
         logging.info('done')
 

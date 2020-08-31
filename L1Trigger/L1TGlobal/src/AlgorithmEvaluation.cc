@@ -95,7 +95,7 @@ void l1t::AlgorithmEvaluation::evaluateAlgorithm(const int chipNumber,
                 CItEvalMap itCond = (conditionResultMaps.at(chipNumber)).find(it->operand);
                 if (itCond != (conditionResultMaps[chipNumber]).end()) {
 
-                    if (0 == itCond->second) {
+                    if (nullptr == itCond->second) {
                         // it should never be happen, only valid conditions are in the maps
                         throw cms::Exception("FailModule") << "\nCondition "
                                 << (it->operand)
@@ -157,6 +157,15 @@ void l1t::AlgorithmEvaluation::evaluateAlgorithm(const int chipNumber,
                 b2 = resultStack.top();
                 resultStack.pop();
                 resultStack.push(b1 && b2);
+            }
+
+                break;
+            case GlobalLogicParser::OP_XOR: {
+                b1 = resultStack.top();
+                resultStack.pop();
+                b2 = resultStack.top();
+                resultStack.pop();
+                resultStack.push(b1 ^ b2);
             }
 
                 break;

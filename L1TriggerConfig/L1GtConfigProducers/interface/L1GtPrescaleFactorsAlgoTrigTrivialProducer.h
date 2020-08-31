@@ -42,11 +42,11 @@ public:
     L1GtPrescaleFactorsAlgoTrigTrivialProducer(const edm::ParameterSet&);
 
     /// destructor
-    ~L1GtPrescaleFactorsAlgoTrigTrivialProducer();
+    ~L1GtPrescaleFactorsAlgoTrigTrivialProducer() override;
 
     /// public methods
 
-    std::shared_ptr<L1GtPrescaleFactors> producePrescaleFactors(
+    std::unique_ptr<L1GtPrescaleFactors> producePrescaleFactors(
             const L1GtPrescaleFactorsAlgoTrigRcd&);
 
 private:

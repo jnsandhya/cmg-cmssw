@@ -39,13 +39,13 @@ typedef std::map<short, short, std::less<short> > LUT;
 class L1TMuonBarrelParamsESProducer : public edm::ESProducer {
    public:
       L1TMuonBarrelParamsESProducer(const edm::ParameterSet&);
-      ~L1TMuonBarrelParamsESProducer();
+      ~L1TMuonBarrelParamsESProducer() override;
       int load_pt(std::vector<LUT>& , std::vector<int>&, unsigned short int, std::string);
       int load_phi(std::vector<LUT>& , unsigned short int, unsigned short int, std::string);
       int load_ext(std::vector<L1TMuonBarrelParams::LUTParams::extLUT>&, unsigned short int, unsigned short int );
       //void print(std::vector<LUT>& , std::vector<int>& ) const;
       int getPtLutThreshold(int ,std::vector<int>& ) const;
-      typedef std::shared_ptr<L1TMuonBarrelParams> ReturnType;
+      using ReturnType = std::unique_ptr<L1TMuonBarrelParams>;
 
       ReturnType produce(const L1TMuonBarrelParamsRcd&);
    private:
@@ -699,9 +699,7 @@ int L1TMuonBarrelParamsESProducer::load_ext(std::vector<L1TMuonBarrelParams::LUT
 L1TMuonBarrelParamsESProducer::ReturnType
 L1TMuonBarrelParamsESProducer::produce(const L1TMuonBarrelParamsRcd& iRecord)
 {
-   using namespace edm::es;
-
-   return std::make_shared<L1TMuonBarrelParams>(m_params_helper);
+   return std::make_unique<L1TMuonBarrelParams>(m_params_helper);
 }
 
 //define this as a plug-in

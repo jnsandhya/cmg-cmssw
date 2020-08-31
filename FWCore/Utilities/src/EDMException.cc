@@ -38,9 +38,12 @@ namespace edm {
       FILLENTRY(NotFound),
       FILLENTRY(FormatIncompatibility),
       FILLENTRY(FallbackFileOpenError),
+      FILLENTRY(NoSecondaryFiles),
       FILLENTRY(ExceededResourceVSize),
       FILLENTRY(ExceededResourceRSS),
       FILLENTRY(ExceededResourceTime),
+      FILLENTRY(FileWriteError),
+      FILLENTRY(EventGenerationFailure),
       FILLENTRY(CaughtSignal)
     };
     static const std::string kUnknownCode("unknownCode");

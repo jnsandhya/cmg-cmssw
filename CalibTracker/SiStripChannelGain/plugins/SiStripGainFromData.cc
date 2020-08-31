@@ -36,7 +36,6 @@
 #include "DataFormats/TrackerRecHit2D/interface/SiStripRecHit1D.h" 
 #include "DataFormats/TrackerRecHit2D/interface/SiStripRecHit2D.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiStripMatchedRecHit2D.h"
-#include "DataFormats/SiStripDetId/interface/SiStripSubStructure.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
@@ -67,6 +66,7 @@
 #include "TROOT.h"
 
 #include <unordered_map>
+#include <memory>
 
 
 
@@ -90,7 +90,7 @@ class SiStripGainFromData : public ConditionDBWriter<SiStripApvGain> {
 //      virtual void algoBeginRun(const edm::Event& iEvent, const edm::EventSetup& iSetup);
       void algoAnalyze(const edm::Event &, const edm::EventSetup &) override;
 
-      SiStripApvGain* getNewObject() override;
+      std::unique_ptr<SiStripApvGain> getNewObject() override;
       DQMStore* dqmStore_;
       DQMStore* dqmStore_infile;
 
@@ -638,7 +638,7 @@ SiStripGainFromData::algoEndJob() {
 
    if( strcmp(AlgoMode.c_str(),"MultiJob")!=0 ){
       TH1D* Proj = nullptr;
-      double* FitResults = new double[5];
+      double FitResults[5];
       I=0;
       for(auto it = APVsColl.begin();it!=APVsColl.end();it++){
          if( I%3650==0 ) printf("Fitting Histograms \t %6.2f%%\n",(100.0*I)/APVsColl.size());
@@ -1279,15 +1279,16 @@ void SiStripGainFromData::getPeakOfLandau(TH1* InputHisto, double* FitResults, d
 
 
 
-SiStripApvGain* SiStripGainFromData::getNewObject() 
+std::unique_ptr<SiStripApvGain> SiStripGainFromData::getNewObject() 
 {
     cout << "START getNewObject\n";
 
 //  if( !(strcmp(AlgoMode.c_str(),"WriteOnDB")==0 || strcmp(AlgoMode.c_str(),"SingleJob")==0) )return NULL;
-  if( !(strcmp(AlgoMode.c_str(),"WriteOnDB")==0 || strcmp(AlgoMode.c_str(),"SingleJob")==0) )return new SiStripApvGain();
+  if( !(strcmp(AlgoMode.c_str(),"WriteOnDB")==0 || strcmp(AlgoMode.c_str(),"SingleJob")==0) )
+      return std::make_unique<SiStripApvGain>();
 
 
-   SiStripApvGain * obj = new SiStripApvGain();
+   auto obj = std::make_unique<SiStripApvGain>();
    std::vector<float>* theSiStripVector = nullptr;
    int PreviousDetId = -1; 
    for(unsigned int a=0;a<APVsCollOrdered.size();a++)

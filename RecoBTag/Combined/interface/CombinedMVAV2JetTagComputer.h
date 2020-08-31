@@ -8,15 +8,15 @@
 
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "CommonTools/Utils/interface/TMVAEvaluator.h"
+#include "CommonTools/MVAUtils/interface/TMVAEvaluator.h"
 #include "RecoBTau/JetTagComputer/interface/JetTagComputer.h"
 
 class CombinedMVAV2JetTagComputer : public JetTagComputer {
     public:
         CombinedMVAV2JetTagComputer(const edm::ParameterSet &parameters);
-        virtual ~CombinedMVAV2JetTagComputer();
+        ~CombinedMVAV2JetTagComputer() override;
 
-        virtual void initialize(const JetTagComputerRecord & record) override;
+        void initialize(const JetTagComputerRecord & record) override;
 
         float discriminator(const TagInfoHelper &info) const override;
 

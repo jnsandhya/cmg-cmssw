@@ -191,7 +191,7 @@ private:
     template <typename T> TH1* make(const char* name,const char* title,int nBinX,double minBinX,double maxBinX,int nBinY,double minBinY,double maxBinY);
     template <typename T> TH1* make(const char* name,const char* title,int nBinX,double minBinX,double maxBinX,double minBinY,double maxBinY);  // at present not used
     
-    std::auto_ptr<TFileDirectory> tfd;
+    std::unique_ptr<TFileDirectory> tfd;
     std::string directoryString;
     const bool dqmMode;
     DQMStore* theDbe;
@@ -636,7 +636,7 @@ TrackerOfflineValidation::bookGlobalHists(DirectoryWrapper& tfd )
 void
 TrackerOfflineValidation::bookDirHists(DirectoryWrapper& tfd, const Alignable& ali, const TrackerTopology* tTopo)
 {
-  std::vector<Alignable*> alivec(ali.components());
+  const auto& alivec = ali.components();
   for(int i=0, iEnd = ali.components().size();i < iEnd; ++i) {
     std::string structurename  = alignableTracker_->objectIdProvider().idToString((alivec)[i]->alignableObjectId());
     LogDebug("TrackerOfflineValidation") << "StructureName = " << structurename;
@@ -1286,7 +1286,7 @@ void
 TrackerOfflineValidation::prepareSummaryHists( DirectoryWrapper& tfd, const Alignable& ali,
 					       std::vector<TrackerOfflineValidation::SummaryContainer>& vLevelProfiles)
 {
-  std::vector<Alignable*> alivec(ali.components());
+  const auto& alivec = ali.components();
   if( this->isDetOrDetUnit((alivec)[0]->alignableObjectId()) ) return;
   
   for(int iComp=0, iCompEnd = ali.components().size();iComp < iCompEnd; ++iComp) {

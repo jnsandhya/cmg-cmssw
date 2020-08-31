@@ -1,3 +1,4 @@
+from __future__ import print_function
 from PhysicsTools.Heppy.utils.cmsswRelease import cmsswRelease, releaseNumber
 
 def miniAodFiles():
@@ -55,6 +56,11 @@ def miniAodFiles():
             '/store/relval/CMSSW_9_4_0/RelValTTbar_13/MINIAODSIM/PU25ns_94X_mc2017_realistic_v10-v1/10000/6A3683FD-A7CA-E711-AC02-0CC47A7C361E.root',
             '/store/relval/CMSSW_9_4_0/RelValTTbar_13/MINIAODSIM/PU25ns_94X_mc2017_realistic_v10-v1/10000/BAE308FD-A7CA-E711-8DC4-0CC47A4C8E16.root',
             ]
+    elif (big,medium) in ( (10,2), (10,4) ):
+        files=[
+            '/store/relval/CMSSW_10_2_4/RelValTTbar_13/MINIAODSIM/PU25ns_102X_upgrade2018_realistic_v12-v1/20000/EB67E894-1B22-0C4F-940B-B1A113F84B92.root',
+            ]
+ 
  
     else:
         raise ValueError('no mini AOD file defined for release '+cmsswRelease())
@@ -63,4 +69,4 @@ def miniAodFiles():
 
 
 if __name__ == '__main__':
-    print miniAodFiles()
+    print(miniAodFiles())

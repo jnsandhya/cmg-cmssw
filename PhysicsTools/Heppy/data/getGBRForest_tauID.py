@@ -1,15 +1,13 @@
 import FWCore.ParameterSet.Config as cms
-
+import sys
 process = cms.Process('GETGBR')
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
-process.load(
-    'Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
+process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
-process.load(
-    'Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 
 process.maxEvents = cms.untracked.PSet(
     input=cms.untracked.int32(1)
@@ -28,8 +26,7 @@ process.GlobalTag = GlobalTag(
     process.GlobalTag, 'auto:phase1_2017_realistic', '')
 
 process.load('RecoTauTag.Configuration.loadRecoTauTagMVAsFromPrepDB_cfi')
-tauIdDiscrMVA_trainings_run2_2017 = {
-    'tauIdMVAIsoDBoldDMwLT2017': "tauIdMVAIsoDBoldDMwLT2017", }
+tauIdDiscrMVA_trainings_run2_2017 = { 'tauIdMVAIsoDBoldDMwLT2017' : "tauIdMVAIsoDBoldDMwLT2017", "tauIdMVAIsoDBoldDMdR0p3wLT2017" : "tauIdMVAIsoDBoldDMdR0p3wLT2017"}
 tauIdDiscrMVA_2017_version = "v2"
 
 tauIdDiscrMVA_WPs_run2_2017 = {
@@ -64,6 +61,9 @@ for training, gbrForestName in tauIdDiscrMVA_trainings_run2_2017.items():
     setattr(process, "get%s%s" %
             (gbrForestName, tauIdDiscrMVA_2017_version), getters[-1])
 
+    if training not in tauIdDiscrMVA_WPs_run2_2017: 
+        sys.stderr.write("ERROR: Missing WPs for "+training+", will be skipped.\n")
+        continue
     for WP in tauIdDiscrMVA_WPs_run2_2017[training]:
         process.loadRecoTauTagMVAsFromPrepDB.toGet.append(
             cms.PSet(

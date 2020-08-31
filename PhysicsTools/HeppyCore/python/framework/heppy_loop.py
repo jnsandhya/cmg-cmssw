@@ -2,6 +2,7 @@
 # Copyright (C) 2014 Colin Bernet
 # https://github.com/cbernet/heppy/blob/master/LICENSE
 
+from __future__ import print_function
 import os
 import shutil
 import glob
@@ -28,7 +29,7 @@ loop = None
 
 def callBack( result ):
     pass
-    print 'production done:', str(result)
+    print('production done:', str(result))
 
 def runLoopAsync(comp, outDir, configName, options):
     try:
@@ -36,10 +37,10 @@ def runLoopAsync(comp, outDir, configName, options):
         return loop.name
     except Exception:
         import traceback
-        print "ERROR processing component %s" % comp.name
-        print comp
-        print "STACK TRACE: "
-        print traceback.format_exc()
+        print("ERROR processing component %s" % comp.name)
+        print(comp)
+        print("STACK TRACE: ")
+        print(traceback.format_exc())
         raise
 
 _globalGracefulStopFlag = multiprocessing.Value('i',0)
@@ -74,14 +75,14 @@ def createOutputDir(dir, components, force):
         os.mkdir(dir)
         return True
     except OSError:
-        print 'directory %s already exists' % dir
-        print 'contents: '
+        print('directory %s already exists' % dir)
+        print('contents: ')
         dirlist = [path for path in os.listdir(dir) if os.path.isdir( '/'.join([dir, path]) )]
         pprint( dirlist )
-        print 'component list: '
-        print [comp.name for comp in components]
+        print('component list: ')
+        print([comp.name for comp in components])
         if force is True:
-            print 'force mode, continue.'
+            print('force mode, continue.')
             return True
         else:
             while answer not in ['Y','y','yes','N','n','no']:
@@ -139,18 +140,18 @@ def main( options, args, parser ):
 
     if len(args) != 2:
         parser.print_help()
-        print 'ERROR: please provide the processing name and the component list'
+        print('ERROR: please provide the processing name and the component list')
         sys.exit(1)
 
     outDir = args[0]
     if os.path.exists(outDir) and not os.path.isdir( outDir ):
         parser.print_help()
-        print 'ERROR: when it exists, first argument must be a directory.'
+        print('ERROR: when it exists, first argument must be a directory.')
         sys.exit(2)
     cfgFileName = args[1]
     if not os.path.isfile( cfgFileName ):
         parser.print_help()
-        print 'ERROR: second argument must be an existing file (your input cfg).'
+        print('ERROR: second argument must be an existing file (your input cfg).')
         sys.exit(3)
 
     if options.verbose:
@@ -176,23 +177,23 @@ def main( options, args, parser ):
     # for comp in selComps:
     #    print comp
     if len(selComps)>options.ntasks:
-        print "WARNING: too many threads {tnum}, will just use a maximum of {jnum}.".format(tnum=len(selComps),jnum=options.ntasks)
+        print("WARNING: too many threads {tnum}, will just use a maximum of {jnum}.".format(tnum=len(selComps),jnum=options.ntasks))
     if not createOutputDir(outDir, selComps, options.force):
-        print 'exiting'
+        print('exiting')
         sys.exit(0)
     if len(selComps)>1:
         shutil.copy( cfgFileName, outDir )
-        pool = multiprocessing.Pool(processes=min(len(selComps),options.ntasks))
+        pool = multiprocessing.Pool(processes=min(len(selComps),options.ntasks,multiprocessing.cpu_count()))
         ## workaround for a scoping problem in ipython+multiprocessing
         import PhysicsTools.HeppyCore.framework.heppy_loop as ML 
         for comp in selComps:
-            print 'submitting', comp.name
+            print('submitting', comp.name)
             pool.apply_async( ML.runLoopAsync, [comp, outDir, 'PhysicsTools.HeppyCore.__cfg_to_run__', options],
                               callback=ML.callBack)
         pool.close()
         pool.join()
     elif len(selComps)==0:
-        print "ERROR: no components selected"
+        print("ERROR: no components selected")
         sys.exit(1)
     else:
         # when running only one loop, do not use multiprocessor module.

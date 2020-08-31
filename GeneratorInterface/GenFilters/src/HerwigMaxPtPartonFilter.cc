@@ -12,7 +12,7 @@ PURPOSE: This Filter is designed to run on Herwig Monte Carlo Event Files
 (Pythia status codes are assumed to NOT BE EMULATED!!!!)
 
 For a description of Herwig Status Codes, See: 
-http://webber.home.cern.ch/webber/hw65_manual.html#htoc96
+https://arxiv.org/abs/hep-ph/0011363
 (Section 8.3.1)
 
 This Filter Finds all final state quarks (pdg_id=1,2,3,4 or 5, status=158 or 159) with Pt>1 GeV/c
@@ -38,7 +38,7 @@ If this is true, the event is accepted.
 #include "GeneratorInterface/GenFilters/interface/HerwigMaxPtPartonFilter.h"
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 
-#include <math.h>
+#include <cmath>
 
 using namespace edm;
 using namespace std;

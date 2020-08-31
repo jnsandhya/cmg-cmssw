@@ -15,7 +15,6 @@
 #include "FWCore/FWLite/interface/FWLiteEnabler.h"
 #include "FWCore/ParameterSet/interface/ProcessDesc.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
-#include "FWCore/PythonParameterSet/interface/PythonProcessDesc.h"
 
 /**
   \class    FWLiteAnalyzerWrapper FWLiteAnalyzerWrapper.h "PhysicsTools/UtilAlgos/interface/FWLiteAnalyzerWrapper.h"
@@ -144,7 +143,7 @@ namespace fwlite {
     }
     else{
       // create a directory in the file if directory string is non empty
-      TFileDirectory dir = fileService_.mkdir(directory.c_str());
+      TFileDirectory dir = fileService_.mkdir(directory);
       analyzer_ = boost::shared_ptr<T>( new T( ana, dir ) );  
     }
   }

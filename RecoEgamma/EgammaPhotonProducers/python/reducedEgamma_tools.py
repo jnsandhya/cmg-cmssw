@@ -18,12 +18,12 @@ def calibrateReducedEgamma(process):
     process.reducedEgamma.gsfElectronCalibEcalEnergySource = cms.InputTag("calibratedElectrons","ecalEnergyPostCorr")
     process.reducedEgamma.gsfElectronCalibEcalEnergyErrSource = cms.InputTag("calibratedElectrons","ecalEnergyErrPostCorr")
     from RecoEgamma.EgammaTools.calibratedEgammas_cff import prefixName
-    import RecoEgamma.EgammaTools.calibratedElectronProducerTRecoGsfElectron_cfi
-    for valueMapName in RecoEgamma.EgammaTools.calibratedElectronProducerTRecoGsfElectron_cfi.calibratedElectronProducerTRecoGsfElectron.valueMapsStored:
+    import RecoEgamma.EgammaTools.calibratedElectronProducer_cfi
+    for valueMapName in RecoEgamma.EgammaTools.calibratedElectronProducer_cfi.calibratedElectronProducer.valueMapsStored:
         process.reducedEgamma.gsfElectronFloatValueMapSources.append(cms.InputTag("calibratedElectrons",valueMapName))
         process.reducedEgamma.gsfElectronFloatValueMapOutput.append(prefixName("calibEle",valueMapName))
-    import RecoEgamma.EgammaTools.calibratedPhotonProducerTRecoPhoton_cfi
-    for valueMapName in RecoEgamma.EgammaTools.calibratedPhotonProducerTRecoPhoton_cfi.calibratedPhotonProducerTRecoPhoton.valueMapsStored:
+    import RecoEgamma.EgammaTools.calibratedPhotonProducer_cfi
+    for valueMapName in RecoEgamma.EgammaTools.calibratedPhotonProducer_cfi.calibratedPhotonProducer.valueMapsStored:
         process.reducedEgamma.photonFloatValueMapSources.append(cms.InputTag("calibratedPhotons",valueMapName))
         process.reducedEgamma.photonFloatValueMapOutput.append(prefixName("calibPho",valueMapName))
 

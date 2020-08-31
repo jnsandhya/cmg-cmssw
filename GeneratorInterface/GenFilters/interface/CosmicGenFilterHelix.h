@@ -16,7 +16,7 @@
 ///
 
 
-#include "FWCore/Framework/interface/EDFilter.h"
+#include "FWCore/Framework/interface/one/EDFilter.h"
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/Event.h"
 
@@ -37,14 +37,14 @@
 class MagneticField;
 class Propagator;
 
-class CosmicGenFilterHelix : public edm::EDFilter {
+class CosmicGenFilterHelix : public edm::one::EDFilter<edm::one::SharedResources> {
  public:
   explicit CosmicGenFilterHelix(const edm::ParameterSet& config);
-  virtual ~CosmicGenFilterHelix();
+  ~CosmicGenFilterHelix() override;
 
-  virtual void beginJob();
-  virtual bool filter(edm::Event &event, const edm::EventSetup &eventSetup);
-  virtual void endJob();
+  void beginJob() override;
+  bool filter(edm::Event &event, const edm::EventSetup &eventSetup) override;
+  void endJob() override;
 
  private:
   /// actually propagate to the defined cylinder

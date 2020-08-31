@@ -9,12 +9,7 @@
  */
 
 #include "CondFormats/GeometryObjects/interface/RecoIdealGeometry.h"
-#include <map>
-#include <list>
-
-class GEMGeometry;
-class GEMDetId;
-class GEMEtaPartition;
+#include "Geometry/GEMGeometry/interface/GEMGeometry.h"
 
 class GEMGeometryBuilderFromCondDB 
 {
@@ -24,12 +19,20 @@ class GEMGeometryBuilderFromCondDB
 
   ~GEMGeometryBuilderFromCondDB();
   
-  void build(const std::shared_ptr<GEMGeometry>& theGeometry,
+  void build(GEMGeometry& theGeometry,
 	     const RecoIdealGeometry& rgeo );
   
  private:
+  typedef ReferenceCountingPointer<BoundPlane> RCPBoundPlane;
 
-  std::map<GEMDetId, std::list<GEMEtaPartition *> > m_chids;
+  GEMSuperChamber* buildSuperChamber(const RecoIdealGeometry& rgeo, unsigned int gid, GEMDetId detId) const;
+  
+  GEMChamber* buildChamber(const RecoIdealGeometry& rgeo, unsigned int gid, GEMDetId detId) const;
+
+  GEMEtaPartition* buildEtaPartition(const RecoIdealGeometry& rgeo, unsigned int gid, GEMDetId detId) const;
+
+  RCPBoundPlane boundPlane(const RecoIdealGeometry& rgeo, unsigned int gid, GEMDetId detId) const;
+  
 };
 
 #endif

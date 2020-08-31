@@ -48,7 +48,7 @@ constexpr char const*valueToKey(T value, entry<T> const *entries) {
 constexpr entry<l1t::L1GtBoardType> l1GtBoardTypeStringToEnumMap[] = {
             {"l1t::MP7", l1t::MP7},
             {"l1t::BoardNull", l1t::BoardNull},
-            {0, (l1t::L1GtBoardType)-1}
+            {nullptr, (l1t::L1GtBoardType)-1}
 };
 
 
@@ -72,9 +72,20 @@ constexpr entry<l1t::GtConditionType> l1GtConditionTypeStringToEnumMap[] = {
 	{"l1t::TypeMinBiasHFP1", l1t::TypeMinBiasHFP1},
 	{"l1t::TypeMinBiasHFM1", l1t::TypeMinBiasHFM1},
         {"l1t::TypeExternal", l1t::TypeExternal},
-        {0, (l1t::GtConditionType) - 1},
-        {"l1t::Type2corWithOverlapRemoval", l1t::Type2corWithOverlapRemoval}
-
+        {nullptr, (l1t::GtConditionType) - 1},
+        {"l1t::Type2corWithOverlapRemoval", l1t::Type2corWithOverlapRemoval},
+	{"l1t::TypeCent0", l1t::TypeCent0},
+	{"l1t::TypeCent1", l1t::TypeCent1},
+	{"l1t::TypeCent2", l1t::TypeCent2},
+	{"l1t::TypeCent3", l1t::TypeCent3},
+	{"l1t::TypeCent4", l1t::TypeCent4},
+	{"l1t::TypeCent5", l1t::TypeCent5},
+	{"l1t::TypeCent6", l1t::TypeCent6},
+	{"l1t::TypeCent7", l1t::TypeCent7},
+	{"l1t::TypeAsymEt", l1t::TypeAsymEt},
+	{"l1t::TypeAsymHt", l1t::TypeAsymHt},
+	{"l1t::TypeAsymEtHF", l1t::TypeAsymEtHF},
+	{"l1t::TypeAsymHtHF", l1t::TypeAsymHtHF}
 };
 
 // l1t::GtConditionCategory
@@ -85,7 +96,7 @@ constexpr entry<l1t::GtConditionCategory> l1GtConditionCategoryStringToEnumMap[]
   {"l1t::CondEnergySum", l1t::CondEnergySum},
   {"l1t::CondCorrelation", l1t::CondCorrelation},
   {"l1t::CondExternal", l1t::CondExternal},
-  {0, (l1t::GtConditionCategory) - 1},
+  {nullptr, (l1t::GtConditionCategory) - 1},
   {"l1t::CondCorrelationWithOverlapRemoval", l1t::CondCorrelationWithOverlapRemoval}
 };
 

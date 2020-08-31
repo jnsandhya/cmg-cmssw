@@ -34,9 +34,9 @@ class DTTFMasksOnlineProd :
   public L1ConfigOnlineProdBase< L1MuDTTFMasksRcd, L1MuDTTFMasks > {
    public:
       DTTFMasksOnlineProd(const edm::ParameterSet&);
-      ~DTTFMasksOnlineProd();
+      ~DTTFMasksOnlineProd() override;
 
-      virtual std::shared_ptr< L1MuDTTFMasks > newObject(
+      std::unique_ptr< L1MuDTTFMasks > newObject(
         const std::string& objectKey ) override ;
 
    private:
@@ -66,12 +66,10 @@ DTTFMasksOnlineProd::~DTTFMasksOnlineProd()
 
 }
 
-std::shared_ptr< L1MuDTTFMasks >
+std::unique_ptr< L1MuDTTFMasks >
 DTTFMasksOnlineProd::newObject( const std::string& objectKey )
 {
-     using namespace edm::es;
-
-     auto pDTTFMasks = std::make_shared< L1MuDTTFMasks >() ;
+     auto pDTTFMasks = std::make_unique< L1MuDTTFMasks >() ;
 
      pDTTFMasks->reset() ;
 
@@ -104,7 +102,7 @@ DTTFMasksOnlineProd::newObject( const std::string& objectKey )
        {
 	 edm::LogError( "L1-O2O" )
 	   << "Problem with L1MuDTTFMasks key " << objectKey ;
-	 return std::shared_ptr< L1MuDTTFMasks >() ;
+	 return std::unique_ptr< L1MuDTTFMasks >() ;
        }
 
      // Cache crate masks
@@ -119,12 +117,12 @@ DTTFMasksOnlineProd::newObject( const std::string& objectKey )
 					crateMask ) ;
          char* pEnd;
 	 crateMaskL[ icrate ] = std::strtol( crateMask.c_str(), &pEnd, 16 ) ;
-	 crateMaskR[ icrate ] = std::strtol( pEnd, (char **)NULL, 16 ) ;
+	 crateMaskR[ icrate ] = std::strtol( pEnd, (char **)nullptr, 16 ) ;
 
 	 crateMaskResults.fillVariable( crateMaskColumns[ icrate+6 ],
 					crateMask ) ;
 	 krateMaskL[ icrate ] = std::strtol( crateMask.c_str(), &pEnd, 16 ) ;
-	 krateMaskR[ icrate ] = std::strtol( pEnd, (char **)NULL, 16 ) ;
+	 krateMaskR[ icrate ] = std::strtol( pEnd, (char **)nullptr, 16 ) ;
 
 	 std::cout << "Crate " << icrate << " masks"
 		   << " L: " << std::hex << crateMaskL[ icrate ]

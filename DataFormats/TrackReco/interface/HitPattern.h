@@ -19,23 +19,25 @@
 // The hits of a track are saved in unit16_t hitPattern[MaxHits].
 //
 //                                            uint16_t
-// +--------+---------------+---------------------------+-----------------+----------------+
-// |  tk/mu | sub-structure |     sub-sub-structure     |     stereo      |    hit type    |
-// +--------+---------------+---------------------------+-----------------+----------------+
-// |   10   | 9   8    7    |  6     5     4     3      |        2        |    1        0  |  bit
-// +--------+---------------+---------------------------+-----------------+----------------|
-// | tk = 1 |    PXB = 1    | layer = 1-3               |                 | hit type = 0-3 |
-// | tk = 1 |    PXF = 2    | disk  = 1-2               |                 | hit type = 0-3 |
-// | tk = 1 |    TIB = 3    | layer = 1-4               | 0=rphi,1=stereo | hit type = 0-3 |
-// | tk = 1 |    TID = 4    | wheel = 1-3               | 0=rphi,1=stereo | hit type = 0-3 |
-// | tk = 1 |    TOB = 5    | layer = 1-6               | 0=rphi,1=stereo | hit type = 0-3 |
-// | tk = 1 |    TEC = 6    | wheel = 1-9               | 0=rphi,1=stereo | hit type = 0-3 |
-// | mu = 0 |    DT  = 1    | 4*(stat-1)+superlayer     |                 | hit type = 0-3 |
-// | mu = 0 |    CSC = 2    | 4*(stat-1)+(ring-1)       |                 | hit type = 0-3 |
-// | mu = 0 |    RPC = 3    | 4*(stat-1)+2*layer+region |                 | hit type = 0-3 |
-// | mu = 0 |    GEM = 4    | 2*(stat-1)+2*(layer-1)    |                 | hit type = 0-3 |
-// |mu = 0  |    ME0 = 5    | roll                      |                 | hit type = 0-3 |
-// +--------+---------------+---------------------------+-----------------+----------------+
+// +------------+---------------+---------------------------+-----------------+----------------+
+// |  tk/mu/mtd | sub-structure |     sub-sub-structure     |     stereo      |    hit type    |
+// +------------+---------------+---------------------------+-----------------+----------------+
+// |    11-10   | 9   8    7    |  6     5     4     3      |        2        |    1        0  |  bit
+// +------------+---------------+---------------------------+-----------------+----------------|
+// | tk  = 1    |    PXB = 1    | layer = 1-3               |                 | hit type = 0-3 |
+// | tk  = 1    |    PXF = 2    | disk  = 1-2               |                 | hit type = 0-3 |
+// | tk  = 1    |    TIB = 3    | layer = 1-4               | 0=rphi,1=stereo | hit type = 0-3 |
+// | tk  = 1    |    TID = 4    | wheel = 1-3               | 0=rphi,1=stereo | hit type = 0-3 |
+// | tk  = 1    |    TOB = 5    | layer = 1-6               | 0=rphi,1=stereo | hit type = 0-3 |
+// | tk  = 1    |    TEC = 6    | wheel = 1-9               | 0=rphi,1=stereo | hit type = 0-3 |
+// | mu  = 0    |    DT  = 1    | 4*(stat-1)+superlayer     |                 | hit type = 0-3 |
+// | mu  = 0    |    CSC = 2    | 4*(stat-1)+(ring-1)       |                 | hit type = 0-3 |
+// | mu  = 0    |    RPC = 3    | 4*(stat-1)+2*layer+region |                 | hit type = 0-3 |
+// | mu  = 0    |    GEM = 4    | 2*(stat-1)+2*(layer-1)    |                 | hit type = 0-3 |
+// | mu  = 0    |    ME0 = 5    | roll                      |                 | hit type = 0-3 |
+// | mtd = 2    |    BTL = 1    | moduleType = 1-3          |                 | hit type = 0-3 | 
+// | mtd = 2    |    ETL = 2    | ring = 1-12               |                 | hit type = 0-3 | 
+// +------------+---------------+---------------------------+-----------------+----------------+
 //
 //  hit type, see DataFormats/TrackingRecHit/interface/TrackingRecHit.h
 //      VALID    = valid hit                                     = 0
@@ -121,9 +123,11 @@
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 #include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
 #include "DataFormats/MuonDetId/interface/MuonSubdetId.h"
+#include "DataFormats/ForwardDetId/interface/MTDDetId.h"
 #include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
 #include "DataFormats/TrackingRecHit/interface/TrackingRecHitFwd.h"
 #include "FWCore/Utilities/interface/GCC11Compatibility.h"
+#include "FWCore/Utilities/interface/Likely.h"
 
 #include <utility>
 #include <algorithm>
@@ -151,6 +155,12 @@ public:
         STEREO = 2
     };
 
+    enum HIT_DETECTOR_TYPE {
+      MUON_HIT = 0,
+      TRACKER_HIT = 1,
+      MTD_HIT = 2
+    };
+
     enum HIT_TYPE {
         VALID = 0,
         MISSING = 1,
@@ -163,8 +173,8 @@ public:
         MISSING_INNER_HITS = 1,
         MISSING_OUTER_HITS = 2
     };
-    const static unsigned short ARRAY_LENGTH = 50;
-    const static unsigned short HIT_LENGTH = 11;
+    const static unsigned short ARRAY_LENGTH = 57;
+    const static unsigned short HIT_LENGTH = 12;
     const static unsigned short MaxHits = (8 * sizeof(uint16_t) * ARRAY_LENGTH) / HIT_LENGTH;
 
     static const uint32_t NULL_RETURN = 999999;
@@ -172,6 +182,7 @@ public:
 
     static bool trackerHitFilter(uint16_t pattern);
     static bool muonHitFilter(uint16_t pattern);
+    static bool timingHitFilter(uint16_t pattern);
 
     static bool validHitFilter(uint16_t pattern);
     static bool missingHitFilter(uint16_t pattern);
@@ -192,6 +203,9 @@ public:
     static bool muonRPCHitFilter(uint16_t pattern);
     static bool muonGEMHitFilter(uint16_t pattern); 
     static bool muonME0HitFilter(uint16_t pattern);
+
+    static bool timingBTLHitFilter(uint16_t pattern);
+    static bool timingETLHitFilter(uint16_t pattern);
 
     static uint32_t getHitType(uint16_t pattern);
 
@@ -222,6 +236,12 @@ public:
 
     /// GEM layer: 1,2. Only valid for muon GEM patterns, of course.
     static uint16_t getGEMLayer(uint16_t pattern);
+
+    /// BTL Module type: 1,2,3. Only valid for BTL patterns of course.
+    static uint16_t getBTLModType(uint16_t pattern);
+
+    /// ETL Ring: 1-12. Only valid for ETL patterns of course.
+    static uint16_t getETLRing(uint16_t pattern);
 
     HitPattern();
 
@@ -280,7 +300,6 @@ public:
     int numberOfValidStripTOBHits() const;                        // not-null, valid, strip TOB
     int numberOfValidStripTECHits() const;                        // not-null, valid, strip TEC
 
-
     int numberOfLostHits(HitCategory category) const;             // not-null, not valid
     int numberOfLostTrackerHits(HitCategory category) const;      // not-null, not valid, tracker
     int numberOfLostPixelHits(HitCategory category) const;        // not-null, not valid, pixel
@@ -292,6 +311,15 @@ public:
     int numberOfLostStripTOBHits(HitCategory category) const;     // not-null, not valid, strip TOB
     int numberOfLostStripTECHits(HitCategory category) const;     // not-null, not valid, strip TEC
 
+    int numberOfTimingHits() const;         // not-null timing
+    int numberOfValidTimingHits() const;    // not-null, valid, timing
+    int numberOfValidTimingBTLHits() const;       // not-null, valid, timing BTL
+    int numberOfValidTimingETLHits() const;       // not-null, valid, timing ETL
+
+    int numberOfLostTimingHits() const;     // not-null, not valid, timing
+    int numberOfLostTimingBTLHits() const;  // not-null, not valid, timing BTL
+    int numberOfLostTimingETLHits() const;  // not-null, not valid, timing ETL
+    
     int numberOfMuonHits() const;             // not-null, muon
     int numberOfValidMuonHits() const;        // not-null, valid, muon
     int numberOfValidMuonDTHits() const;      // not-null, valid, muon DT
@@ -317,6 +345,7 @@ public:
 
     int numberOfInactiveHits() const;         // not-null, inactive
     int numberOfInactiveTrackerHits() const;  // not-null, inactive, tracker
+    int numberOfInactiveTimingHits() const;   // not-null, inactive, timing
 
     // count strip layers that have non-null, valid mono and stereo hits
     int numberOfValidStripLayersWithMonoAndStereo(uint16_t stripdet, uint16_t layer) const;
@@ -434,13 +463,14 @@ private:
     const static unsigned short SubstrOffset = 7;
     const static unsigned short SubstrMask = 0x7;
 
-    // 1 bit to distinguish tracker and muon subsystems
+    // 2 bits to distinguish tracker, muon, mtd subsystems
     const static unsigned short SubDetectorOffset = 10;
-    const static unsigned short SubDetectorMask = 0x1;
+    const static unsigned short SubDetectorMask = 0x3;
 
-    const static unsigned short minTrackerWord = 1<< SubDetectorOffset;
-    const static unsigned short minPixelWord = minTrackerWord |  (1<<SubstrOffset);
-    const static unsigned short minStripWord = minTrackerWord |  (3<<SubstrOffset);
+    const static unsigned short minTrackerWord = 1 << SubDetectorOffset;
+    const static unsigned short maxTrackerWord = (2 << SubDetectorOffset) - 1;
+    const static unsigned short minPixelWord = minTrackerWord | (1<<SubstrOffset);
+    const static unsigned short minStripWord = minTrackerWord | (3<<SubstrOffset);
 
 
     // detector side for tracker modules (mono/stereo)
@@ -479,7 +509,7 @@ private:
     uint8_t beginOuter;
     uint8_t endOuter;
 
-  friend int test::TestHitPattern::test();
+  friend int ::test::TestHitPattern::test();
 
   template<int N>
   friend struct PatternSet;
@@ -505,7 +535,7 @@ template<typename I>
 bool HitPattern::appendHits(const I &begin, const I &end, const TrackerTopology& ttopo)
 {
     for (I hit = begin; hit != end; hit++) {
-      if unlikely((!appendHit(*hit, ttopo))) {
+      if UNLIKELY((!appendHit(*hit, ttopo))) {
             return false;
         }
     }
@@ -515,7 +545,7 @@ bool HitPattern::appendHits(const I &begin, const I &end, const TrackerTopology&
 inline uint16_t HitPattern::getHitPattern(HitCategory category, int position) const
 {
     std::pair<uint8_t, uint8_t> range = getCategoryIndexRange(category);
-    if unlikely((position < 0 || (position + range.first) >= range.second)) {
+    if UNLIKELY((position < 0 || (position + range.first) >= range.second)) {
         return HitPattern::EMPTY_PATTERN;
     }
 
@@ -563,7 +593,7 @@ inline int HitPattern::countTypedHits(HitCategory category, filterType typeFilte
 
 inline bool HitPattern::pixelHitFilter(uint16_t pattern)
 {
-    if unlikely(!trackerHitFilter(pattern)) {
+    if UNLIKELY(!trackerHitFilter(pattern)) {
         return false;
     }
 
@@ -574,7 +604,7 @@ inline bool HitPattern::pixelHitFilter(uint16_t pattern)
 
 inline bool HitPattern::pixelBarrelHitFilter(uint16_t pattern)
 {
-    if unlikely(!trackerHitFilter(pattern)) {
+    if UNLIKELY(!trackerHitFilter(pattern)) {
         return false;
     }
 
@@ -584,7 +614,7 @@ inline bool HitPattern::pixelBarrelHitFilter(uint16_t pattern)
 
 inline bool HitPattern::pixelEndcapHitFilter(uint16_t pattern)
 {
-    if unlikely(!trackerHitFilter(pattern)) {
+    if UNLIKELY(!trackerHitFilter(pattern)) {
         return false;
     }
 
@@ -600,7 +630,7 @@ inline bool HitPattern::stripHitFilter(uint16_t pattern)
 
 inline bool HitPattern::stripSubdetectorHitFilter(uint16_t pattern, StripSubdetector::SubDetector substructure)
 {
-    if unlikely(!trackerHitFilter(pattern)) {
+    if UNLIKELY(!trackerHitFilter(pattern)) {
         return false;
     }
 
@@ -629,7 +659,7 @@ inline bool HitPattern::stripTECHitFilter(uint16_t pattern)
 
 inline bool HitPattern::muonDTHitFilter(uint16_t pattern)
 {
-    if unlikely(!muonHitFilter(pattern)) {
+    if UNLIKELY(!muonHitFilter(pattern)) {
         return false;
     }
 
@@ -639,7 +669,7 @@ inline bool HitPattern::muonDTHitFilter(uint16_t pattern)
 
 inline bool HitPattern::muonCSCHitFilter(uint16_t pattern)
 {
-    if unlikely(!muonHitFilter(pattern)) {
+    if UNLIKELY(!muonHitFilter(pattern)) {
         return false;
     }
 
@@ -649,7 +679,7 @@ inline bool HitPattern::muonCSCHitFilter(uint16_t pattern)
 
 inline bool HitPattern::muonRPCHitFilter(uint16_t pattern)
 {
-    if unlikely(!muonHitFilter(pattern)) {
+    if UNLIKELY(!muonHitFilter(pattern)) {
         return false;
     }
 
@@ -659,7 +689,7 @@ inline bool HitPattern::muonRPCHitFilter(uint16_t pattern)
 
 inline bool HitPattern::muonGEMHitFilter(uint16_t pattern)
 { 
-    if  unlikely(!muonHitFilter(pattern)) {
+    if  UNLIKELY(!muonHitFilter(pattern)) {
          return false;
     }
 
@@ -668,7 +698,7 @@ inline bool HitPattern::muonGEMHitFilter(uint16_t pattern)
 }
 
 inline bool HitPattern::muonME0HitFilter(uint16_t pattern) { 
-  if  unlikely(!muonHitFilter(pattern)) return false;
+  if  UNLIKELY(!muonHitFilter(pattern)) return false;
   uint16_t substructure = getSubStructure(pattern);
   return (substructure == (uint16_t) MuonSubdetId::ME0);
 }
@@ -676,21 +706,42 @@ inline bool HitPattern::muonME0HitFilter(uint16_t pattern) {
 
 inline bool HitPattern::trackerHitFilter(uint16_t pattern)
 {
-  return pattern > minTrackerWord;
+  return pattern > minTrackerWord && pattern <= maxTrackerWord;
 }
 
 inline bool HitPattern::muonHitFilter(uint16_t pattern)
 {
-    if unlikely(pattern == HitPattern::EMPTY_PATTERN) {
+    if UNLIKELY(pattern == HitPattern::EMPTY_PATTERN) {
         return false;
     }
 
     return (((pattern >> SubDetectorOffset) & SubDetectorMask) == 0);
 }
 
+inline bool HitPattern::timingBTLHitFilter(uint16_t pattern) { 
+  if  UNLIKELY(!timingHitFilter(pattern)) return false;
+  uint16_t substructure = getSubStructure(pattern);
+  return (substructure == (uint16_t) MTDDetId::BTL);
+}
+
+inline bool HitPattern::timingETLHitFilter(uint16_t pattern) { 
+  if  UNLIKELY(!timingHitFilter(pattern)) return false;
+  uint16_t substructure = getSubStructure(pattern);
+  return (substructure == (uint16_t) MTDDetId::ETL);
+}
+
+inline bool HitPattern::timingHitFilter(uint16_t pattern)
+{
+    if UNLIKELY(pattern == HitPattern::EMPTY_PATTERN) {
+        return false;
+    }
+
+    return (((pattern >> SubDetectorOffset) & SubDetectorMask) == 2);
+}
+
 inline uint32_t HitPattern::getSubStructure(uint16_t pattern)
 {
-    if unlikely(pattern == HitPattern::EMPTY_PATTERN) {
+    if UNLIKELY(pattern == HitPattern::EMPTY_PATTERN) {
         return NULL_RETURN;
     }
 
@@ -704,7 +755,7 @@ inline uint32_t HitPattern::getLayer(uint16_t pattern)
 
 inline uint32_t HitPattern::getSubSubStructure(uint16_t pattern)
 {
-    if unlikely(pattern == HitPattern::EMPTY_PATTERN) {
+    if UNLIKELY(pattern == HitPattern::EMPTY_PATTERN) {
         return NULL_RETURN;
     }
 
@@ -713,7 +764,7 @@ inline uint32_t HitPattern::getSubSubStructure(uint16_t pattern)
 
 inline uint32_t HitPattern::getSubDetector(uint16_t pattern)
 {
-    if unlikely(pattern == HitPattern::EMPTY_PATTERN) {
+    if UNLIKELY(pattern == HitPattern::EMPTY_PATTERN) {
         return NULL_RETURN;
     }
 
@@ -723,7 +774,7 @@ inline uint32_t HitPattern::getSubDetector(uint16_t pattern)
 
 inline uint32_t HitPattern::getSide(uint16_t pattern)
 {
-    if unlikely(pattern == HitPattern::EMPTY_PATTERN) {
+    if UNLIKELY(pattern == HitPattern::EMPTY_PATTERN) {
         return NULL_RETURN;
     }
 
@@ -732,7 +783,7 @@ inline uint32_t HitPattern::getSide(uint16_t pattern)
 
 inline uint32_t HitPattern::getHitType(uint16_t pattern)
 {
-    if unlikely(pattern == HitPattern::EMPTY_PATTERN) {
+    if UNLIKELY(pattern == HitPattern::EMPTY_PATTERN) {
         return NULL_RETURN;
     }
 
@@ -759,7 +810,7 @@ inline uint16_t HitPattern::getRPCLayer(uint16_t pattern)
     uint16_t subSubStructure = getSubSubStructure(pattern);
     uint16_t stat = subSubStructure >> 2;
 
-    if likely(stat <= 1) {
+    if LIKELY(stat <= 1) {
         return ((subSubStructure >> 1) & 1) + 1;
     }
 
@@ -777,6 +828,15 @@ inline uint16_t HitPattern::getGEMStation(uint16_t pattern)
 {
     uint16_t sss = getSubSubStructure(pattern), stat = sss >> 1;
     return stat + 1;
+}
+
+/// MTD
+inline uint16_t HitPattern::getBTLModType(uint16_t pattern) { 
+  return getSubSubStructure(pattern);
+}
+
+inline uint16_t HitPattern::getETLRing(uint16_t pattern) {
+  return getSubSubStructure(pattern);
 }
 
 inline uint16_t HitPattern::getGEMLayer(uint16_t pattern)
@@ -820,6 +880,11 @@ inline int HitPattern::numberOfMuonHits() const
     return countHits(TRACK_HITS, muonHitFilter);
 }
 
+inline int HitPattern::numberOfTimingHits() const
+{
+    return countHits(TRACK_HITS, timingHitFilter);
+}
+
 inline int HitPattern::numberOfValidHits() const
 {
     return countHits(TRACK_HITS, validHitFilter);
@@ -833,6 +898,11 @@ inline int HitPattern::numberOfValidTrackerHits() const
 inline int HitPattern::numberOfValidMuonHits() const
 {
     return countTypedHits(TRACK_HITS, validHitFilter, muonHitFilter);
+}
+
+inline int HitPattern::numberOfValidTimingHits() const
+{
+    return countTypedHits(TRACK_HITS, validHitFilter, timingHitFilter);
 }
 
 inline int HitPattern::numberOfValidPixelHits() const
@@ -899,6 +969,16 @@ inline int HitPattern::numberOfValidMuonME0Hits() const {
   return countTypedHits(TRACK_HITS, validHitFilter, muonME0HitFilter);
 }
 
+inline int HitPattern::numberOfValidTimingBTLHits() const
+{
+   return countTypedHits(TRACK_HITS, validHitFilter, timingBTLHitFilter);
+}
+
+inline int HitPattern::numberOfValidTimingETLHits() const
+{
+   return countTypedHits(TRACK_HITS, validHitFilter, timingETLHitFilter);
+}
+
 inline int HitPattern::numberOfLostHits(HitCategory category) const
 {
     return countHits(category, missingHitFilter);
@@ -912,6 +992,21 @@ inline int HitPattern::numberOfLostTrackerHits(HitCategory category) const
 inline int HitPattern::numberOfLostMuonHits() const
 {
     return countTypedHits(TRACK_HITS, missingHitFilter, muonHitFilter);
+}
+
+inline int HitPattern::numberOfLostTimingHits() const
+{
+    return countTypedHits(TRACK_HITS, missingHitFilter, timingHitFilter);
+}
+
+inline int HitPattern::numberOfLostTimingBTLHits() const
+{
+    return countTypedHits(TRACK_HITS, missingHitFilter, timingBTLHitFilter);
+}
+
+inline int HitPattern::numberOfLostTimingETLHits() const
+{
+    return countTypedHits(TRACK_HITS, missingHitFilter, timingETLHitFilter);
 }
 
 inline int HitPattern::numberOfLostPixelHits(HitCategory category) const

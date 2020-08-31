@@ -17,7 +17,7 @@
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/JetReco/interface/BasicJet.h"
 #include "DataFormats/Candidate/interface/CompositeCandidate.h"
-#include "PhysicsTools/CandUtils/interface/AddFourMomenta.h"
+#include "CommonTools/CandUtils/interface/AddFourMomenta.h"
 #include "DataFormats/Candidate/interface/CandMatchMap.h"
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
 #include "HLTrigger/HLTcore/interface/HLTFilter.h"
@@ -25,7 +25,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include <Math/VectorUtil.h>
 
-class CATopJetHelperUser : public std::unary_function<reco::Jet, reco::CATopJetProperties> {
+class CATopJetHelperUser {
  public:
 
   CATopJetHelperUser(double TopMass) :

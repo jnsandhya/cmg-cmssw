@@ -56,7 +56,7 @@
 class ElectronMVANtuplizer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
    public:
       explicit ElectronMVANtuplizer(const edm::ParameterSet&);
-      ~ElectronMVANtuplizer();
+      ~ElectronMVANtuplizer() override;
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 

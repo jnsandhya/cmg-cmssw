@@ -26,12 +26,12 @@ mvaTag = "Fall17NoIsoV1"
 
 
 mvaFall17WeightFiles_V1 = cms.vstring(
-    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EB1_5_2017_puinfo_BDT.weights.xml",
-    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EB2_5_2017_puinfo_BDT.weights.xml",
-    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EE_5_2017_puinfo_BDT.weights.xml",
-    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EB1_10_2017_puinfo_BDT.weights.xml",
-    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EB2_10_2017_puinfo_BDT.weights.xml",
-    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EE_10_2017_puinfo_BDT.weights.xml"
+    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EB1_5_2017_puinfo_BDT.weights.xml.gz",
+    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EB2_5_2017_puinfo_BDT.weights.xml.gz",
+    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EE_5_2017_puinfo_BDT.weights.xml.gz",
+    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EB1_10_2017_puinfo_BDT.weights.xml.gz",
+    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EB2_10_2017_puinfo_BDT.weights.xml.gz",
+    "RecoEgamma/ElectronIdentification/data/Fall17/EIDmva_EE_10_2017_puinfo_BDT.weights.xml.gz"
     )
 
 ## The working point for this MVA that is expected to have about 90% signal
@@ -73,6 +73,12 @@ MVA_WPLoose = EleMVA_WP(
     cutCategory4 =  "-0.8107642141584835" , # EB2
     cutCategory5 =  "-0.7179265933023059"   # EE
     )
+
+workingPoints = dict(
+    wpLoose = MVA_WPLoose,
+    wp90 = MVA_WP90,
+    wp80 = MVA_WP80,
+)
 
 #
 # Finally, set up VID configuration for all cuts

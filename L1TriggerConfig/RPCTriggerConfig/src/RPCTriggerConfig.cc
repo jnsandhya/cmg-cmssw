@@ -42,7 +42,7 @@
 class RPCTriggerConfig : public edm::ESProducer {
    public:
       RPCTriggerConfig(const edm::ParameterSet&);
-      ~RPCTriggerConfig();
+      ~RPCTriggerConfig() override;
 
       typedef std::unique_ptr<L1RPCConfig> ReturnType;
 
@@ -104,7 +104,6 @@ RPCTriggerConfig::~RPCTriggerConfig()
 RPCTriggerConfig::ReturnType
 RPCTriggerConfig::produce(const L1RPCConfigRcd& iRecord)
 {
-   using namespace edm::es;
    auto pL1RPCConfig = std::make_unique<L1RPCConfig>();
 
    pL1RPCConfig->setPPT(m_ppt);

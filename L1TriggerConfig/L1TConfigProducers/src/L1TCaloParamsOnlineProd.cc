@@ -20,16 +20,17 @@ using namespace XERCES_CPP_NAMESPACE;
 class L1TCaloParamsOnlineProd : public L1ConfigOnlineProdBaseExt<L1TCaloParamsO2ORcd,l1t::CaloParams> {
 private:
     unsigned int exclusiveLayer; // 0 - process calol1 and calol2, 1 - only calol1, 2 - only calol2
+    bool transactionSafe;
 
     bool readCaloLayer1OnlineSettings(l1t::CaloParamsHelperO2O& paramsHelper, std::map<std::string, l1t::Parameter>& conf, std::map<std::string, 
 l1t::Mask>& );
     bool readCaloLayer2OnlineSettings(l1t::CaloParamsHelperO2O& paramsHelper, std::map<std::string, l1t::Parameter>& conf, std::map<std::string, 
 l1t::Mask>& );
 public:
-    virtual std::shared_ptr<l1t::CaloParams> newObject(const std::string& objectKey, const L1TCaloParamsO2ORcd& record) override ;
+    std::unique_ptr<const l1t::CaloParams> newObject(const std::string& objectKey, const L1TCaloParamsO2ORcd& record) override ;
 
     L1TCaloParamsOnlineProd(const edm::ParameterSet&);
-    ~L1TCaloParamsOnlineProd(void){}
+    ~L1TCaloParamsOnlineProd(void) override{}
 };
 
 bool
@@ -50,7 +51,7 @@ std::map<std::string, l1t::Mask>& ) {
   };
   for (const auto param : expectedParams) {
     if ( conf.find(param) == conf.end() ) {
-      std::cerr << "Unable to locate expected CaloLayer1 parameter: " << param << " in L1 settings payload!";
+      edm::LogError("L1-O2O: L1TCaloParamsOnlineProd") << "Unable to locate expected CaloLayer1 parameter: " << param << " in L1 settings payload!";
       return false;
     }
   }
@@ -81,40 +82,47 @@ std::map<std::string, l1t::Mask>& ) {
     "leptonSeedThreshold",
     "leptonTowerThreshold",
     "pileUpTowerThreshold",
-    "jetSeedThreshold",
-    "jetMaxEta",
-    "HTMHT_maxJetEta",
-    "HT_jetThreshold",
-    "MHT_jetThreshold",
-    "jetEnergyCalibLUT",
-    "ETMET_maxTowerEta",
-    "ET_energyCalibLUT",
-    "ecalET_energyCalibLUT",
-    "METX_energyCalibLUT",
-    "METY_energyCalibLUT",
     "egammaRelaxationThreshold",
     "egammaMaxEta",
+    "egammaBypassCuts",
+    "egammaBypassShape",
+    "egammaBypassEcalFG",
+    "egammaBypassExtendedHOverE",
+    "egammaHOverECut_iEtaLT15",
+    "egammaHOverECut_iEtaGTEq15",
     "egammaEnergyCalibLUT",
     "egammaIsoLUT1",
     "egammaIsoLUT2",
     "tauMaxEta",
     "tauEnergyCalibLUT",
-    "tauIsoLUT1",
-///    "tauIsoLUT2",
+    "tauIsoLUT",
+    "tauTrimmingLUT",
+    "jetSeedThreshold",
+    "HTMHT_maxJetEta",
+    "HT_jetThreshold",
+    "MHT_jetThreshold",
+    "jetBypassPileUpSub",
+    "jetEnergyCalibLUT",
+    "jetPUSUsePhiRing",
     "towerCountThreshold",
     "towerCountMaxEta",
+    "ETMET_maxTowerEta",
+    "ecalET_towerThresholdLUT",
     "ET_towerThresholdLUT",
     "MET_towerThresholdLUT",
-    "ecalET_towerThresholdLUT",
-    "jetBypassPileUpSub",
-    "egammaBypassCuts",
-    "egammaHOverECut_iEtaLT15",
-    "egammaHOverECut_iEtaGTEq15",
-    "egammaBypassExtendedHOverE"
+    "ET_centralityLowerThresholds",
+    "ET_centralityUpperThresholds",
+    "ET_energyCalibLUT",
+    "ecalET_energyCalibLUT",
+    "MET_energyCalibLUT",
+    "METHF_energyCalibLUT",
+    "MET_phiCalibLUT",
+    "METHF_phiCalibLUT",
   };
+
   for (const auto param : expectedParams) {
     if ( conf.find(param) == conf.end() ) {
-      std::cerr << "Unable to locate expected CaloLayer2 parameter: " << param << " in L1 settings payload!";
+      edm::LogError("L1-O2O: L1TCaloParamsOnlineProd") << "Unable to locate expected CaloLayer2 parameter: " << param << " in L1 settings payload!";
       return false;
     }
   }
@@ -123,17 +131,31 @@ std::map<std::string, l1t::Mask>& ) {
   paramsHelper.setTauSeedThreshold((conf["leptonSeedThreshold"].getValue<int>())/2);
   paramsHelper.setEgNeighbourThreshold((conf["leptonTowerThreshold"].getValue<int>())/2);
   paramsHelper.setTauNeighbourThreshold((conf["leptonTowerThreshold"].getValue<int>())/2);
-  paramsHelper.setJetSeedThreshold((conf["jetSeedThreshold"].getValue<int>())/2);
-  paramsHelper.setJetBypassPUS(conf["jetBypassPileUpSub"].getValue<bool>());
+  paramsHelper.setPileUpTowerThreshold((conf["pileUpTowerThreshold"].getValue<int>())/2);
+
+  paramsHelper.setEgMaxPtHOverE((conf["egammaRelaxationThreshold"].getValue<int>())/2.);
+  paramsHelper.setEgEtaCut((conf["egammaMaxEta"].getValue<int>()));
   paramsHelper.setEgBypassEGVetos(conf["egammaBypassCuts"].getValue<bool>());
+  paramsHelper.setEgBypassShape( conf["egammaBypassShape"].getValue<bool>() );
+  paramsHelper.setEgBypassECALFG( conf["egammaBypassEcalFG"].getValue<bool>() );
+  paramsHelper.setEgBypassExtHOverE( conf["egammaBypassExtendedHOverE"].getValue<bool>() );
   paramsHelper.setEgHOverEcutBarrel(conf["egammaHOverECut_iEtaLT15"].getValue<int>());
   paramsHelper.setEgHOverEcutEndcap(conf["egammaHOverECut_iEtaGTEq15"].getValue<int>());
+  paramsHelper.setEgCalibrationLUT  ( l1t::convertToLUT( conf["egammaEnergyCalibLUT"].getVector<int>() ) );
+  paramsHelper.setEgIsolationLUT    ( l1t::convertToLUT( conf["egammaIsoLUT1"].getVector<int>() ) );
+  paramsHelper.setEgIsolationLUT2   ( l1t::convertToLUT( conf["egammaIsoLUT2"].getVector<int>() ) );
+
+  paramsHelper.setIsoTauEtaMax((conf["tauMaxEta"].getValue<int>()));
+  paramsHelper.setTauCalibrationLUT( l1t::convertToLUT( conf["tauEnergyCalibLUT"].getVector<int>() ) );
+  paramsHelper.setTauIsolationLUT  ( l1t::convertToLUT( conf["tauIsoLUT"].getVector<int>() ) );
+  paramsHelper.setTauTrimmingShapeVetoLUT( l1t::convertToLUT( conf["tauTrimmingLUT"].getVector<int>() ) );
 
 
-  // Currently not used // paramsHelper.setEgPileupTowerThresh((conf["pileUpTowerThreshold"].getValue<int>())); 
-  // Currently not used // paramsHelper.setTauPileupTowerThresh((conf["pileUpTowerThreshold"].getValue<int>())); 
-  // Currently not used // paramsHelper.setJetMaxEta((conf["jetMaxEta"].getValue<int>()));
-  
+  paramsHelper.setJetSeedThreshold((conf["jetSeedThreshold"].getValue<int>())/2);
+  paramsHelper.setJetBypassPUS(conf["jetBypassPileUpSub"].getValue<bool>());
+  paramsHelper.setJetPUSUsePhiRing(conf["jetPUSUsePhiRing"].getValue<bool>());
+  paramsHelper.setJetCalibrationLUT ( l1t::convertToLUT( conf["jetEnergyCalibLUT"].getVector<uint32_t>() ) );
+
   std::vector<int> etSumEtaMax;
   std::vector<int> etSumEtThresh;
   
@@ -142,45 +164,40 @@ std::map<std::string, l1t::Mask>& ) {
   etSumEtaMax.push_back(conf["ETMET_maxTowerEta"].getValue<int>());
   etSumEtaMax.push_back(conf["HTMHT_maxJetEta"].getValue<int>());
   etSumEtaMax.push_back(conf["towerCountMaxEta"].getValue<int>());
-  
-  etSumEtThresh.push_back(0); //conf["ET_towerThreshold"].getValue<int>()/2); // ETT tower threshold
+
+  etSumEtThresh.push_back(0); //deprecated by EttPUSLUT
   etSumEtThresh.push_back(conf["HT_jetThreshold"].getValue<int>()/2);
-  etSumEtThresh.push_back(0); //conf["MET_towerThreshold"].getValue<int>()/2); // ETM tower threshold
+  etSumEtThresh.push_back(0); //deprecated by MetPUSLUT
   etSumEtThresh.push_back(conf["MHT_jetThreshold"].getValue<int>()/2);
-  etSumEtThresh.push_back(conf["ET_towerThreshold"].getValue<int>()/2);
+  etSumEtThresh.push_back(conf["towerCountThreshold"].getValue<int>()/2);
 
   for (uint i=0; i<5; ++i) {
     paramsHelper.setEtSumEtaMax(i, etSumEtaMax.at(i));
     paramsHelper.setEtSumEtThreshold(i, etSumEtThresh.at(i));
   }
 
-  paramsHelper.setJetCalibrationLUT ( l1t::convertToLUT( conf["jetEnergyCalibLUT"].getVector<uint32_t>() ) );
-
   paramsHelper.setEtSumMetPUSLUT    ( l1t::convertToLUT( conf["MET_towerThresholdLUT"].getVector<int>() ) );
   paramsHelper.setEtSumEttPUSLUT    ( l1t::convertToLUT( conf["ET_towerThresholdLUT"].getVector<int>() ) );
   paramsHelper.setEtSumEcalSumPUSLUT( l1t::convertToLUT( conf["ecalET_towerThresholdLUT"].getVector<int>() ) );
 
+  std::vector<double> etSumCentLowerValues;
+  std::vector<double> etSumCentUpperValues;
+
+  etSumCentLowerValues = conf["ET_centralityLowerThresholds"].getVector<double>();
+  etSumCentUpperValues = conf["ET_centralityUpperThresholds"].getVector<double>();
+
+  for(uint i=0; i<8; ++i){
+    paramsHelper.setEtSumCentLower(i, etSumCentLowerValues[i]/2);
+    paramsHelper.setEtSumCentUpper(i, etSumCentUpperValues[i]/2);
+  }
+
+  // demux tower sum calib LUTs
   paramsHelper.setEtSumEttCalibrationLUT    ( l1t::convertToLUT( conf["ET_energyCalibLUT"].getVector<int>() ) );
   paramsHelper.setEtSumEcalSumCalibrationLUT( l1t::convertToLUT( conf["ecalET_energyCalibLUT"].getVector<int>() ) );
-  paramsHelper.setEtSumXCalibrationLUT      ( l1t::convertToLUT( conf["METX_energyCalibLUT"].getVector<int>() ) );
-
-  paramsHelper.setEgMaxPtHOverE((conf["egammaRelaxationThreshold"].getValue<int>())/2.);
-  paramsHelper.setEgEtaCut((conf["egammaMaxEta"].getValue<int>()));
-  paramsHelper.setEgCalibrationLUT  ( l1t::convertToLUT( conf["egammaEnergyCalibLUT"].getVector<int>() ) );
-  paramsHelper.setEgIsolationLUT    ( l1t::convertToLUT( conf["egammaIsoLUT1"].getVector<int>() ) );
-  paramsHelper.setEgIsolationLUT2   ( l1t::convertToLUT( conf["egammaIsoLUT2"].getVector<int>() ) );
-
-  paramsHelper.setIsoTauEtaMax((conf["tauMaxEta"].getValue<int>()));
-
-  paramsHelper.setTauCalibrationLUT( l1t::convertToLUT( conf["tauEnergyCalibLUT"].getVector<int>() ) );
-  paramsHelper.setTauIsolationLUT  ( l1t::convertToLUT( conf["tauIsoLUT1"].getVector<int>() ) );
-  if( conf.find("tauIsoLUT2") != conf.end() )
-    paramsHelper.setTauIsolationLUT2 ( l1t::convertToLUT( conf["tauIsoLUT2"].getVector<int>() ) );
-
-  paramsHelper.setEgBypassExtHOverE( conf["egammaBypassExtendedHOverE"].getValue<bool>() );
-
-  if( conf.find("P_TauTrimming_13to8.mif") != conf.end() )
-    paramsHelper.setTauTrimmingShapeVetoLUT( l1t::convertToLUT( conf["P_TauTrimming_13to8.mif"].getVector<int>() ) );
+  paramsHelper.setMetCalibrationLUT      ( l1t::convertToLUT( conf["MET_energyCalibLUT"].getVector<int>() ) );
+  paramsHelper.setMetHFCalibrationLUT      ( l1t::convertToLUT( conf["METHF_energyCalibLUT"].getVector<int>() ) );
+  paramsHelper.setMetPhiCalibrationLUT      ( l1t::convertToLUT( conf["MET_phiCalibLUT"].getVector<int>() ) );
+  paramsHelper.setMetHFPhiCalibrationLUT      ( l1t::convertToLUT( conf["METHF_phiCalibLUT"].getVector<int>() ) );
 
   return true;
 }
@@ -188,11 +205,11 @@ std::map<std::string, l1t::Mask>& ) {
 L1TCaloParamsOnlineProd::L1TCaloParamsOnlineProd(const edm::ParameterSet& iConfig) : 
     L1ConfigOnlineProdBaseExt<L1TCaloParamsO2ORcd,l1t::CaloParams>(iConfig)
 {
-    exclusiveLayer = iConfig.getParameter<uint32_t>("exclusiveLayer");
+    exclusiveLayer  = iConfig.getParameter<uint32_t>("exclusiveLayer");
+    transactionSafe = iConfig.getParameter<bool>("transactionSafe");
 }
 
-std::shared_ptr<l1t::CaloParams> L1TCaloParamsOnlineProd::newObject(const std::string& objectKey, const L1TCaloParamsO2ORcd& record) {
-    using namespace edm::es;
+std::unique_ptr<const l1t::CaloParams> L1TCaloParamsOnlineProd::newObject(const std::string& objectKey, const L1TCaloParamsO2ORcd& record) {
 
     const L1TCaloParamsRcd& baseRcd = record.template getRecord< L1TCaloParamsRcd >() ;
     edm::ESHandle< l1t::CaloParams > baseSettings ;
@@ -200,15 +217,19 @@ std::shared_ptr<l1t::CaloParams> L1TCaloParamsOnlineProd::newObject(const std::s
 
 
     if( objectKey.empty() ){
-        edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << "Key is empty, returning empty l1t::CaloParams";
-        throw std::runtime_error("Empty objectKey");
+        edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << "Key is empty";
+        if( transactionSafe )
+            throw std::runtime_error("SummaryForFunctionManager: Calo  | Faulty  | Empty objectKey");
+        else {
+            edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << "returning unmodified prototype of l1t::CaloParams";
+            return std::make_unique< const l1t::CaloParams >( *(baseSettings.product()) ) ;
+        }
     }
 
     std::string tscKey = objectKey.substr(0, objectKey.find(":") );
     std::string  rsKey = objectKey.substr(   objectKey.find(":")+1, std::string::npos );
 
-    edm::LogInfo( "L1-O2O: L1TCaloParamsOnlineProd" ) << "Producing L1TCaloParamsOnlineProd with TSC key = " << tscKey << " and RS key = " << rsKey 
-;
+    edm::LogInfo( "L1-O2O: L1TCaloParamsOnlineProd" ) << "Producing L1TCaloParamsOnlineProd with TSC key = " << tscKey << " and RS key = " << rsKey;
 
     std::string calol1_top_key, calol1_algo_key;
     std::string calol1_algo_payload;
@@ -279,7 +300,12 @@ std::shared_ptr<l1t::CaloParams> L1TCaloParamsOnlineProd::newObject(const std::s
 
     } catch ( std::runtime_error &e ) {
         edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << e.what();
-        throw std::runtime_error("Broken key");
+        if( transactionSafe )
+            throw std::runtime_error(std::string("SummaryForFunctionManager: Calo  | Faulty  | ") + e.what());
+        else {
+            edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << "returning unmodified prototype of l1t::CaloParams";
+            return std::make_unique< const l1t::CaloParams >( *(baseSettings.product()) ) ;
+        }
     }
 
     if( exclusiveLayer == 0 || exclusiveLayer == 2 ){
@@ -303,48 +329,71 @@ std::shared_ptr<l1t::CaloParams> L1TCaloParamsOnlineProd::newObject(const std::s
     l1t::CaloParamsHelperO2O m_params_helper( *(baseSettings.product()) );
 
 
-  if( exclusiveLayer == 0 || exclusiveLayer == 1 ){
-    l1t::XmlConfigParser xmlReader1;
-    xmlReader1.readDOMFromString( calol1_algo_payload );
+    if( exclusiveLayer == 0 || exclusiveLayer == 1 ){
+        try {
+            l1t::XmlConfigParser xmlReader1;
+            xmlReader1.readDOMFromString( calol1_algo_payload );
 
-    l1t::TriggerSystem calol1;
-    calol1.addProcessor("processors", "processors","-1","-1");
-    xmlReader1.readRootElement( calol1, "calol1" );
-    calol1.setConfigured();
+            l1t::TriggerSystem calol1;
+            calol1.addProcessor("processors", "processors","-1","-1");
+            xmlReader1.readRootElement( calol1, "calol1" );
+            calol1.setConfigured();
 
-    std::map<std::string, l1t::Parameter> calol1_conf = calol1.getParameters("processors");
-    std::map<std::string, l1t::Mask>      calol1_rs   ;//= calol1.getMasks   ("processors");
+            std::map<std::string, l1t::Parameter> calol1_conf = calol1.getParameters("processors");
+            std::map<std::string, l1t::Mask>      calol1_rs   ;//= calol1.getMasks   ("processors");
 
-    if( !readCaloLayer1OnlineSettings(m_params_helper, calol1_conf, calol1_rs) )
-        throw std::runtime_error("Parsing error for CaloLayer1");
-  }
+            if( !readCaloLayer1OnlineSettings(m_params_helper, calol1_conf, calol1_rs) )
+                throw std::runtime_error("Parsing error for CaloLayer1");
 
-
-  if( exclusiveLayer == 0 || exclusiveLayer == 2 ){
-    l1t::TriggerSystem calol2;
-
-    l1t::XmlConfigParser xmlReader2;
-    xmlReader2.readDOMFromString( calol2_hw_payload );
-    xmlReader2.readRootElement( calol2, "calol2" );
-
-    for(auto &conf : calol2_algo_payloads){ 
-        xmlReader2.readDOMFromString( conf.second );
-        xmlReader2.readRootElement( calol2, "calol2" );
+        } catch ( std::runtime_error &e ){
+            edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << e.what();
+            if( transactionSafe )
+                throw std::runtime_error(std::string("SummaryForFunctionManager: Calo  | Faulty  | ") + e.what());
+            else {
+                edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << "returning unmodified prototype of l1t::CaloParams";
+                return std::make_unique< const l1t::CaloParams >( *(baseSettings.product()) ) ;
+            }
+        }
     }
 
-//    calol2.setSystemId("calol2");
-    calol2.setConfigured();
 
-    // Perhaps layer 2 has to look at settings for demux and mp separately? // => No demux settings required
-    std::map<std::string, l1t::Parameter> calol2_conf = calol2.getParameters("MP1");
-    std::map<std::string, l1t::Mask>      calol2_rs   ;//= calol2.getMasks   ("processors");
+    if( exclusiveLayer == 0 || exclusiveLayer == 2 ){
+        try {
+            l1t::TriggerSystem calol2;
+            l1t::XmlConfigParser xmlReader2;
+            xmlReader2.readDOMFromString( calol2_hw_payload );
+            xmlReader2.readRootElement( calol2, "calol2" );
 
-    if( !readCaloLayer2OnlineSettings(m_params_helper, calol2_conf, calol2_rs) )
-        throw std::runtime_error("Parsing error for CaloLayer2");
-  }
+            for(auto &conf : calol2_algo_payloads){ 
+                xmlReader2.readDOMFromString( conf.second );
+                xmlReader2.readRootElement( calol2, "calol2" );
+            }
+
+//            calol2.setSystemId("calol2");
+            calol2.setConfigured();
+
+            std::map<std::string, l1t::Parameter> calol2_conf = calol2.getParameters("MP1");
+	    std::map<std::string, l1t::Parameter> calol2_conf_demux = calol2.getParameters("DEMUX");
+	    calol2_conf.insert( calol2_conf_demux.begin(), calol2_conf_demux.end() ) ;
+            std::map<std::string, l1t::Mask>      calol2_rs   ;//= calol2.getMasks   ("processors");
+
+            if( !readCaloLayer2OnlineSettings(m_params_helper, calol2_conf, calol2_rs) )
+                throw std::runtime_error("Parsing error for CaloLayer2");
+
+        } catch ( std::runtime_error &e ){
+            edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << e.what();
+            if( transactionSafe )
+                throw std::runtime_error(std::string("SummaryForFunctionManager: Calo  | Faulty  | ") + e.what());
+            else {
+                edm::LogError( "L1-O2O: L1TCaloParamsOnlineProd" ) << "returning unmodified prototype of l1t::CaloParams";
+                return std::make_unique< const l1t::CaloParams >( *(baseSettings.product()) ) ;
+            }
+        }
+    }
     
-
-    std::shared_ptr< l1t::CaloParams > retval = std::make_shared< l1t::CaloParams >( m_params_helper ) ;
+    auto retval = std::make_unique< const l1t::CaloParams >( m_params_helper ) ;
+    
+    edm::LogInfo( "L1-O2O: L1TCaloParamsOnlineProd" ) << "SummaryForFunctionManager: Calo  | OK      | All looks good";
     return retval;
 }
 

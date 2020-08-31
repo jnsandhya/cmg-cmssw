@@ -24,17 +24,11 @@
 #include "DQMServices/Core/interface/DQMStore.h"
 #include "DQMServices/Core/interface/DQMEDAnalyzer.h"
 
-typedef std::map<DetId, EcalRecHit> RecHitsMap;
 // Less than operator for sorting EcalRecHits according to energy.
-class ecalRecHitLess : public std::binary_function<EcalRecHit, EcalRecHit, bool> 
-{
-public:
-  bool operator()(EcalRecHit x, EcalRecHit y) 
-  { 
-    return (x.energy() > y.energy()); 
-  }
-};
-
+bool ecalRecHitGreater(EcalRecHit x, EcalRecHit y) 
+{ 
+  return (x.energy() > y.energy()); 
+}
 
 
 
@@ -50,30 +44,14 @@ public:
 
 protected:
    
-  void beginJob();
-
-//  void beginRun(const edm::Run& r, const edm::EventSetup& c);
   void bookHistograms(DQMStore::IBooker &, edm::Run const &, edm::EventSetup const &) override;
   void analyze(const edm::Event& e, const edm::EventSetup& c) override ;
-
-  void beginLuminosityBlock(const edm::LuminosityBlock& lumiSeg, 
-                            const edm::EventSetup& context)  override;
-
-  void endLuminosityBlock(const edm::LuminosityBlock& lumiSeg, 
-                          const edm::EventSetup& c) override;
-
-  void endRun(const edm::Run& r, const edm::EventSetup& c) override;
-
-  void endJob();
 
   void convxtalid(int & , int &);
   int diff_neta_s(int,int);
   int diff_nphi_s(int,int);
 
-
-
 private:
- 
 
   int eventCounter_;      
   PositionCalc posCalculator_ ;                        
@@ -344,4 +322,3 @@ private:
 };
 
 #endif
-

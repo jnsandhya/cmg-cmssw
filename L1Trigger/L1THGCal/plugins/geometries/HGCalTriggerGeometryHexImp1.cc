@@ -14,7 +14,10 @@ class HGCalTriggerGeometryHexImp1 : public HGCalTriggerGeometryGenericMapping
     public:
         HGCalTriggerGeometryHexImp1(const edm::ParameterSet& conf);
 
-        virtual void initialize(const edm::ESHandle<CaloGeometry>& ) override final;
+        void initialize(const edm::ESHandle<CaloGeometry>& ) final;
+        void initialize(const edm::ESHandle<HGCalGeometry>&,
+                const edm::ESHandle<HGCalGeometry>&,
+                const edm::ESHandle<HGCalGeometry>&) final;
 
     private:
         edm::FileInPath l1tCellsMapping_;
@@ -34,7 +37,6 @@ HGCalTriggerGeometryHexImp1::HGCalTriggerGeometryHexImp1(const edm::ParameterSet
 {
 }
 
-
 /*****************************************************************/
 void HGCalTriggerGeometryHexImp1::initialize(const edm::ESHandle<CaloGeometry>& calo_geometry)
 /*****************************************************************/
@@ -46,6 +48,17 @@ void HGCalTriggerGeometryHexImp1::initialize(const edm::ESHandle<CaloGeometry>& 
     fillMaps();
     buildTriggerCellsAndModules();
 
+}
+
+/*****************************************************************/
+ void HGCalTriggerGeometryHexImp1::initialize(const edm::ESHandle<HGCalGeometry>& hgc_ee_geometry,
+        const edm::ESHandle<HGCalGeometry>& hgc_hsi_geometry,
+        const edm::ESHandle<HGCalGeometry>& hgc_hsc_geometry
+        )
+/*****************************************************************/
+{
+    throw cms::Exception("BadGeometry")
+        << "HGCalTriggerGeometryHexImp1 geometry cannot be initialized with the V9 HGCAL geometry";
 }
 
 
@@ -126,7 +139,7 @@ void HGCalTriggerGeometryHexImp1::fillMaps()
     //
     // Loop over HGC cells
     // EE
-    for(const auto& id : eeGeometry().getValidGeomDetIds())
+    for(const auto& id : eeGeometry()->getValidGeomDetIds())
     {
         if(id.rawId()==0) continue;
         HGCalDetId waferDetId(id); 
@@ -149,7 +162,7 @@ void HGCalTriggerGeometryHexImp1::fillMaps()
         }
     }
     // FH
-    for(const auto& id : fhGeometry().getValidGeomDetIds())
+    for(const auto& id : fhGeometry()->getValidGeomDetIds())
     {
         if(id.rawId()==0) continue;
         HGCalDetId waferDetId(id); 
@@ -201,7 +214,7 @@ void HGCalTriggerGeometryHexImp1::buildTriggerCellsAndModules()
         for(const auto& cell : cellIds)
         {
             HGCalDetId cellDetId(cell);
-            triggerCellVector += (cellDetId.subdetId()==ForwardSubdetector::HGCEE ? eeGeometry().getPosition(cellDetId) :  fhGeometry().getPosition(cellDetId)).basicVector();
+            triggerCellVector += (cellDetId.subdetId()==ForwardSubdetector::HGCEE ? eeGeometry()->getPosition(cellDetId) :  fhGeometry()->getPosition(cellDetId)).basicVector();
         }
         GlobalPoint triggerCellPoint( triggerCellVector/cellIds.size() );
         const auto& triggerCellToModuleItr = trigger_cells_to_modules_.find(triggerCellId);

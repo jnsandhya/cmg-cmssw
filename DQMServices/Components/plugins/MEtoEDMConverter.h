@@ -50,9 +50,18 @@
 #include "TProfile2D.h"
 #include "TObjString.h"
 
-class MEtoEDMConverter : public edm::one::EDProducer<edm::one::WatchRuns,
+namespace meedm {
+  struct Void {};
+}
+
+//Using RunCache and LuminosityBlockCache tells the framework the module is able to 
+// allow multiple concurrent Runs and LuminosityBlocks.
+
+class MEtoEDMConverter : public edm::one::EDProducer<edm::RunCache<meedm::Void>,
+                                                     edm::LuminosityBlockCache<meedm::Void>,
                                                      edm::EndLuminosityBlockProducer,
-                                                     edm::EndRunProducer>
+                                                     edm::EndRunProducer,
+                                                     edm::one::SharedResources>
 {
 public:
   explicit MEtoEDMConverter(const edm::ParameterSet&);
@@ -60,15 +69,17 @@ public:
   void beginJob() override;
   void endJob() override;
   void produce(edm::Event&, const edm::EventSetup&) override;
-  void beginRun(edm::Run const&, const edm::EventSetup&) override;
-  void endRun(edm::Run const&, const edm::EventSetup&) override;
+  std::shared_ptr<meedm::Void> globalBeginRun(edm::Run const&, const edm::EventSetup&) const override;
+  void globalEndRun(edm::Run const&, const edm::EventSetup&) override;
   void endRunProduce(edm::Run&, const edm::EventSetup&) override;
   void endLuminosityBlockProduce(edm::LuminosityBlock&, const edm::EventSetup&) override;
+  void globalEndLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override {};
+  std::shared_ptr<meedm::Void>  globalBeginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) const override;
 
   template <class T>
-      void putData(T& iPutTo, bool iLumiOnly, uint32_t run, uint32_t lumi);
+  void putData(DQMStore::IGetter &g, T& iPutTo, bool iLumiOnly, uint32_t run, uint32_t lumi);
 
-  typedef std::vector<uint32_t> TagList;
+  using TagList = std::vector<uint32_t>;
 
 private:
   std::string fName;
@@ -77,8 +88,6 @@ private:
   bool deleteAfterCopy;
   bool enableMultiThread_;
   std::string path;
-
-  DQMStore* dbe;
 
   // private statistics information
   std::map<int,int> iCount;

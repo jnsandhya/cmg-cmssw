@@ -99,9 +99,8 @@ void SiStripGainCosmicCalculator::algoBeginJob(const edm::EventSetup& iSetup)
    siStripDetCabling->addActiveDetectorsRawIds(activeDets);
 //    SelectedDetIds = activeDets; // all active detector modules
    // use SiStripSubStructure for selecting certain regions
-   SiStripSubStructure substructure;
-   substructure.getTIBDetectors(activeDets, SelectedDetIds, 0, 0, 0, 0); // this adds rawDetIds to SelectedDetIds
-   substructure.getTOBDetectors(activeDets, SelectedDetIds, 0, 0, 0);    // this adds rawDetIds to SelectedDetIds
+   SiStripSubStructure::getTIBDetectors(activeDets, SelectedDetIds, tTopo, 0, 0, 0, 0); // this adds rawDetIds to SelectedDetIds
+   SiStripSubStructure::getTOBDetectors(activeDets, SelectedDetIds, tTopo, 0, 0, 0);    // this adds rawDetIds to SelectedDetIds
    // get tracker geometry and find nr. of apv pairs for each active detector 
    edm::ESHandle<TrackerGeometry> tkGeom; iSetup.get<TrackerDigiGeometryRecord>().get( tkGeom );     
    for(TrackerGeometry::DetContainer::const_iterator it = tkGeom->dets().begin(); it != tkGeom->dets().end(); it++){ // loop over detector modules
@@ -277,7 +276,7 @@ double SiStripGainCosmicCalculator::moduleThickness(const uint32_t detid, const 
 }
 
 //---------------------------------------------------------------------------------------------------------
-SiStripApvGain * SiStripGainCosmicCalculator::getNewObject() {
+std::unique_ptr<SiStripApvGain> SiStripGainCosmicCalculator::getNewObject() {
   std::cout<<"SiStripGainCosmicCalculator::getNewObject called"<<std::endl;
 
   std::cout<<"total_nr_of_events="<<total_nr_of_events<<std::endl;
@@ -420,7 +419,7 @@ TH1F *CorrectionOfEachAPVPairControlView = new TH1F("CorrectionOfEachAPVPairCont
     outputfile->Close();
   }
 
-  SiStripApvGain * obj = new SiStripApvGain();
+  auto obj = std::make_unique<SiStripApvGain>();
 
 //   for(std::map<uint32_t,OptoScanAnalysis*>::const_iterator it = analyses.begin(); it != analyses.end(); it++){
 //     //Generate Gain for det detid

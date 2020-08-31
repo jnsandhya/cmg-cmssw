@@ -57,9 +57,41 @@ namespace edmNew {
 
       DetSetVectorTrans(): m_filling(false), m_dataSize(0){}
       DetSetVectorTrans& operator=(const DetSetVectorTrans&) = delete;
-      DetSetVectorTrans(const DetSetVectorTrans&) = delete;
-      DetSetVectorTrans(DetSetVectorTrans&&) = default;
-      DetSetVectorTrans& operator=(DetSetVectorTrans&&) = default;
+
+      DetSetVectorTrans(const DetSetVectorTrans& rh): // can't be default because of atomics
+        m_filling(false) {
+        // better no one is filling...
+        assert(rh.m_filling==false);
+        m_getter = rh.m_getter;
+#ifdef DSVN_USE_ATOMIC
+        m_dataSize.store(rh.m_dataSize.load());
+#else
+        m_dataSize = rh.m_dataSize;
+#endif
+      }
+
+      DetSetVectorTrans(DetSetVectorTrans&& rh): // can't be default because of atomics
+        m_filling(false) {
+        // better no one is filling...
+        assert(rh.m_filling==false);
+        m_getter = std::move(rh.m_getter);
+#ifdef DSVN_USE_ATOMIC
+        m_dataSize.store(rh.m_dataSize.exchange(m_dataSize.load()));
+#else
+        m_dataSize = std::move(rh.m_dataSize);
+#endif
+      }
+      DetSetVectorTrans& operator=(DetSetVectorTrans&& rh) {  // can't be default because of atomics
+        // better no one is filling...
+        assert(m_filling==false); assert(rh.m_filling==false);
+        m_getter = std::move(rh.m_getter);
+#ifdef DSVN_USE_ATOMIC
+        m_dataSize.store(rh.m_dataSize.exchange(m_dataSize.load()));
+#else
+        m_dataSize = std::move(rh.m_dataSize);
+#endif
+        return *this;
+      }
       mutable std::atomic<bool> m_filling;
       boost::any m_getter;
 #ifdef DSVN_USE_ATOMIC
@@ -108,7 +140,7 @@ namespace edmNew {
 #else
         mutable int offset;
 #endif
-        CMS_THREAD_GUARD("offset") mutable size_type size;
+        CMS_THREAD_GUARD(offset) mutable size_type size;
 
         bool uninitialized() const { return (-1)==offset;}
         bool initializing() const { return (-2)==offset;}
@@ -172,7 +204,7 @@ namespace edmNew {
     struct IterHelp {
       typedef DetSet result_type;
       //      IterHelp() : v(0),update(true){}
-      IterHelp() : m_v(0),m_update(false){}
+      IterHelp() : m_v(nullptr),m_update(false){}
       IterHelp(DetSetVector<T> const & iv, bool iup) : m_v(&iv), m_update(iup){}
       
       result_type & operator()(Item const& item) const {
@@ -378,15 +410,18 @@ namespace edmNew {
     friend class TSFastFiller;
     friend class edmNew::DetSet<T>;
 
-    class FindForDetSetVector : public std::binary_function<const edmNew::DetSetVector<T>&, unsigned int, const T*> {
+    class FindForDetSetVector {
     public:
-      typedef FindForDetSetVector self;
-      typename self::result_type operator()(typename self::first_argument_type iContainer, typename self::second_argument_type iIndex)
+      using first_argument_type  = const edmNew::DetSetVector<T>&;
+      using second_argument_type = unsigned int;
+      using result_type          = const T*;
+
+      result_type operator()(first_argument_type iContainer, second_argument_type iIndex)
 #ifdef DSVN_USE_ATOMIC
       {
         bool expected=false;
         while (!iContainer.m_filling.compare_exchange_weak(expected,true,std::memory_order_acq_rel))  { expected=false; nanosleep(nullptr,nullptr);}
-        typename self::result_type item =  &(iContainer.m_data[iIndex]);
+        result_type item =  &(iContainer.m_data[iIndex]);
         assert(iContainer.m_filling==true);
         iContainer.m_filling = false;
         return item;
@@ -410,7 +445,11 @@ namespace edmNew {
 
     // default or delete is the same...
     DetSetVector& operator=(const DetSetVector&) = delete;
-    DetSetVector(const DetSetVector&) = delete;
+    // Implement copy constructor because of a (possibly temporary)
+    // need in heterogeneous framework prototyping. In general this
+    // class is still supposed to be non-copyable, so to prevent
+    // accidental copying the assignment operator is left deleted.
+    DetSetVector(const DetSetVector&) = default;
     DetSetVector(DetSetVector&&) = default;
     DetSetVector& operator=(DetSetVector&&) = default;
 
@@ -618,7 +657,7 @@ namespace edmNew {
     // ROOT6 has a problem with this IdContainer typedef
     //IdContainer m_ids;
     std::vector<Trans::Item> m_ids;
-    CMS_THREAD_GUARD("dstvdetails::DetSetVectorTrans::m_filling") mutable DataContainer m_data;
+    CMS_THREAD_GUARD(dstvdetails::DetSetVectorTrans::m_filling) mutable DataContainer m_data;
     
   };
   
@@ -699,9 +738,12 @@ namespace edm {
     /* Probably this one is not that useful .... */
     namespace refhelper {
         template<typename T>
-            struct FindSetForNewDetSetVector : public std::binary_function<const edmNew::DetSetVector<T>&, unsigned int, edmNew::DetSet<T> > {
-                typedef FindSetForNewDetSetVector<T> self;
-                typename self::result_type operator()(typename self::first_argument_type iContainer, typename self::second_argument_type iIndex) {
+            struct FindSetForNewDetSetVector {
+                using first_argument_type  = const edmNew::DetSetVector<T>&;
+                using second_argument_type = unsigned int;
+                using result_type          = edmNew::DetSet<T>;
+
+                result_type operator()(first_argument_type iContainer, second_argument_type iIndex) {
                     return &(iContainer[iIndex]);
                 }
             };

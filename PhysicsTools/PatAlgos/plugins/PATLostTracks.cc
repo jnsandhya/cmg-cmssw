@@ -38,9 +38,9 @@ namespace pat {
   class PATLostTracks : public edm::global::EDProducer<> {
   public:
     explicit PATLostTracks(const edm::ParameterSet&);
-    ~PATLostTracks();
+    ~PATLostTracks() override;
     
-    virtual void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
+    void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
    
   private:  
     enum class TrkStatus {
@@ -116,7 +116,6 @@ void pat::PATLostTracks::produce(edm::StreamID, edm::Event& iEvent, const edm::E
 
     edm::Handle<reco::PFCandidateCollection> cands;
     iEvent.getByToken( cands_, cands );
-    std::vector<reco::Candidate>::const_iterator cand;
 
     edm::Handle<edm::Association<pat::PackedCandidateCollection> > pf2pc;
     iEvent.getByToken(map_,pf2pc);

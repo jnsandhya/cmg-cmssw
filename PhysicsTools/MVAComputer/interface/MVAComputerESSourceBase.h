@@ -16,10 +16,10 @@ namespace PhysicsTools {
 
 class MVAComputerESSourceBase : public edm::ESProducer {
     public:
-	typedef std::shared_ptr<Calibration::MVAComputerContainer> ReturnType;
+	using ReturnType = std::unique_ptr<Calibration::MVAComputerContainer>;
 
 	MVAComputerESSourceBase(const edm::ParameterSet &params);
-	virtual ~MVAComputerESSourceBase();
+	~MVAComputerESSourceBase() override;
 
     protected:
 	ReturnType produce() const;

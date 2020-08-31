@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <cstring>
 
 
@@ -38,14 +38,14 @@ class IODConfig : public IDBObject {
 
   inline void checkPrepare() noexcept(false)
     {
-      if (m_writeStmt == NULL) {
+      if (m_writeStmt == nullptr) {
 	throw(std::runtime_error("Write statement not prepared"));
       }
     }
 
   inline void terminateWriteStatement() noexcept(false)
   {
-    if (m_writeStmt != NULL) {
+    if (m_writeStmt != nullptr) {
       m_conn->terminateStatement(m_writeStmt);
     } else {
       std::cout << "Warning from IDataItem: statement was aleady closed"<< std::endl;
@@ -65,7 +65,7 @@ class IODConfig : public IDBObject {
 
   inline void terminateReadStatement() noexcept(false)
   {
-    if (m_readStmt != NULL) {
+    if (m_readStmt != nullptr) {
       m_conn->terminateStatement(m_readStmt);
     } else {
       std::cout << "Warning from IDataItem: statement was aleady closed"<< std::endl;
@@ -88,7 +88,7 @@ void populateClob (Clob &clob, std::string fname, unsigned int bufsize) noexcept
       std::cout << "Populating the Clob using writeBuffer(Stream) method" << std::endl;
       std::cout<<"we are here0"<<std::endl; 
 
-      char *file = (char *)fname.c_str();
+      const char *file = fname.c_str();
       std::cout<<"we are here0.5 file is:"<<fname<<std::endl; 
 
       std::ifstream inFile;
@@ -99,7 +99,7 @@ void populateClob (Clob &clob, std::string fname, unsigned int bufsize) noexcept
 	  inFile.close();
 
 	  std::string fname2="/nfshome0/ecaldev/francesca/null_file.txt";
-	  inFile.open((char*)fname2.c_str(),std::ios::in);
+	  inFile.open(fname2.c_str(),std::ios::in);
 	  
 
           
@@ -144,7 +144,7 @@ void populateClob (Clob &clob, std::string fname, unsigned int bufsize) noexcept
 
 
   }catch (SQLException &e) {
-    throw(std::runtime_error("populateClob():  "+e.getMessage()));
+    throw(std::runtime_error(std::string("populateClob():  ")+getOraMessage(&e)));
   }
 
   std::cout << "Populating the Clob - Success" << std::endl;
@@ -172,7 +172,7 @@ unsigned char* readClob (Clob &clob, int size) noexcept(false)
     return  buffer;
 
   }catch (SQLException &e) {
-    throw(std::runtime_error("readClob():  "+e.getMessage()));
+    throw(std::runtime_error(std::string("readClob():  ")+getOraMessage(&e)));
   }
 
 }

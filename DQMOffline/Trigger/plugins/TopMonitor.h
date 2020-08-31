@@ -43,6 +43,9 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DQMOffline/Trigger/plugins/TriggerDQMBase.h"
 
+//ATHER                                                                                                                                                                                                            
+#include "DataFormats/Common/interface/ValueMap.h"
+
 class GenericTriggerEventFlag;
 
 
@@ -63,8 +66,7 @@ protected:
   void analyze(edm::Event const& iEvent, edm::EventSetup const& iSetup) override;
 
   // Marina
-  struct JetRefCompare :
-    public std::binary_function<edm::RefToBase<reco::Jet>, edm::RefToBase<reco::Jet>, bool> {
+  struct JetRefCompare {
     inline bool operator () (const edm::RefToBase<reco::Jet> &j1, const edm::RefToBase<reco::Jet> &j2)
       const {return j1.id() < j2.id() || (j1.id() == j2.id() && j1.key() < j2.key());}
   };
@@ -78,15 +80,16 @@ private:
   std::string folderName_;
   std::string histoSuffix_;
 
-  edm::EDGetTokenT<reco::PFMETCollection>       metToken_;
-  edm::EDGetTokenT<reco::PFJetCollection>       jetToken_;
+  edm::EDGetTokenT<reco::PFMETCollection>         metToken_;
+  edm::EDGetTokenT<reco::PFJetCollection>         jetToken_;
   edm::EDGetTokenT<edm::View<reco::GsfElectron> > eleToken_;
-  edm::EDGetTokenT<reco::MuonCollection>        muoToken_;
-  edm::EDGetTokenT<reco::PhotonCollection>      phoToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> >          elecIDToken_; //ATHER   
+  edm::EDGetTokenT<reco::MuonCollection>          muoToken_;
+  edm::EDGetTokenT<reco::PhotonCollection>        phoToken_;
   // Marina
-  edm::EDGetTokenT<reco::JetTagCollection>  jetTagToken_ ;
+  edm::EDGetTokenT<reco::JetTagCollection>        jetTagToken_ ;
   //Suvankar
-  edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
+  edm::EDGetTokenT<reco::VertexCollection>        vtxToken_;
 
  //Suvankar
   struct PVcut {
@@ -275,6 +278,9 @@ bool invMassCutInAllMuPairs_;
 
   //Menglei
   bool enablePhotonPlot_;
+
+  //Mateusz
+  bool enableMETplot_;
   
 };
 

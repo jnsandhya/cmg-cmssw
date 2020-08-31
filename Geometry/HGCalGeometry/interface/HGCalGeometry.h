@@ -10,25 +10,29 @@
  */
 
 #include "DataFormats/Common/interface/AtomicPtrCache.h"
+#include "DataFormats/ForwardDetId/interface/HFNoseDetId.h"
+#include "DataFormats/ForwardDetId/interface/HGCalDetId.h"
+#include "DataFormats/ForwardDetId/interface/HGCScintillatorDetId.h"
+#include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
-#include "DataFormats/ForwardDetId/interface/HGCEEDetId.h"
-#include "DataFormats/ForwardDetId/interface/HGCHEDetId.h"
+#include "DataFormats/GeometryVector/interface/GlobalVector.h"
+#include "DetectorDescription/Core/interface/DDFilteredView.h"
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/CaloGeometry/interface/FlatHexagon.h"
 #include "Geometry/CaloGeometry/interface/FlatTrd.h"
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
-#include "DetectorDescription/Core/interface/DDFilteredView.h"
+#include "Geometry/HGCalCommonData/interface/HGCalGeometryMode.h"
 #include "Geometry/CaloTopology/interface/HGCalTopology.h"
 #include "Geometry/Records/interface/HGCalGeometryRecord.h"
+#include "MagneticField/Engine/interface/MagneticField.h"
 #include <vector>
-
-class FlatTrd;
 
 class HGCalGeometry final: public CaloSubdetectorGeometry {
 
 public:
   
-  typedef std::vector<FlatTrd> CellVec ;
-  
+  typedef std::vector<FlatHexagon>   CellVec;
+  typedef std::vector<FlatTrd>       CellVec2;
   typedef CaloCellGeometry::CCGFloat CCGFloat ;
   typedef CaloCellGeometry::Pt3D     Pt3D     ;
   typedef CaloCellGeometry::Pt3DVec  Pt3DVec  ;
@@ -39,8 +43,11 @@ public:
   typedef HGCalGeometryRecord        AlignedRecord   ; // NOTE: not aligned yet
   typedef PHGCalRcd                  PGeometryRecord ;
 
-  enum { k_NumberOfParametersPerShape = 12 } ; // FlatTrd
-  enum { k_NumberOfShapes = 50 } ; 
+  static constexpr unsigned int k_NumberOfParametersPerTrd   = 12; // FlatTrd
+  static constexpr unsigned int k_NumberOfParametersPerHex   = 3 ; // FlatHexagon
+  static constexpr unsigned int k_NumberOfParametersPerShape = 3; // FlatHexagon
+  static constexpr unsigned int k_NumberOfShapes    = 100; 
+  static constexpr unsigned int k_NumberOfShapesTrd = 1000; 
 
   static std::string dbString() { return "PHGCalRcd" ; }
  
@@ -60,17 +67,26 @@ public:
 			const DetId&       detId ) override;
   
   /// Get the cell geometry of a given detector id.  Should return false if not found.
-  const CaloCellGeometry* getGeometry( const DetId& id ) const override;
+  std::shared_ptr<const CaloCellGeometry> getGeometry( const DetId& id ) const override;
+
+  bool present (const DetId& id) const override;
 
   void getSummary( CaloSubdetectorGeometry::TrVec&  trVector,
-			   CaloSubdetectorGeometry::IVec&   iVector,
-			   CaloSubdetectorGeometry::DimVec& dimVector,
-			   CaloSubdetectorGeometry::IVec& dinsVector ) const override;
+		   CaloSubdetectorGeometry::IVec&   iVector,
+		   CaloSubdetectorGeometry::DimVec& dimVector,
+		   CaloSubdetectorGeometry::IVec& dinsVector ) const override;
   
   GlobalPoint getPosition( const DetId& id ) const;
       
   /// Returns the corner points of this cell's volume.
   CornersVec getCorners( const DetId& id ) const; 
+  CornersVec get8Corners( const DetId& id ) const; 
+  CornersVec getNewCorners( const DetId& id ) const; 
+
+  // Get neighbor in z along a direction
+  DetId neighborZ(const DetId& idin, const GlobalVector& p) const;
+  DetId neighborZ(const DetId& idin, const MagneticField* bField, int charge,
+		  const GlobalVector& momentum) const;
 
   // avoid sorting set in base class  
   const std::vector<DetId>& getValidDetIds( DetId::Detector det = DetId::Detector(0), int subdet = 0) const override { return m_validIds; }
@@ -102,18 +118,31 @@ protected:
   using CaloSubdetectorGeometry::sizeForDenseIndex;
   unsigned int sizeForDenseIndex() const;
   
-  const CaloCellGeometry* cellGeomPtr( uint32_t index ) const override;
+  // Modify the RawPtr class
+  const CaloCellGeometry* getGeometryRawPtr(uint32_t index) const override;
+
+  std::shared_ptr<const CaloCellGeometry> cellGeomPtr(uint32_t index) const override;
   
   void addValidID(const DetId& id);
   unsigned int getClosestCellIndex ( const GlobalPoint& r ) const;
-  
+
 private:
-  const HGCalTopology&    m_topology;
-  
-  CellVec                 m_cellVec ; 
-  std::vector<DetId>      m_validGeomIds;
-  bool                    m_halfType;
-  ForwardSubdetector      m_subdet;
+
+  template<class T>
+  unsigned int getClosestCellIndex(const GlobalPoint&r, const std::vector<T>& vec) const;
+  std::shared_ptr<const CaloCellGeometry> cellGeomPtr( uint32_t index, const GlobalPoint& p) const;
+  DetId getGeometryDetId(DetId detId) const;
+
+  static constexpr double         k_half = 0.5;
+
+  const HGCalTopology&            m_topology;
+  CellVec                         m_cellVec; 
+  CellVec2                        m_cellVec2; 
+  std::vector<DetId>              m_validGeomIds;
+  HGCalGeometryMode::GeometryMode mode_;
+  DetId::Detector                 m_det;
+  ForwardSubdetector              m_subdet;
+  const double                    twoBysqrt3_;
 };
 
 #endif

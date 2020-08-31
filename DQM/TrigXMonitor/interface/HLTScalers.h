@@ -63,11 +63,11 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
-class HLTScalers : public DQMEDAnalyzer {
+class HLTScalers : public one::DQMEDAnalyzer<edm::one::WatchLuminosityBlocks> {
  public:
   HLTScalers(const edm::ParameterSet &ps);
-  ~HLTScalers() override{};
-  void beginJob(void);
+  ~HLTScalers() override = default;
+
   void dqmBeginRun(const edm::Run &run, const edm::EventSetup &c) override;
   void bookHistograms(DQMStore::IBooker &, edm::Run const &,
                       edm::EventSetup const &) override;

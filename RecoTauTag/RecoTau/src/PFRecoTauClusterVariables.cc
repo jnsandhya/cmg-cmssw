@@ -1,38 +1,48 @@
 #include "RecoTauTag/RecoTau/interface/PFRecoTauClusterVariables.h"
 
 namespace {
+  struct PFTau_traits{ typedef reco::PFTau Tau_t; typedef const std::vector<reco::PFCandidatePtr>& Ret_t; };
+  struct PATTau_traits{ typedef pat::Tau Tau_t; typedef reco::CandidatePtrVector Ret_t; };
 
+  template<typename T>
+  typename T::Ret_t getGammas_T(const typename T::Tau_t& tau, bool signal) {
+    return typename T::Ret_t();
+  }
   /// return pf photon candidates that are associated to signal
-  const std::vector<reco::PFCandidatePtr>& getPFGammas(const reco::PFTau& tau, bool signal) {
+  template<>
+  const std::vector<reco::PFCandidatePtr>& getGammas_T<PFTau_traits>(const reco::PFTau& tau, bool signal) {
     if (signal){
       return tau.signalPFGammaCands();
     }
     return tau.isolationPFGammaCands();
   }
-  reco::CandidatePtrVector getGammas(const pat::Tau& tau, bool signal) {
+
+  template<>
+  reco::CandidatePtrVector getGammas_T<PATTau_traits>(const pat::Tau& tau, bool signal) {
     if(signal){
       return tau.signalGammaCands();
     }
     return tau.isolationGammaCands();
   }
+
   /// decide if photon candidate is inside the cone to be associated to the tau signal
   bool isInside(float photon_pt, float deta, float dphi) {
-    const double stripEtaAssociationDistance_0p95_p0 = 0.197077;
-    const double stripEtaAssociationDistance_0p95_p1 = 0.658701;
-    const double stripPhiAssociationDistance_0p95_p0 = 0.352476;
-    const double stripPhiAssociationDistance_0p95_p1 = 0.707716;
+    constexpr double stripEtaAssociationDistance_0p95_p0 = 0.197077;
+    constexpr double stripEtaAssociationDistance_0p95_p1 = 0.658701;
+    constexpr double stripPhiAssociationDistance_0p95_p0 = 0.352476;
+    constexpr double stripPhiAssociationDistance_0p95_p1 = 0.707716;
     if(photon_pt==0){
       return false;
     }      if((dphi<0.3  && dphi<std::max(0.05, stripPhiAssociationDistance_0p95_p0*std::pow(photon_pt, -stripPhiAssociationDistance_0p95_p1))) && (deta<0.15 && deta<std::max(0.05, stripEtaAssociationDistance_0p95_p0*std::pow(photon_pt, -stripEtaAssociationDistance_0p95_p1)))){
       return true;
     }
     return false;
-  }    
+  }
 }
 
-namespace reco { namespace tau { namespace mva {
+namespace reco { namespace tau { 
   /// return chi2 of the leading track ==> deprecated? <==
-  float tau_leadTrackChi2(const reco::PFTau& tau) {
+  float lead_track_chi2(const reco::PFTau& tau) {
     float LeadingTracknormalizedChi2 = 0;
     const reco::PFCandidatePtr& leadingPFCharged = tau.leadPFChargedHadrCand() ;
     if (leadingPFCharged.isNonnull()) {
@@ -44,89 +54,43 @@ namespace reco { namespace tau { namespace mva {
     return LeadingTracknormalizedChi2;
   }
   /// return ratio of energy in ECAL over sum of energy in ECAL and HCAL
-  float tau_Eratio(const reco::PFTau& tau) {
-    std::vector<reco::PFCandidatePtr> constsignal = tau.signalPFCands();
-    float EcalEnInSignalPFCands = 0;
-    float HcalEnInSignalPFCands = 0;
-    typedef std::vector <reco::PFCandidatePtr>::iterator constituents_iterator;
-    for(constituents_iterator it=constsignal.begin(); it != constsignal.end(); ++it) {
-      reco::PFCandidatePtr & icand = *it;
-      EcalEnInSignalPFCands += icand -> ecalEnergy();
-      HcalEnInSignalPFCands += icand -> hcalEnergy();
+  float eratio(const reco::PFTau& tau) {
+    float ecal_en_in_signal_pf_cands = 0;
+    float hcal_en_in_signal_pf_cands = 0;
+    for (const auto& signal_cand : tau.signalPFCands()) {
+      ecal_en_in_signal_pf_cands += signal_cand->ecalEnergy();
+      hcal_en_in_signal_pf_cands += signal_cand->hcalEnergy();
     }
-    float total = EcalEnInSignalPFCands + HcalEnInSignalPFCands;
+    float total = ecal_en_in_signal_pf_cands + hcal_en_in_signal_pf_cands;
     if(total==0){ 
       return -1;
     }
-    return EcalEnInSignalPFCands/total;
+    return ecal_en_in_signal_pf_cands/total;
   }
-  float tau_Eratio(const pat::Tau& tau) {
-    float EcalEnInSignalCands = tau.ecalEnergy();
-    float HcalEnInSignalCands = tau.hcalEnergy();
-    float total = EcalEnInSignalCands + HcalEnInSignalCands;
+  float eratio(const pat::Tau& tau) {
+    float ecal_en_in_signal_cands = tau.ecalEnergy();
+    float hcal_en_in_signal_cands = tau.hcalEnergy();
+    float total = ecal_en_in_signal_cands + hcal_en_in_signal_cands;
     if(total == 0){ 
       return -1;
     }
-    return EcalEnInSignalCands/total;
+    return ecal_en_in_signal_cands/total;
   }
-  /// return sum of pt weighted values of distance to tau candidate for all pf photon candidates, 
-  /// which are associated to signal; depending on var the distance is in 0=:dr, 1=:deta, 2=:dphi 
-  float pt_weighted_dx(const reco::PFTau& tau, int mode, int var, int decaymode) {  
+  /// return sum of pt weighted values of distance to tau candidate for all pf photon candidates,
+  /// which are associated to signal; depending on var the distance is in 0=:dr, 1=:deta, 2=:dphi
+  template<typename T>
+  float pt_weighted_dx_T(const typename T::Tau_t& tau, int mode, int var, int decaymode) {
     float sum_pt = 0.;
     float sum_dx_pt = 0.;
     float signalrad = std::max(0.05, std::min(0.1, 3./std::max(1., tau.pt())));
     int is3prong = (decaymode==10);
-    const auto& cands = getPFGammas(tau, mode < 2);
-    for (const auto& cand : cands) {
-      // only look at electrons/photons with pT > 0.5
-      if ((float)cand->pt() < 0.5){
-        continue;
-      }
-      float dr = reco::deltaR((float)cand->eta(),(float)cand->phi(),(float)tau.eta(),(float)tau.phi());
-      float deta = std::abs((float)cand->eta() - (float)tau.eta());
-      float dphi = std::abs(reco::deltaPhi((float)cand->phi(), (float)tau.phi()));
-      float pt = cand->pt();
-      bool flag = isInside(pt, deta, dphi);
-      if(is3prong==0){
-        if (mode == 2 || (mode == 0 && dr < signalrad) || (mode == 1 && dr > signalrad)) {
-          sum_pt += pt;
-          if (var == 0)
-            sum_dx_pt += pt * dr;
-          else if (var == 1)
-            sum_dx_pt += pt * deta;
-          else if (var == 2)
-            sum_dx_pt += pt * dphi;
-        }
-      }
-      else if(is3prong==1){
-        if( (mode==2 && flag==false) || (mode==1 && flag==true) || mode==0){
-          sum_pt += pt;
-          if (var == 0)
-            sum_dx_pt += pt * dr;
-          else if (var == 1)
-            sum_dx_pt += pt * deta;
-          else if (var == 2)
-            sum_dx_pt += pt * dphi;
-        }
-      }
-    }
-    if (sum_pt > 0.){
-      return sum_dx_pt/sum_pt;  
-    }
-    return 0.;
-  }
-  float pt_weighted_dx(const pat::Tau& tau, int mode, int var, int decaymode) {
-    float sum_pt = 0.;
-    float sum_dx_pt = 0.;
-    float signalrad = std::max(0.05, std::min(0.1, 3./std::max(1., tau.pt())));
-    int is3prong = (decaymode==10);
-    const auto cands = getGammas(tau, mode < 2);
+    const auto& cands = getGammas_T<T>(tau, mode < 2);
     for (const auto& cand : cands) {
       // only look at electrons/photons with pT > 0.5
       if (cand->pt() < 0.5){
         continue;
       }
-      float dr = reco::deltaR(*cand, tau);
+      float dr = reco::deltaR(cand->eta(), cand->phi(), tau.eta(), tau.phi());
       float deta = std::abs(cand->eta() - tau.eta());
       float dphi = std::abs(reco::deltaPhi(cand->phi(), tau.phi()));
       float pt = cand->pt();
@@ -144,7 +108,7 @@ namespace reco { namespace tau { namespace mva {
       }
       else if(is3prong==1){
         if( (mode==2 && flag==false) || (mode==1 && flag==true) || mode==0){
-          sum_pt += pt;        
+          sum_pt += pt;
           if (var == 0)
             sum_dx_pt += pt * dr;
           else if (var == 1)
@@ -153,58 +117,32 @@ namespace reco { namespace tau { namespace mva {
             sum_dx_pt += pt * dphi;
         }
       }
-    }	 
+    }
     if (sum_pt > 0.){
       return sum_dx_pt/sum_pt;
-    }  
-    return 0.;	
+    }
+    return 0.;
   }
-  /// return sum of pt weighted values of dr relative to tau candidate for all pf photon candidates,
-  /// which are associated to signal
-  float tau_pt_weighted_dr_signal(const reco::PFTau& tau, int dm) {
-    return pt_weighted_dx(tau, 0, 0, dm);
+  float pt_weighted_dx(const reco::PFTau& tau, int mode, int var, int decaymode) {
+    return pt_weighted_dx_T<PFTau_traits>(tau, mode, var, decaymode);
   }
-  float tau_pt_weighted_dr_signal(const pat::Tau& tau, int dm) {
-    return pt_weighted_dx(tau, 0, 0, dm);
-  }
-  /// return sum of pt weighted values of deta relative to tau candidate for all pf photon candidates,
-  /// which are associated to signal
-  float tau_pt_weighted_deta_strip(const reco::PFTau& tau, int dm) {
-    return pt_weighted_dx(tau, dm==10 ? 2 : 1, 1, dm);
-  }
-  float tau_pt_weighted_deta_strip(const pat::Tau& tau, int dm) {
-    return pt_weighted_dx(tau, dm==10 ? 2 : 1, 1, dm);
-  }
-  /// return sum of pt weighted values of dphi relative to tau candidate for all pf photon candidates,
-  /// which are associated to signal
-  float tau_pt_weighted_dphi_strip(const reco::PFTau& tau, int dm) {
-    return pt_weighted_dx(tau, dm==10 ? 2 : 1, 2, dm);
-  }
-  float tau_pt_weighted_dphi_strip(const pat::Tau& tau, int dm) {
-    return pt_weighted_dx(tau, dm==10 ? 2 : 1, 2, dm);
-  }  
-  /// return sum of pt weighted values of dr relative to tau candidate for all pf photon candidates,
-  /// which are inside an isolation conde but not associated to signal
-  float tau_pt_weighted_dr_iso(const reco::PFTau& tau, int dm) {
-    return pt_weighted_dx(tau, 2, 0, dm);
-  }
-  float tau_pt_weighted_dr_iso(const pat::Tau& tau, int dm) {
-    return pt_weighted_dx(tau, 2, 0, dm);
+  float pt_weighted_dx(const pat::Tau& tau, int mode, int var, int decaymode) {
+    return pt_weighted_dx_T<PATTau_traits>(tau, mode, var, decaymode);
   }
   /// return total number of pf photon candidates with pT>500 MeV, which are associated to signal
-  unsigned int tau_n_photons_total(const reco::PFTau& tau) {
+  unsigned int n_photons_total(const reco::PFTau& tau) {
     unsigned int n_photons = 0;
     for (auto& cand : tau.signalPFGammaCands()) {
-      if ((float)cand->pt() > 0.5)
+      if (cand->pt() > 0.5)
         ++n_photons;
     }
     for (auto& cand : tau.isolationPFGammaCands()) {
-      if ((float)cand->pt() > 0.5)
+      if (cand->pt() > 0.5)
         ++n_photons;
     }
     return n_photons;
   }
-  unsigned int tau_n_photons_total(const pat::Tau& tau) {
+  unsigned int n_photons_total(const pat::Tau& tau) {
     unsigned int n_photons = 0;
     for (auto& cand : tau.signalGammaCands()) {
       if (cand->pt() > 0.5) 
@@ -217,7 +155,9 @@ namespace reco { namespace tau { namespace mva {
     return n_photons;
   }  
 
-  bool fillMVAInputs(float* mvaInput, const pat::Tau& tau, int mvaOpt, const std::string nameCharged, const std::string   nameNeutral, const std::string namePu, const std::string nameOutside, const std::string nameFootprint) 
+  bool fillIsoMVARun2Inputs(float* mvaInput, const pat::Tau& tau, int mvaOpt, const std::string& nameCharged, 
+                            const std::string& nameNeutral, const std::string& namePu, 
+                            const std::string& nameOutside, const std::string& nameFootprint) 
   {
     int tauDecayMode = tau.decayMode();
     
@@ -241,14 +181,14 @@ namespace reco { namespace tau { namespace mva {
   		
       // --- The following 5 variables differ slightly between AOD & MiniAOD
       //     because they are recomputed using packedCandidates saved in the tau
-      float nPhoton = (float)reco::tau::mva::tau_n_photons_total(tau);
-      float ptWeightedDetaStrip = reco::tau::mva::tau_pt_weighted_deta_strip(tau, tauDecayMode);
-      float ptWeightedDphiStrip = reco::tau::mva::tau_pt_weighted_dphi_strip(tau, tauDecayMode);
-      float ptWeightedDrSignal = reco::tau::mva::tau_pt_weighted_dr_signal(tau, tauDecayMode);
-      float ptWeightedDrIsolation = reco::tau::mva::tau_pt_weighted_dr_iso(tau, tauDecayMode);
+      float nPhoton = reco::tau::n_photons_total(tau);
+      float ptWeightedDetaStrip = reco::tau::pt_weighted_deta_strip(tau, tauDecayMode);
+      float ptWeightedDphiStrip = reco::tau::pt_weighted_dphi_strip(tau, tauDecayMode);
+      float ptWeightedDrSignal = reco::tau::pt_weighted_dr_signal(tau, tauDecayMode);
+      float ptWeightedDrIsolation = reco::tau::pt_weighted_dr_iso(tau, tauDecayMode);
       // ---
       float leadingTrackChi2 = tau.leadingTrackNormChi2();
-      float eRatio = reco::tau::mva::tau_Eratio(tau);
+      float eRatio = reco::tau::eratio(tau);
   
       // Difference between measured and maximally allowed Gottfried-Jackson angle
       float gjAngleDiff = -999;
@@ -364,4 +304,4 @@ namespace reco { namespace tau { namespace mva {
     return false;
   }
 
-}}} // namespaces
+}} // namespaces

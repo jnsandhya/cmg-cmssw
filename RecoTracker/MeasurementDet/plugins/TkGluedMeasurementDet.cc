@@ -52,15 +52,6 @@ namespace {
 
     return std::make_pair(projectedHitPos, rotatedError);
   }
-
-
-  inline
-  std::pair<LocalPoint,LocalError> projectedPos(const TrackingRecHit& hit,
-                           const GeomDet& det,
-                           const TrajectoryStateOnSurface& ts, const StripClusterParameterEstimator* cpe) {
-      GlobalVector gdir = ts.globalParameters().momentum();
-      return projectedPos(hit, det, gdir, cpe);
-  }
 }
 
 // #include "TrackingTools/KalmanUpdators/interface/Chi2MeasurementEstimator.h"
@@ -104,7 +95,7 @@ TkGluedMeasurementDet::recHits( const TrajectoryStateOnSurface& ts, const Measur
 bool TkGluedMeasurementDet::recHits(SimpleHitContainer & result,  
 				    const TrajectoryStateOnSurface& stateOnThisDet, 
 				    const MeasurementEstimator& est, const MeasurementTrackerEvent & data) const {
-  if unlikely((!theMonoDet->isActive(data)) && (!theStereoDet->isActive(data))) return false;
+  if UNLIKELY((!theMonoDet->isActive(data)) && (!theStereoDet->isActive(data))) return false;
   auto oldSize = result.size();
   HitCollectorForSimpleHits collector( &fastGeomDet(), theMatcher, theCPE, stateOnThisDet, est, result);
   collectRecHits(stateOnThisDet, data, collector);
@@ -121,7 +112,7 @@ bool TkGluedMeasurementDet::measurements( const TrajectoryStateOnSurface& stateO
                                           const MeasurementTrackerEvent & data,
 					  TempMeasurements & result) const {
   
-  if unlikely((!theMonoDet->isActive(data)) && (!theStereoDet->isActive(data))) {
+  if UNLIKELY((!theMonoDet->isActive(data)) && (!theStereoDet->isActive(data))) {
        //     LogDebug("TkStripMeasurementDet") << " DetID " << geomDet().geographicalId().rawId() << " (glued) fully inactive";
        result.add(theInactiveHit, 0.F);
        return true;
@@ -525,7 +516,7 @@ TkGluedMeasurementDet::HitCollectorForFastMeasurements::add(SiStripMatchedRecHit
 
   std::pair<bool,double> diffEst = est_.estimate( stateOnThisDet_, hit2d);
   if (diffEst.first)
-    target_.add(std::move(hit2d.cloneSH()),diffEst.second);
+    target_.add(hit2d.cloneSH(),diffEst.second);
 }
 
 

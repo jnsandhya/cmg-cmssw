@@ -582,7 +582,13 @@ if(DeltaPhiManualM1P1>DeltaPhiMaxM1P1+tol_DeltaPhiMaxM1P1 || DeltaPhiManualM1P1<
 #endif
 
     
-
+    // get cloner (FIXME: add to config)
+    auto TTRHBuilder = "WithTrackAngle"; 
+    edm::ESHandle<TransientTrackingRecHitBuilder> builderH;
+    es.get<TransientRecHitRecord>().get(TTRHBuilder, builderH);
+    auto builder = (TkTransientTrackingRecHitBuilder const *)(builderH.product());
+    cloner = (*builder).cloner(); 
+    
     bool buildSeedBoolPos = buildSeedBool(seedCollection,phits,ftsPlus,es,applydzCAcut,region, dzcut);
     bool buildSeedBoolNeg = buildSeedBool(seedCollection,mhits,ftsMinus,es,applydzCAcut,region, dzcut);
 
@@ -765,13 +771,6 @@ bool SeedForPhotonConversionFromQuadruplets::buildSeedBool(
   edm::ESHandle<Propagator>  propagatorHandle;
   es.get<TrackingComponentsRecord>().get(thePropagatorLabel, propagatorHandle);
   const Propagator*  propagator = &(*propagatorHandle);
-
-   // get cloner (FIXME: add to config)
-  auto TTRHBuilder = "WithTrackAngle"; 
-  edm::ESHandle<TransientTrackingRecHitBuilder> builderH;
-  es.get<TransientRecHitRecord>().get(TTRHBuilder, builderH);
-  auto builder = (TkTransientTrackingRecHitBuilder const *)(builderH.product());
-  cloner = (*builder).cloner(); 
 
   // get updator
   KFUpdator  updator;
@@ -1057,7 +1056,7 @@ double SeedForPhotonConversionFromQuadruplets::getSqrEffectiveErrorOnZ(const See
 
 bool SeedForPhotonConversionFromQuadruplets::similarQuadExist(Quad & thisQuad, std::vector<Quad>& quadV){
 
-  BOOST_FOREACH( Quad quad, quadV )
+  for(auto const& quad : quadV )
     {
       double dx = thisQuad.x-quad.x;
       double dy = thisQuad.y-quad.y;
